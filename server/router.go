@@ -13,8 +13,9 @@ import (
 )
 
 type RouterConfig struct {
-	UserService     service.UserService
-	ProvinceService service.ProvinceService
+	UserService        service.UserService
+	ProvinceService    service.ProvinceService
+	MarketplaceService service.MarketplaceService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -29,8 +30,9 @@ func NewRouter(c RouterConfig) *gin.Engine {
 	}))
 
 	h := handler.New(handler.HConfig{
-		UserService:     c.UserService,
-		ProvinceService: c.ProvinceService,
+		UserService:        c.UserService,
+		ProvinceService:    c.ProvinceService,
+		MarketplaceService: c.MarketplaceService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -44,6 +46,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.Static("/docs", "swaggerui")
 		api.POST("/users", h.Register, middleware.ErrorHandler)
 		api.GET("/provinces", h.GetAllProvinces, middleware.ErrorHandler)
+		api.GET("/marketplace/promo/banners", h.GetMarketplacePromoBanner, middleware.ErrorHandler)
 	}
 
 	return router
