@@ -13,10 +13,11 @@ import (
 )
 
 type RouterConfig struct {
+	UserService     service.UserService
 	ProvinceService service.ProvinceService
 }
 
-func NewRouter(c *RouterConfig) *gin.Engine {
+func NewRouter(c RouterConfig) *gin.Engine {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
@@ -28,6 +29,7 @@ func NewRouter(c *RouterConfig) *gin.Engine {
 	}))
 
 	h := handler.New(handler.HConfig{
+		UserService:     c.UserService,
 		ProvinceService: c.ProvinceService,
 	})
 
@@ -37,9 +39,10 @@ func NewRouter(c *RouterConfig) *gin.Engine {
 		})
 	})
 
-	router.Static("/docs", "swaggerui")
 	api := router.Group("/api")
 	{
+		api.Static("/docs", "swaggerui")
+		api.POST("/users", h.Register, middleware.ErrorHandler)
 		api.GET("/provinces", h.GetAllProvinces, middleware.ErrorHandler)
 	}
 

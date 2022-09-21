@@ -38,7 +38,7 @@ var Config = AppConfig{
 	DBConfig: dbConfig{
 		Host:     getEnv("DB_HOST", "localhost"),
 		User:     getEnv("DB_USER", "postgres"),
-		Password: getEnv("DB_PASSWORD", "password"),
+		Password: getEnv("DB_PASSWORD", "postgres"),
 		DBName:   getEnv("DB_NAME", "kamari_db"),
 		Port:     getEnv("DB_PORT", "5432"),
 		SSLMode:  getEnv("DB_SSL", "disable"),
