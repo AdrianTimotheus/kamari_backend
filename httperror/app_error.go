@@ -1,8 +1,6 @@
 package httperror
 
-import (
-	"net/http"
-)
+import "net/http"
 
 type AppError struct {
 	StatusCode int    `json:"statusCode"`
@@ -10,14 +8,15 @@ type AppError struct {
 	Message    string `json:"message"`
 }
 
-func (err AppError) Error() string {
-	return err.Message
+func (e AppError) Error() string {
+	return e.Message
 }
 
 func BadRequestError(message string, code string) AppError {
 	if code == "" {
 		code = "BAD_REQUEST"
 	}
+
 	return AppError{
 		Code:       code,
 		Message:    message,

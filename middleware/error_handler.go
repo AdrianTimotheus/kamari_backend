@@ -11,11 +11,12 @@ func ErrorHandler(c *gin.Context) {
 	}
 
 	firstError := c.Errors[0].Err
-	appError, isAppError := firstError.(httperror.AppError)
-	if isAppError {
+	appError, ok := firstError.(httperror.AppError)
+	if ok {
 		c.JSON(appError.StatusCode, appError)
 		return
 	}
+
 	serverErr := httperror.InternalServerError(firstError.Error())
 	c.JSON(serverErr.StatusCode, serverErr)
 }
