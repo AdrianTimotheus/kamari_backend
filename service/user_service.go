@@ -1,7 +1,10 @@
 package service
 
 import (
-	"golang.org/x/crypto/bcrypt"
+	"crypto/sha256"
+	"errors"
+	"fmt"
+	"github.com/jackc/pgconn"
 	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
@@ -33,12 +36,18 @@ func (u userService) CreateNewUser(req *dto.RegisterRequest) error {
 
 	user := req.ToModel(req)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	user.Password = string(hash)
+	hash := fmt.Sprintf("%X", sha256.Sum256([]byte(req.Password)))
+	user.Password = hash
 
 	err := u.userRepository.CreateUser(user)
 	if err != nil {
-		return httperror.InternalServerError(err.Error())
+		var pgErr *pgconn.PgError
+		switch {
+		case errors.As(err, &pgErr):
+			return httperror.InternalServerError("duplicate key values for unique constraint")
+		default:
+			return httperror.InternalServerError(err.Error())
+		}
 	}
 
 	return nil

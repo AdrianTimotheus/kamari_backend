@@ -73,7 +73,7 @@ func TestHandler_Register(t *testing.T) {
 			Name:        "abdul",
 			Username:    "abdull",
 			Email:       "test@gmail.com",
-			Password:    "abdull",
+			Password:    "abdull12345",
 			DateOfBirth: 1663642290536,
 			Phone:       "084216327163",
 			GenderId:    1,
@@ -85,7 +85,7 @@ func TestHandler_Register(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodPost, "/api/users", strings.NewReader(string(payload)))
 		router.ServeHTTP(rr, req)
 
-		assert.Equal(t, rr.Code, http.StatusBadRequest)
-		assert.Equal(t, rr.Body.String(), string(expectedResponse))
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Equal(t, string(expectedResponse), rr.Body.String())
 	})
 }
