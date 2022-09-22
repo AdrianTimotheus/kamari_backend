@@ -1,6 +1,9 @@
 package service_test
 
 import (
+	"crypto/sha256"
+	"fmt"
+	"github.com/jackc/pgconn"
 	"github.com/stretchr/testify/assert"
 	"kamari.com/dto"
 	"kamari.com/httperror"
@@ -40,14 +43,59 @@ func Test_userService_CreateNewUser(t *testing.T) {
 		s := service.NewUserService(service.USConfig{
 			UserRepository: mockRepo,
 		})
+		p := fmt.Sprintf("%X", sha256.Sum256([]byte("password123")))
 		req := &dto.RegisterRequest{
 			Username: "adbul",
-			Password: "somepassword123",
+			Password: p,
 		}
 		mockRepo.On("CreateUser", req.ToModel(req)).Return(nil)
 
-		err := s.CreateNewUser(req)
+		err := s.CreateNewUser(&dto.RegisterRequest{
+			Username: "adbul",
+			Password: "password123",
+		})
 
 		assert.Nil(t, err)
+	})
+
+	t.Run("should thrown an error when trying to register with registered email/username", func(t *testing.T) {
+		mockRepo := &mocks.UserRepository{}
+		s := service.NewUserService(service.USConfig{
+			UserRepository: mockRepo,
+		})
+		p := fmt.Sprintf("%X", sha256.Sum256([]byte("password123")))
+		req := &dto.RegisterRequest{
+			Username: "adbul",
+			Password: p,
+		}
+		mockRepo.On("CreateUser", req.ToModel(req)).Return(&pgconn.PgError{})
+
+		err := s.CreateNewUser(&dto.RegisterRequest{
+			Username: "adbul",
+			Password: "password123",
+		})
+
+		assert.Equal(t, httperror.InternalServerError("duplicate key values for unique constraint"), err)
+		assert.Error(t, err)
+	})
+
+	t.Run("should thrown an error when trying to register with password length less than 8 chars", func(t *testing.T) {
+		mockRepo := &mocks.UserRepository{}
+		s := service.NewUserService(service.USConfig{
+			UserRepository: mockRepo,
+		})
+		p := fmt.Sprintf("%X", sha256.Sum256([]byte("123")))
+		req := &dto.RegisterRequest{
+			Username: "adbul",
+			Password: p,
+		}
+		mockRepo.On("CreateUser", req.ToModel(req)).Return(httperror.InternalServerError("failed binding validation"))
+
+		err := s.CreateNewUser(&dto.RegisterRequest{
+			Username: "adbul",
+			Password: "123",
+		})
+
+		assert.Error(t, err)
 	})
 }
