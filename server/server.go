@@ -43,7 +43,9 @@ func Init() {
 		ProductRepository:          productRepository,
 		MerchantFollowerRepository: merchantFollowerRepository,
 	})
-	provinceService := service.NewProvinceService(service.PSConfig{ProvinceRepository: provinceRepository})
+	provinceService := service.NewProvinceService(service.PSConfig{
+		ProvinceRepository: provinceRepository,
+	})
 
 	marketplaceService := service.NewMarketplaceService(service.MpSConfig{
 		MarketplaceRepository: marketplaceRepository,
