@@ -8,6 +8,7 @@ import (
 )
 
 func Init() {
+	//REPO
 	userRepository := repository.NewUserRepository(repository.URConfig{
 		DB: db.Get(),
 	})
@@ -23,23 +24,38 @@ func Init() {
 	cityRepository := repository.NewCityRepository(repository.CRConfig{
 		DB: db.Get(),
 	})
-	provinceRepository := repository.NewProvinceRepository(repository.PRConfig{DB: db.Get()})
+	provinceRepository := repository.NewProvinceRepository(repository.PRConfig{
+		DB: db.Get(),
+	})
 
+	marketplaceRepository := repository.NewMarketplaceRepository(repository.MpRConfig{
+		DB: db.Get(),
+	})
+
+	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository: userRepository,
 	})
+
 	merchantService := service.NewMerchantService(service.MSConfig{
 		MerchantRepository:         merchantRepository,
 		CityRepository:             cityRepository,
 		ProductRepository:          productRepository,
 		MerchantFollowerRepository: merchantFollowerRepository,
 	})
-	provinceService := service.NewProvinceService(service.PSConfig{ProvinceRepository: provinceRepository})
+	provinceService := service.NewProvinceService(service.PSConfig{
+		ProvinceRepository: provinceRepository,
+	})
+
+	marketplaceService := service.NewMarketplaceService(service.MpSConfig{
+		MarketplaceRepository: marketplaceRepository,
+	})
 
 	r := NewRouter(RouterConfig{
-		UserService:     userService,
-		ProvinceService: provinceService,
-		MerchantService: merchantService,
+		UserService:        userService,
+		ProvinceService:    provinceService,
+		MerchantService:    merchantService,
+		MarketplaceService: marketplaceService,
 	})
 
 	log.Fatal(r.Run())
