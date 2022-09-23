@@ -1,17 +1,8 @@
 package config
 
 import (
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 	_ "github.com/joho/godotenv/autoload"
->>>>>>> feat:Get promotion img URL for <img> src sorted by latest promotion
-=======
-	_ "github.com/joho/godotenv/autoload"
->>>>>>> 389454c5afc0ee87bf80a2c41600fe616111f407
 	"os"
-
-	_ "github.com/joho/godotenv/autoload"
 )
 
 type dbConfig struct {
