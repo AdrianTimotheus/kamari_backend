@@ -2,8 +2,10 @@ package helper
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"strconv"
+	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -13,6 +15,7 @@ var (
 
 func GetParam(c *gin.Context, key string, returnType string) (interface{}, error) {
 	p := c.Param(key)
+	p = strings.TrimSpace(p)
 	if p == "" {
 		return nil, errParamNotFound
 	}

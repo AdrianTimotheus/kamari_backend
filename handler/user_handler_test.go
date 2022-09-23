@@ -2,16 +2,17 @@ package handler_test
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"kamari.com/dto"
 	"kamari.com/handler"
 	"kamari.com/httperror"
 	"kamari.com/mocks"
 	"kamari.com/server"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 func TestHandler_Register(t *testing.T) {
@@ -26,7 +27,7 @@ func TestHandler_Register(t *testing.T) {
 			Username: "testwaw123",
 		}
 		expectedResponse, _ := json.Marshal(httperror.InternalServerError(handler.ErrFailedBindingValidation.Error()))
-		payload, _ := json.Marshal(&data)
+		payload, _ := json.Marshal(data)
 
 		req, _ := http.NewRequest(http.MethodPost, "/api/users", strings.NewReader(string(payload)))
 		router.ServeHTTP(rr, req)
@@ -54,7 +55,7 @@ func TestHandler_Register(t *testing.T) {
 		expectedResponse, _ := json.Marshal(map[string]any{
 			"message": "user created successfully",
 		})
-		payload, _ := json.Marshal(&data)
+		payload, _ := json.Marshal(data)
 
 		req, _ := http.NewRequest(http.MethodPost, "/api/users", strings.NewReader(string(payload)))
 		router.ServeHTTP(rr, req)
