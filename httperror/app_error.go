@@ -16,7 +16,6 @@ func BadRequestError(message string, code string) AppError {
 	if code == "" {
 		code = "BAD_REQUEST"
 	}
-
 	return AppError{
 		Code:       code,
 		Message:    message,

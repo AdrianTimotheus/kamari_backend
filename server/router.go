@@ -13,9 +13,10 @@ import (
 )
 
 type RouterConfig struct {
-	UserService        service.UserService
-	ProvinceService    service.ProvinceService
-	MerchantService    service.MerchantService
+	UserService     service.UserService
+	ProvinceService service.ProvinceService
+	CartService     service.CartService
+	MerchantService service.MerchantService
 	MarketplaceService service.MarketplaceService
 }
 
@@ -31,9 +32,10 @@ func NewRouter(c RouterConfig) *gin.Engine {
 	}))
 
 	h := handler.New(handler.HConfig{
-		UserService:        c.UserService,
-		ProvinceService:    c.ProvinceService,
-		MerchantService:    c.MerchantService,
+		UserService:     c.UserService,
+		ProvinceService: c.ProvinceService,
+		CartService:     c.CartService,
+		MerchantService: c.MerchantService,
 		MarketplaceService: c.MarketplaceService,
 	})
 
@@ -49,6 +51,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/users", h.Register, middleware.ErrorHandler)
 		api.POST("/login", h.Login, middleware.ErrorHandler)
 		api.GET("/provinces", h.GetAllProvinces, middleware.ErrorHandler)
+		api.GET("/carts/hover", middleware.AuthorizeJWT, h.GetCartHoverItems, middleware.ErrorHandler)
 		api.GET("/sellers/:username", h.GetSellerDetail, middleware.ErrorHandler)
 		api.GET("/marketplace/promo/banners", h.GetMarketplacePromoBanner, middleware.ErrorHandler)
 	}
