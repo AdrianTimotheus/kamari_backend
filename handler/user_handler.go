@@ -27,3 +27,24 @@ func (h Handler) Register(c *gin.Context) {
 		"message": "user created successfully",
 	})
 }
+
+func (h Handler) Login(c *gin.Context) {
+	var (
+		req *dto.LoginRequest
+		err error
+	)
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(ErrFailedBindingValidation)
+		return
+	}
+
+	response, err := h.userService.Login(req)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
