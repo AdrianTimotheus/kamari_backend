@@ -39,3 +39,11 @@ func UnauthorizedError() AppError {
 		StatusCode: http.StatusUnauthorized,
 	}
 }
+
+func InvalidLogin(message string) AppError {
+	return AppError{
+		Code:       "INVALID_LOGIN",
+		Message:    message,
+		StatusCode: http.StatusUnauthorized,
+	}
+}

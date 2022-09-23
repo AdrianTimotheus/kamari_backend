@@ -1,7 +1,6 @@
 package service
 
 import (
-	"kamari.com/config"
 	"kamari.com/httperror"
 	"kamari.com/model"
 	"kamari.com/repository"
@@ -13,18 +12,15 @@ type ProvinceService interface {
 
 type provinceService struct {
 	provinceRepository repository.ProvinceRepository
-	appConfig          config.AppConfig
 }
 
 type PSConfig struct {
 	ProvinceRepository repository.ProvinceRepository
-	AppConfig          config.AppConfig
 }
 
 func NewProvinceService(p PSConfig) ProvinceService {
 	return provinceService{
 		provinceRepository: p.ProvinceRepository,
-		appConfig:          p.AppConfig,
 	}
 }
 

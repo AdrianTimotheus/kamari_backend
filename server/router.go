@@ -47,6 +47,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 	{
 		api.Static("/docs", "swaggerui")
 		api.POST("/users", h.Register, middleware.ErrorHandler)
+		api.POST("/login", h.Login, middleware.ErrorHandler)
 		api.GET("/provinces", h.GetAllProvinces, middleware.ErrorHandler)
 		api.GET("/sellers/:username", h.GetSellerDetail, middleware.ErrorHandler)
 		api.GET("/marketplace/promo/banners", h.GetMarketplacePromoBanner, middleware.ErrorHandler)
