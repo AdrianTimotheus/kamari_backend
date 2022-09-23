@@ -11,7 +11,7 @@ type cityService struct {
 	merchantRepository repository.MerchantRepository
 }
 
-type CSConfig struct {
+type CiSConfig struct {
 	MerchantRepository repository.MerchantRepository
 }
 

@@ -13,7 +13,7 @@ type cityRepository struct {
 	db *gorm.DB
 }
 
-type CRConfig struct {
+type CiRConfig struct {
 	DB *gorm.DB
 }
 

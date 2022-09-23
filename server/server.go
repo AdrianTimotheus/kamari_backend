@@ -12,18 +12,23 @@ func Init() {
 	userRepository := repository.NewUserRepository(repository.URConfig{
 		DB: db.Get(),
 	})
+	
 	merchantRepository := repository.NewMerchantRepository(repository.MRConfig{
 		DB: db.Get(),
 	})
+	
 	productRepository := repository.NewProductRepository(repository.ProdConfig{
 		DB: db.Get(),
 	})
+
 	merchantFollowerRepository := repository.NewMFRepository(repository.MFConfig{
 		DB: db.Get(),
 	})
+
 	cityRepository := repository.NewCityRepository(repository.CRConfig{
 		DB: db.Get(),
 	})
+
 	provinceRepository := repository.NewProvinceRepository(repository.PRConfig{
 		DB: db.Get(),
 	})
@@ -32,6 +37,11 @@ func Init() {
 		DB: db.Get(),
 	})
 
+	cartRepository := repository.NewCartRepository(repository.CRConfig{
+		DB: db.Get(),
+	})
+	
+	
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository: userRepository,
@@ -43,6 +53,11 @@ func Init() {
 		ProductRepository:          productRepository,
 		MerchantFollowerRepository: merchantFollowerRepository,
 	})
+
+	provinceService := service.NewProvinceService(service.PSConfig{
+		ProvinceRepository: provinceRepository,
+	})
+
 	provinceService := service.NewProvinceService(service.PSConfig{
 		ProvinceRepository: provinceRepository,
 	})
@@ -51,10 +66,15 @@ func Init() {
 		MarketplaceRepository: marketplaceRepository,
 	})
 
+	cartService := service.NewCartService(service.CSConfig{
+		CartRepository: cartRepository,
+	})
+	
 	r := NewRouter(RouterConfig{
-		UserService:        userService,
-		ProvinceService:    provinceService,
-		MerchantService:    merchantService,
+		UserService:     userService,
+		ProvinceService: provinceService,
+		CartService:     cartService,
+		MerchantService: merchantService,
 		MarketplaceService: marketplaceService,
 	})
 
