@@ -10,21 +10,24 @@ var (
 )
 
 type Handler struct {
-	userService     service.UserService
-	provinceService service.ProvinceService
-	merchantService service.MerchantService
+	userService        service.UserService
+	provinceService    service.ProvinceService
+	merchantService    service.MerchantService
+	marketplaceService service.MarketplaceService
 }
 
 type HConfig struct {
-	UserService     service.UserService
-	ProvinceService service.ProvinceService
-	MerchantService service.MerchantService
+	UserService        service.UserService
+	ProvinceService    service.ProvinceService
+	MerchantService    service.MerchantService
+	MarketplaceService service.MarketplaceService
 }
 
 func New(c HConfig) Handler {
 	return Handler{
-		userService:     c.UserService,
-		provinceService: c.ProvinceService,
-		merchantService: c.MerchantService,
+		userService:        c.UserService,
+		provinceService:    c.ProvinceService,
+		merchantService:    c.MerchantService,
+		marketplaceService: c.MarketplaceService,
 	}
 }

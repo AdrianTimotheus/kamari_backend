@@ -1,6 +1,10 @@
 package config
 
 import (
+<<<<<<< HEAD
+=======
+	_ "github.com/joho/godotenv/autoload"
+>>>>>>> feat:Get promotion img URL for <img> src sorted by latest promotion
 	"os"
 
 	_ "github.com/joho/godotenv/autoload"
