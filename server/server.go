@@ -12,11 +12,11 @@ func Init() {
 	userRepository := repository.NewUserRepository(repository.URConfig{
 		DB: db.Get(),
 	})
-	
+
 	merchantRepository := repository.NewMerchantRepository(repository.MRConfig{
 		DB: db.Get(),
 	})
-	
+
 	productRepository := repository.NewProductRepository(repository.ProdConfig{
 		DB: db.Get(),
 	})
@@ -40,8 +40,7 @@ func Init() {
 	cartRepository := repository.NewCartRepository(repository.CRConfig{
 		DB: db.Get(),
 	})
-	
-	
+
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository: userRepository,
@@ -58,10 +57,6 @@ func Init() {
 		ProvinceRepository: provinceRepository,
 	})
 
-	provinceService := service.NewProvinceService(service.PSConfig{
-		ProvinceRepository: provinceRepository,
-	})
-
 	marketplaceService := service.NewMarketplaceService(service.MpSConfig{
 		MarketplaceRepository: marketplaceRepository,
 	})
@@ -69,12 +64,12 @@ func Init() {
 	cartService := service.NewCartService(service.CSConfig{
 		CartRepository: cartRepository,
 	})
-	
+
 	r := NewRouter(RouterConfig{
-		UserService:     userService,
-		ProvinceService: provinceService,
-		CartService:     cartService,
-		MerchantService: merchantService,
+		UserService:        userService,
+		ProvinceService:    provinceService,
+		CartService:        cartService,
+		MerchantService:    merchantService,
 		MarketplaceService: marketplaceService,
 	})
 
