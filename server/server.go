@@ -41,6 +41,10 @@ func Init() {
 		DB: db.Get(),
 	})
 
+	walletRepository := repository.NewWalletRepository(repository.WConfig{
+		DB: db.Get(),
+	})
+
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository: userRepository,
@@ -71,6 +75,10 @@ func Init() {
 		CityRepository:     cityRepository,
 	})
 
+	walletService := service.NewWalletService(service.WSConfig{
+		WalletRepository: walletRepository,
+	})
+
 	r := NewRouter(RouterConfig{
 		UserService:        userService,
 		ProvinceService:    provinceService,
@@ -78,6 +86,7 @@ func Init() {
 		MerchantService:    merchantService,
 		MarketplaceService: marketplaceService,
 		ProductService:     productService,
+		WalletService:      walletService,
 	})
 
 	log.Fatal(r.Run())
