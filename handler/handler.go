@@ -11,6 +11,7 @@ type Handler struct {
 	merchantService    service.MerchantService
 	cartService        service.CartService
 	marketplaceService service.MarketplaceService
+	productService     service.ProductService
 }
 
 type HConfig struct {
@@ -19,6 +20,7 @@ type HConfig struct {
 	MerchantService    service.MerchantService
 	CartService        service.CartService
 	MarketplaceService service.MarketplaceService
+	ProductService     service.ProductService
 }
 
 func New(h HConfig) Handler {
@@ -28,6 +30,7 @@ func New(h HConfig) Handler {
 		merchantService:    h.MerchantService,
 		cartService:        h.CartService,
 		marketplaceService: h.MarketplaceService,
+		productService:     h.ProductService,
 	}
 }
 

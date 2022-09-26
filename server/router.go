@@ -13,11 +13,12 @@ import (
 )
 
 type RouterConfig struct {
-	UserService     service.UserService
-	ProvinceService service.ProvinceService
-	CartService     service.CartService
-	MerchantService service.MerchantService
+	UserService        service.UserService
+	ProvinceService    service.ProvinceService
+	CartService        service.CartService
+	MerchantService    service.MerchantService
 	MarketplaceService service.MarketplaceService
+	ProductService     service.ProductService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -32,11 +33,12 @@ func NewRouter(c RouterConfig) *gin.Engine {
 	}))
 
 	h := handler.New(handler.HConfig{
-		UserService:     c.UserService,
-		ProvinceService: c.ProvinceService,
-		CartService:     c.CartService,
-		MerchantService: c.MerchantService,
+		UserService:        c.UserService,
+		ProvinceService:    c.ProvinceService,
+		CartService:        c.CartService,
+		MerchantService:    c.MerchantService,
 		MarketplaceService: c.MarketplaceService,
+		ProductService:     c.ProductService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -55,6 +57,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/sellers/:username", h.GetSellerDetail, middleware.ErrorHandler)
 		api.GET("/merchant/:username/products", h.GetSellerProduct, middleware.ErrorHandler)
 		api.GET("/marketplace/promo/banners", h.GetMarketplacePromoBanner, middleware.ErrorHandler)
+		api.GET("/products/recommend", h.GetRecommendedProduct, middleware.ErrorHandler)
 	}
 
 	return router

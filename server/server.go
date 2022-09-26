@@ -65,12 +65,19 @@ func Init() {
 		CartRepository: cartRepository,
 	})
 
+	productService := service.NewProductService(service.PConfig{
+		ProductRepository:  productRepository,
+		MerchantRepository: merchantRepository,
+		CityRepository:     cityRepository,
+	})
+
 	r := NewRouter(RouterConfig{
 		UserService:        userService,
 		ProvinceService:    provinceService,
 		CartService:        cartService,
 		MerchantService:    merchantService,
 		MarketplaceService: marketplaceService,
+		ProductService:     productService,
 	})
 
 	log.Fatal(r.Run())

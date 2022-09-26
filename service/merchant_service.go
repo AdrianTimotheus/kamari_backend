@@ -130,9 +130,9 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 		}
 	}
 
-	var dtoItem []dto.MerchantProducts
+	var dtoItem []dto.DtoProducts
 	for _, modelData := range models {
-		temp := dto.MerchantProducts{
+		temp := dto.DtoProducts{
 			ID:           modelData.Id,
 			Title:        modelData.Name,
 			ThumbnailURL: modelData.ThumbnailUrl,

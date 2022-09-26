@@ -7,6 +7,7 @@ import (
 
 type MerchantRepository interface {
 	GetMerchantDetail(username string) (model.Merchant, error)
+	GetMerchantDetailById(id uint64) (model.Merchant, error)
 }
 
 type merchantRepository struct {
@@ -29,6 +30,21 @@ func (m merchantRepository) GetMerchantDetail(username string) (model.Merchant, 
 		Joins("User").
 		Joins("UserAddress").
 		Where(`"User"."username" = ?`, username).
+		First(&merchant).Error
+
+	if err != nil {
+		return merchant, err
+	}
+
+	return merchant, nil
+}
+
+func (m merchantRepository) GetMerchantDetailById(id uint64) (model.Merchant, error) {
+	var merchant model.Merchant
+	err := m.db.
+		Joins("User").
+		Joins("UserAddress").
+		Where(`"merchants"."id" = ?`, id).
 		First(&merchant).Error
 
 	if err != nil {
