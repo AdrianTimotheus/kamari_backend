@@ -53,6 +53,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/provinces", h.GetAllProvinces, middleware.ErrorHandler)
 		api.GET("/carts/hover", middleware.AuthorizeJWT, h.GetCartHoverItems, middleware.ErrorHandler)
 		api.GET("/sellers/:username", h.GetSellerDetail, middleware.ErrorHandler)
+		api.GET("/merchant/:username/products", h.GetSellerProduct, middleware.ErrorHandler)
 		api.GET("/marketplace/promo/banners", h.GetMarketplacePromoBanner, middleware.ErrorHandler)
 	}
 

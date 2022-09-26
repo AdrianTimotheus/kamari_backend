@@ -25,7 +25,7 @@ func NewCityRepository(c CRConfig) CityRepository {
 
 func (c cityRepository) GetCity(id uint64) (model.City, error) {
 	var city model.City
-	err := c.db.Where("id = ?", id).First(&city).Error
+	err := c.db.Joins("Province").Where("cities.id = ?", id).First(&city).Error
 	if err != nil {
 		return city, err
 	}

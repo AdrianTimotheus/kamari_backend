@@ -2,14 +2,17 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"kamari.com/dto"
 	"kamari.com/httperror"
 	"kamari.com/repository"
+	"sort"
 )
 
 type MerchantService interface {
 	GetMerchantDetail(username string) (*dto.MerchantDetailResponse, error)
+	GetMerchantProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetMerchantProductsResponse, error)
 }
 
 type merchantService struct {
@@ -72,4 +75,118 @@ func (m merchantService) GetMerchantDetail(username string) (*dto.MerchantDetail
 	}
 
 	return merchant, nil
+}
+
+func (m merchantService) GetMerchantProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetMerchantProductsResponse, error) {
+	var dtoResp dto.GetMerchantProductsResponse
+	totalRecord, err := m.productRepository.GetCountMerchantProducts(username)
+	if err != nil {
+		return nil, httperror.InternalServerError(err.Error())
+	}
+
+	if totalRecord%20 == 0 {
+		dtoResp.TotalPage = int(totalRecord / 20)
+	} else {
+		dtoResp.TotalPage = (int(totalRecord / 20)) + 1
+	}
+
+	merchantModel, err := m.merchantRepository.GetMerchantDetail(username)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+		default:
+			return nil, httperror.InternalServerError(err.Error())
+		}
+	}
+
+	cityModel, err := m.cityRepository.GetCity(merchantModel.UserAddress.CityId)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+		default:
+			return nil, httperror.InternalServerError(err.Error())
+		}
+	}
+
+	if payload.Page <= 0 {
+		payload.Page = 1
+	}
+	pageOffset := (payload.Page * 20) - 20
+	var orderBy string
+	switch payload.SortBy {
+	case "latest":
+		orderBy = "created_at DESC"
+	case "oldest":
+		orderBy = "created_at ASC"
+	default:
+		orderBy = ""
+	}
+
+	models, err := m.productRepository.GetMerchantProducts(merchantModel.Id, pageOffset, orderBy)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+		default:
+			return nil, httperror.InternalServerError(err.Error())
+		}
+	}
+
+	var dtoItem []dto.MerchantProducts
+	for _, modelData := range models {
+		temp := dto.MerchantProducts{
+			ID:           modelData.Id,
+			Title:        modelData.Name,
+			ThumbnailURL: modelData.ThumbnailUrl,
+			ItemSold:     modelData.UnitSold,
+			ProvinceName: cityModel.Province.Name,
+			CityName:     cityModel.Name,
+			MerchantName: merchantModel.Name,
+		}
+		dtoItem = append(dtoItem, temp)
+	}
+
+	for i, _ := range dtoItem {
+		score, err := m.productRepository.GetProductReviewScore(dtoItem[i].ID)
+		if err != nil {
+			return nil, httperror.InternalServerError(err.Error())
+		}
+		dtoItem[i].ReviewScore = score
+	}
+
+	for i, _ := range dtoItem {
+		model, err := m.productRepository.GetProductFirstVariant(dtoItem[i].ID)
+		if err != nil {
+			switch {
+			case errors.Is(err, gorm.ErrRecordNotFound):
+				return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+			default:
+				return nil, httperror.InternalServerError(err.Error())
+			}
+		}
+		dtoItem[i].Price = model.Price
+	}
+
+	switch payload.SortBy {
+	case "lowestPrice":
+		sort.Slice(dtoItem, func(i, j int) bool {
+			return dtoItem[i].Price < dtoItem[j].Price
+		})
+		for _, v := range dtoItem {
+			fmt.Println(v.Price)
+		}
+	case "highestPrice":
+		sort.Slice(dtoItem, func(i, j int) bool {
+			return dtoItem[i].Price > dtoItem[j].Price
+		})
+		for _, v := range dtoItem {
+			fmt.Println(v.Price)
+		}
+	}
+
+	dtoResp.Page = payload.Page
+	dtoResp.Products = dtoItem
+	return &dtoResp, nil
 }
