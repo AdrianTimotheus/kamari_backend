@@ -12,6 +12,7 @@ type ProductRepository interface {
 	GetCountMerchantProducts(username string) (int64, error)
 	GetProductReviewScore(productID uint64) (int, error)
 	GetProductFirstVariant(productID uint64) (*model.ProductVariants, error)
+	GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string) ([]model.Product, error)
 }
 
 type productRepository struct {
@@ -83,4 +84,22 @@ func (c productRepository) GetProductFirstVariant(productID uint64) (*model.Prod
 		return nil, err
 	}
 	return &pvModel, nil
+}
+
+func (c productRepository) GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string) ([]model.Product, error) {
+	fmt.Println(pageOffset)
+	var products []model.Product
+	ilikeStatement := fmt.Sprintf("products.name ilike '%%%v%%'", keyword)
+	err := c.db.
+		Where("merchant_id=?", merchantID).
+		Where(ilikeStatement).
+		Offset(pageOffset).
+		Limit(20).
+		Order(orderBy).
+		Order("unit_sold DESC").
+		Find(&products).Error
+	if err != nil {
+		return nil, err
+	}
+	return products, nil
 }
