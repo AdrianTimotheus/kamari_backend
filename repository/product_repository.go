@@ -13,6 +13,7 @@ type ProductRepository interface {
 	GetProductReviewScore(productID uint64) (int, error)
 	GetProductFirstVariant(productID uint64) (*model.ProductVariants, error)
 	GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string) ([]model.Product, error)
+	GetTopSellProduct() ([]model.Product, error)
 }
 
 type productRepository struct {
@@ -102,4 +103,17 @@ func (c productRepository) GetSearchProducts(merchantID uint64, pageOffset int, 
 		return nil, err
 	}
 	return products, nil
+}
+
+func (c productRepository) GetTopSellProduct() ([]model.Product, error) {
+	var models []model.Product
+	err := c.db.
+		Joins("Merchant").
+		Order("unit_sold DESC").
+		Limit(20).
+		Find(&models).Error
+	if err != nil {
+		return nil, err
+	}
+	return models, nil
 }

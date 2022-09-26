@@ -1,12 +1,12 @@
 package dto
 
 type GetMerchantProductsResponse struct {
-	Page      int                `json:"page"`
-	TotalPage int                `json:"total_page"`
-	Products  []MerchantProducts `json:"products"`
+	Page      int           `json:"page"`
+	TotalPage int           `json:"total_page"`
+	Products  []DtoProducts `json:"products"`
 }
 
-type MerchantProducts struct {
+type DtoProducts struct {
 	ID           uint64 `json:"id"`
 	Title        string `json:"title"`
 	Price        uint64 `json:"price"`
