@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	"kamari.com/dto"
 	"kamari.com/httperror"
+	"kamari.com/model"
 	"kamari.com/repository"
 	"sort"
 )
@@ -79,16 +80,6 @@ func (m merchantService) GetMerchantDetail(username string) (*dto.MerchantDetail
 
 func (m merchantService) GetMerchantProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetMerchantProductsResponse, error) {
 	var dtoResp dto.GetMerchantProductsResponse
-	totalRecord, err := m.productRepository.GetCountMerchantProducts(username)
-	if err != nil {
-		return nil, httperror.InternalServerError(err.Error())
-	}
-
-	if totalRecord%20 == 0 {
-		dtoResp.TotalPage = int(totalRecord / 20)
-	} else {
-		dtoResp.TotalPage = (int(totalRecord / 20)) + 1
-	}
 
 	merchantModel, err := m.merchantRepository.GetMerchantDetail(username)
 	if err != nil {
@@ -123,8 +114,13 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 	default:
 		orderBy = ""
 	}
+	var models []model.Product
+	if payload.Search != "" {
+		models, err = m.productRepository.GetSearchProducts(merchantModel.Id, pageOffset, orderBy, payload.Search)
+	} else {
+		models, err = m.productRepository.GetMerchantProducts(merchantModel.Id, pageOffset, orderBy)
+	}
 
-	models, err := m.productRepository.GetMerchantProducts(merchantModel.Id, pageOffset, orderBy)
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -184,6 +180,14 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 		for _, v := range dtoItem {
 			fmt.Println(v.Price)
 		}
+	}
+
+	totalRecord := len(models)
+
+	if totalRecord%20 == 0 {
+		dtoResp.TotalPage = totalRecord / 20
+	} else {
+		dtoResp.TotalPage = (totalRecord / 20) + 1
 	}
 
 	dtoResp.Page = payload.Page
