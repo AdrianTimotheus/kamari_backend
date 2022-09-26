@@ -112,7 +112,7 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 	case "oldest":
 		orderBy = "created_at ASC"
 	default:
-		orderBy = ""
+		orderBy = "unit_sold DESC"
 	}
 	var models []model.Product
 	if payload.Search != "" {
