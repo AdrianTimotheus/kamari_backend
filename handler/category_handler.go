@@ -1,10 +1,11 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"kamari.com/helper"
 	"kamari.com/httperror"
-	"net/http"
 )
 
 func (h Handler) GetCategories(c *gin.Context) {
@@ -20,8 +21,13 @@ func (h Handler) GetCategories(c *gin.Context) {
 	}
 
 	categories, metadata, err := h.categoryService.GetCategories(query.Keyword, &query.Filters)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"__metadata": metadata,
-		"products":   categories,
+		"categories": categories,
 	})
 }
