@@ -54,6 +54,10 @@ func Init() {
 		DB: db.Get(),
 	})
 
+	walletTransactionRepository := repository.NewWalletTransaction(repository.WTConfig{
+		DB: db.Get(),
+	})
+
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository: userRepository,
@@ -88,7 +92,8 @@ func Init() {
 	})
 
 	walletService := service.NewWalletService(service.WSConfig{
-		WalletRepository: walletRepository,
+		WalletRepository:            walletRepository,
+		WalletTransactionRepository: walletTransactionRepository,
 	})
 
 	r := NewRouter(RouterConfig{
