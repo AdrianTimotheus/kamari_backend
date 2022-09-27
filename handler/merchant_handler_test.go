@@ -2,15 +2,16 @@ package handler_test
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"kamari.com/dto"
 	"kamari.com/httperror"
 	"kamari.com/mocks"
 	"kamari.com/server"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestHandler_GetSellerDetail(t *testing.T) {
@@ -24,7 +25,7 @@ func TestHandler_GetSellerDetail(t *testing.T) {
 		rr := httptest.NewRecorder()
 		expectedResponse, _ := json.Marshal(httperror.BadRequestError("failed to get value from the given param key", "INVALID_PARAM"))
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/sellers/ ", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/merchants/ ", nil)
 		router.ServeHTTP(rr, req)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
@@ -64,7 +65,7 @@ func TestHandler_GetSellerDetail(t *testing.T) {
 		expectedResponse, _ := json.Marshal(res)
 		merchantService.On("GetMerchantDetail", "goodseller").Return(res, nil)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/sellers/goodseller", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/merchants/goodseller", nil)
 		router.ServeHTTP(rr, req)
 
 		assert.Equal(t, http.StatusOK, rr.Code)

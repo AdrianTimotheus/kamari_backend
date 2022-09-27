@@ -1,10 +1,11 @@
 package server
 
 import (
+	"log"
+
 	"kamari.com/db"
 	"kamari.com/repository"
 	"kamari.com/service"
-	"log"
 )
 
 func Init() {
@@ -20,7 +21,15 @@ func Init() {
 	productRepository := repository.NewProductRepository(repository.ProdConfig{
 		DB: db.Get(),
 	})
-
+	productVariantRepository := repository.NewProductVariantRepository(repository.PVConfig{
+		DB: db.Get(),
+	})
+	categoryRepositoy := repository.NewCategoryRepository(repository.CaRConfig{
+		DB: db.Get(),
+	})
+	orderDetailRepository := repository.NewOrderDetailRepository(repository.ODRConfig{
+		DB: db.Get(),
+	})
 	merchantFollowerRepository := repository.NewMFRepository(repository.MFConfig{
 		DB: db.Get(),
 	})
@@ -49,7 +58,16 @@ func Init() {
 	userService := service.NewUserService(service.USConfig{
 		UserRepository: userRepository,
 	})
-
+	productService := service.NewProductService(service.PConfig{
+		ProductRepository:        productRepository,
+		ProductVariantRepository: productVariantRepository,
+		OrderDetailsRepository:   orderDetailRepository,
+		CityRepository:           cityRepository,
+		MerchantRepository:       merchantRepository,
+	})
+	categoryService := service.NewCategoryService(service.CaSConfig{
+		CategoryRepository: categoryRepositoy,
+	})
 	merchantService := service.NewMerchantService(service.MSConfig{
 		MerchantRepository:         merchantRepository,
 		CityRepository:             cityRepository,
@@ -69,12 +87,6 @@ func Init() {
 		CartRepository: cartRepository,
 	})
 
-	productService := service.NewProductService(service.PConfig{
-		ProductRepository:  productRepository,
-		MerchantRepository: merchantRepository,
-		CityRepository:     cityRepository,
-	})
-
 	walletService := service.NewWalletService(service.WSConfig{
 		WalletRepository: walletRepository,
 	})
@@ -82,11 +94,12 @@ func Init() {
 	r := NewRouter(RouterConfig{
 		UserService:        userService,
 		ProvinceService:    provinceService,
-		CartService:        cartService,
 		MerchantService:    merchantService,
-		MarketplaceService: marketplaceService,
 		ProductService:     productService,
+		CartService:        cartService,
+		MarketplaceService: marketplaceService,
 		WalletService:      walletService,
+		CategoryService:    categoryService,
 	})
 
 	log.Fatal(r.Run())

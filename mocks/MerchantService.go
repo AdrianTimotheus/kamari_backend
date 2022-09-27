@@ -35,6 +35,29 @@ func (_m *MerchantService) GetMerchantDetail(username string) (*dto.MerchantDeta
 	return r0, r1
 }
 
+// GetMerchantProducts provides a mock function with given fields: username, payload
+func (_m *MerchantService) GetMerchantProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetMerchantProductsResponse, error) {
+	ret := _m.Called(username, payload)
+
+	var r0 *dto.GetMerchantProductsResponse
+	if rf, ok := ret.Get(0).(func(string, dto.GetMerchantProductRequest) *dto.GetMerchantProductsResponse); ok {
+		r0 = rf(username, payload)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dto.GetMerchantProductsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, dto.GetMerchantProductRequest) error); ok {
+		r1 = rf(username, payload)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewMerchantService interface {
 	mock.TestingT
 	Cleanup(func())

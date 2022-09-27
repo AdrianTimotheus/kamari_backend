@@ -67,6 +67,7 @@ func (m merchantService) GetMerchantDetail(username string) (*dto.MerchantDetail
 
 	merchant := &dto.MerchantDetailResponse{
 		Name:              md.Name,
+		Username:          md.User.Username,
 		Description:       md.Description,
 		ProfilePicture:    md.User.PicUrl,
 		ShopLocation:      ml.Name,

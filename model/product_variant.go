@@ -2,7 +2,7 @@ package model
 
 import "gorm.io/gorm"
 
-type ProductVariants struct {
+type ProductVariant struct {
 	gorm.Model      `json:"-"`
 	ID              uint64 `json:"id"`
 	MainVariant     string `json:"main_variant"`

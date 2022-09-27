@@ -11,7 +11,7 @@ const (
 	_ RoleId = iota
 	RoleAdmin
 	RoleBuyer
-	RoleSeller
+	RoleMerchant
 )
 
 type User struct {

@@ -1,13 +1,14 @@
 package dto
 
 import (
-	"kamari.com/model"
 	"time"
+
+	"kamari.com/model"
 )
 
 type RegisterRequest struct {
 	Name        string `json:"name" binding:"required"`
-	Username    string `json:"username" binding:"required,min=3,alphanum"`
+	Username    string `json:"username" binding:"required,alphanum,min=3"`
 	Email       string `json:"email" binding:"required,email"`
 	Password    string `json:"password" binding:"required,min=8"`
 	DateOfBirth int64  `json:"date_of_birth,omitempty"`
