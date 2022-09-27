@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+
 	"kamari.com/service"
 )
 
@@ -13,6 +14,7 @@ type Handler struct {
 	marketplaceService service.MarketplaceService
 	productService     service.ProductService
 	walletService      service.WalletService
+	categoryService    service.CategoryService
 }
 
 type HConfig struct {
@@ -23,6 +25,7 @@ type HConfig struct {
 	MarketplaceService service.MarketplaceService
 	ProductService     service.ProductService
 	WalletService      service.WalletService
+	CategoryService    service.CategoryService
 }
 
 func New(h HConfig) Handler {
@@ -34,6 +37,7 @@ func New(h HConfig) Handler {
 		marketplaceService: h.MarketplaceService,
 		productService:     h.ProductService,
 		walletService:      h.WalletService,
+		categoryService:    h.CategoryService,
 	}
 }
 

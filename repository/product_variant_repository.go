@@ -5,13 +5,32 @@ import (
 	"kamari.com/model"
 )
 
-type ProductVariant interface {
-	GetProductVariantByID(id int) (model.ProductVariants, error)
+type ProductVariantRepository interface {
+	GetProductVariants(productId uint64) ([]model.ProductVariant, error)
+	//GetProductVariantByID(id int) (model.ProductVariant, error)
 }
 
-type productVariant struct {
+type productVariantRepository struct {
 	db *gorm.DB
 }
 
 type PVConfig struct {
+	DB *gorm.DB
+}
+
+func NewProductVariantRepository(c PVConfig) ProductVariantRepository {
+	return productVariantRepository{
+		db: c.DB,
+	}
+}
+
+func (p productVariantRepository) GetProductVariants(productId uint64) ([]model.ProductVariant, error) {
+	var variants []model.ProductVariant
+
+	err := p.db.Where("product_id = ?", productId).Find(&variants).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return variants, nil
 }

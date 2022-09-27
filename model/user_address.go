@@ -10,6 +10,7 @@ type UserAddress struct {
 	Phone         string `json:"phone"`
 	UserId        uint64 `json:"user_id"`
 	CityId        uint64 `json:"city_id"`
+	City          City
 }
 
 func (u UserAddress) TableName() string {

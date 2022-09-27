@@ -4,6 +4,7 @@ import "time"
 
 type MerchantDetailResponse struct {
 	Name              string    `json:"name"`
+	Username          string    `json:"username"`
 	Description       string    `json:"description"`
 	ProfilePicture    string    `json:"profile_picture"`
 	FollowerCount     uint64    `json:"follower_count"`

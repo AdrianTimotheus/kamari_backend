@@ -26,6 +26,29 @@ func (_m *UserService) CreateNewUser(req *dto.RegisterRequest) error {
 	return r0
 }
 
+// Login provides a mock function with given fields: req
+func (_m *UserService) Login(req *dto.LoginRequest) (*dto.TokenResponse, error) {
+	ret := _m.Called(req)
+
+	var r0 *dto.TokenResponse
+	if rf, ok := ret.Get(0).(func(*dto.LoginRequest) *dto.TokenResponse); ok {
+		r0 = rf(req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dto.TokenResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*dto.LoginRequest) error); ok {
+		r1 = rf(req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewUserService interface {
 	mock.TestingT
 	Cleanup(func())

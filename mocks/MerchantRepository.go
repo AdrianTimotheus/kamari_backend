@@ -33,6 +33,27 @@ func (_m *MerchantRepository) GetMerchantDetail(username string) (model.Merchant
 	return r0, r1
 }
 
+// GetMerchantDetailById provides a mock function with given fields: id
+func (_m *MerchantRepository) GetMerchantDetailById(id uint64) (model.Merchant, error) {
+	ret := _m.Called(id)
+
+	var r0 model.Merchant
+	if rf, ok := ret.Get(0).(func(uint64) model.Merchant); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(model.Merchant)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewMerchantRepository interface {
 	mock.TestingT
 	Cleanup(func())

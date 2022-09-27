@@ -2,24 +2,26 @@ package server
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"kamari.com/handler"
 	"kamari.com/middleware"
 	"kamari.com/service"
-	"net/http"
-	"os"
-	"time"
 )
 
 type RouterConfig struct {
 	UserService        service.UserService
 	ProvinceService    service.ProvinceService
-	CartService        service.CartService
 	MerchantService    service.MerchantService
+	CartService        service.CartService
 	MarketplaceService service.MarketplaceService
 	ProductService     service.ProductService
 	WalletService      service.WalletService
+	CategoryService    service.CategoryService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -36,11 +38,12 @@ func NewRouter(c RouterConfig) *gin.Engine {
 	h := handler.New(handler.HConfig{
 		UserService:        c.UserService,
 		ProvinceService:    c.ProvinceService,
-		CartService:        c.CartService,
 		MerchantService:    c.MerchantService,
-		MarketplaceService: c.MarketplaceService,
 		ProductService:     c.ProductService,
+		CartService:        c.CartService,
+		MarketplaceService: c.MarketplaceService,
 		WalletService:      c.WalletService,
+		CategoryService:    c.CategoryService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -55,9 +58,12 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/users", h.Register, middleware.ErrorHandler)
 		api.POST("/login", h.Login, middleware.ErrorHandler)
 		api.GET("/provinces", h.GetAllProvinces, middleware.ErrorHandler)
+		api.GET("/products", h.GetProducts, middleware.ErrorHandler)
+		api.GET("/categories", h.GetCategories, middleware.ErrorHandler)
+		api.GET("/merchants/:username", h.GetMerchantDetail, middleware.ErrorHandler)
 		api.GET("/carts/hover", middleware.AuthorizeJWT, h.GetCartHoverItems, middleware.ErrorHandler)
-		api.GET("/sellers/:username", h.GetSellerDetail, middleware.ErrorHandler)
-		api.GET("/sellers/:username/products", h.GetSellerProduct, middleware.ErrorHandler)
+		api.GET("/sellers/:username", h.GetMerchantDetail, middleware.ErrorHandler)
+		api.GET("/merchant/:username/products", h.GetSellerProduct, middleware.ErrorHandler)
 		api.GET("/marketplace/promo/banners", h.GetMarketplacePromoBanner, middleware.ErrorHandler)
 		api.GET("/products/recommend", h.GetRecommendedProduct, middleware.ErrorHandler)
 		api.GET("/wallets", middleware.AuthorizeJWT, h.GetWalletDetail, middleware.ErrorHandler)
