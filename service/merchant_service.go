@@ -105,7 +105,7 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 	if payload.Page <= 0 {
 		payload.Page = 1
 	}
-	pageOffset := (payload.Page * 20) - 20
+	pageOffset := (payload.Page * payload.Limit) - payload.Limit
 	var orderBy string
 	switch payload.SortBy {
 	case "latest":
@@ -117,9 +117,9 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 	}
 	var models []model.Product
 	if payload.Search != "" {
-		models, err = m.productRepository.GetSearchProducts(merchantModel.Id, pageOffset, orderBy, payload.Search)
+		models, err = m.productRepository.GetSearchProducts(merchantModel.Id, pageOffset, orderBy, payload.Search, payload.Limit)
 	} else {
-		models, err = m.productRepository.GetMerchantProducts(merchantModel.Id, pageOffset, orderBy)
+		models, err = m.productRepository.GetMerchantProducts(merchantModel.Id, pageOffset, orderBy, payload.Limit)
 	}
 
 	if err != nil {
@@ -184,12 +184,12 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 		}
 	}
 
-	totalRecord := len(models)
+	totalRecord, _ := m.productRepository.GetCountMerchantProduct(username)
 
-	if totalRecord%20 == 0 {
-		dtoResp.TotalPage = totalRecord / 20
+	if int(totalRecord)%payload.Limit == 0 {
+		dtoResp.TotalPage = int(totalRecord) / payload.Limit
 	} else {
-		dtoResp.TotalPage = (totalRecord / 20) + 1
+		dtoResp.TotalPage = (int(totalRecord) / payload.Limit) + 1
 	}
 
 	dtoResp.Page = payload.Page
