@@ -15,6 +15,7 @@ type Handler struct {
 	productService           service.ProductService
 	walletService            service.WalletService
 	categoryService          service.CategoryService
+	productReviewService     service.ProductReviewService
 	walletTransactionService service.WalletTransactionService
 }
 
@@ -27,6 +28,7 @@ type HConfig struct {
 	ProductService           service.ProductService
 	WalletService            service.WalletService
 	CategoryService          service.CategoryService
+	ProductReviewService     service.ProductReviewService
 	WalletTransactionService service.WalletTransactionService
 }
 
@@ -40,6 +42,7 @@ func New(h HConfig) Handler {
 		productService:           h.ProductService,
 		walletService:            h.WalletService,
 		categoryService:          h.CategoryService,
+		productReviewService:     h.ProductReviewService,
 		walletTransactionService: h.WalletTransactionService,
 	}
 }

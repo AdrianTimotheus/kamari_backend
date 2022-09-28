@@ -22,6 +22,7 @@ type RouterConfig struct {
 	ProductService           service.ProductService
 	WalletService            service.WalletService
 	CategoryService          service.CategoryService
+	ProductReviewService     service.ProductReviewService
 	WalletTransactionService service.WalletTransactionService
 }
 
@@ -45,6 +46,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		MarketplaceService:       c.MarketplaceService,
 		WalletService:            c.WalletService,
 		CategoryService:          c.CategoryService,
+		ProductReviewService:     c.ProductReviewService,
 		WalletTransactionService: c.WalletTransactionService,
 	})
 
@@ -61,14 +63,14 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/users", h.Register, middleware.ErrorHandler)
 		api.POST("/login", h.Login, middleware.ErrorHandler)
 		api.GET("/provinces", h.GetAllProvinces, middleware.ErrorHandler)
-		api.GET("/products", h.GetProducts, middleware.ErrorHandler)
-		api.GET("/categories", h.GetCategories, middleware.ErrorHandler)
-		api.GET("/merchants/:username", h.GetMerchantDetail, middleware.ErrorHandler)
-		api.GET("/products/:id", h.GetProductDetail, middleware.ErrorHandler)
 		api.GET("/sellers/:username", h.GetMerchantDetail, middleware.ErrorHandler)
 		api.GET("/sellers/:username/products", h.GetSellerProduct, middleware.ErrorHandler)
 		api.GET("/marketplace/promo/banners", h.GetMarketplacePromoBanner, middleware.ErrorHandler)
+		api.GET("/products", h.GetProducts, middleware.ErrorHandler)
 		api.GET("/products/recommend", h.GetRecommendedProduct, middleware.ErrorHandler)
+		api.GET("/products/:id/reviews", h.GetProductReviews, middleware.ErrorHandler)
+		api.GET("/products/:id", h.GetProductDetail, middleware.ErrorHandler)
+		api.GET("/categories", h.GetCategories, middleware.ErrorHandler)
 		// need auth
 		api.GET("/carts/hover", middleware.AuthorizeJWT, h.GetCartHoverItems, middleware.ErrorHandler)
 		api.GET("/wallets", middleware.AuthorizeJWT, h.GetWalletDetail, middleware.ErrorHandler)

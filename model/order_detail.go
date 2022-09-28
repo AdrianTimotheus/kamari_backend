@@ -10,5 +10,4 @@ type OrderDetail struct {
 	ProductVariantId uint64
 	CourierRouteId   uint64
 	ProductReview    ProductReview
-	//ProductVariants  []ProductVariant
 }

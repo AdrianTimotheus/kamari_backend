@@ -13,7 +13,7 @@ import (
 
 var (
 	ErrParamNotFound     = errors.New("failed to get value from the given param key")
-	errInvalidReturnType = errors.New("failed to get value from the given param key")
+	ErrInvalidReturnType = errors.New("failed to get value from the given param key")
 )
 
 func GetParam(c *gin.Context, key string, returnType string) (interface{}, error) {
@@ -33,7 +33,7 @@ func GetParam(c *gin.Context, key string, returnType string) (interface{}, error
 		}
 		return n, nil
 	default:
-		return nil, errInvalidReturnType
+		return nil, ErrInvalidReturnType
 	}
 }
 

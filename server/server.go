@@ -33,6 +33,9 @@ func Init() {
 	merchantFollowerRepository := repository.NewMFRepository(repository.MFConfig{
 		DB: db.Get(),
 	})
+	productReviewRepository := repository.NewProductReviewRepository(repository.PRRConfig{
+		DB: db.Get(),
+	})
 
 	cityRepository := repository.NewCityRepository(repository.CRConfig{
 		DB: db.Get(),
@@ -78,6 +81,11 @@ func Init() {
 		ProductRepository:          productRepository,
 		MerchantFollowerRepository: merchantFollowerRepository,
 	})
+	productReviewService := service.NewProductReviewService(service.PRSConfig{
+		ProductReviewRepository:  productReviewRepository,
+		OrderDetailRepository:    orderDetailRepository,
+		ProductVariantRepository: productVariantRepository,
+	})
 
 	provinceService := service.NewProvinceService(service.PSConfig{
 		ProvinceRepository: provinceRepository,
@@ -110,6 +118,7 @@ func Init() {
 		MarketplaceService:       marketplaceService,
 		WalletService:            walletService,
 		CategoryService:          categoryService,
+		ProductReviewService:     productReviewService,
 		WalletTransactionService: walletTransactionService,
 	})
 

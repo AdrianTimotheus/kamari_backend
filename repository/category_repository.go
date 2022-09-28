@@ -54,5 +54,7 @@ func (c categoryRepository) GetCategories(keyword string, filters *helper.Filter
 	}
 
 	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
+	fmt.Println("count", count)
+	fmt.Println("metadata", metadata)
 	return categories, &metadata, nil
 }
