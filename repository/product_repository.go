@@ -16,6 +16,7 @@ type ProductRepository interface {
 	GetProductFirstVariant(productID uint64) (*model.ProductVariant, error)
 	GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string) ([]model.Product, error)
 	GetTopSellProduct() ([]model.Product, error)
+	GetProductDetails(productId uint64) (*model.Product, error)
 }
 
 type productRepository struct {
@@ -186,4 +187,40 @@ func (p productRepository) GetTopSellProduct() ([]model.Product, error) {
 		return nil, err
 	}
 	return models, nil
+}
+
+func (p productRepository) GetProductDetails(productId uint64) (*model.Product, error) {
+	var product *model.Product
+	err := p.db.
+		Preload("Merchant").
+		Preload("Category").
+		Preload("ProductPhotos").
+		Preload("ProductVariants").
+		Where("id = ?", productId).
+		First(&product).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return product, err
+}
+
+func (p productRepository) GetProductReview(productId uint64) (int, error) {
+	var score int
+	err := p.db.
+		Raw(`SELECT COALESCE(ROUND(avg(score)),0) AS score 
+				from product_reviews where order_detail_id in (
+					select id 
+					from order_details
+					where order_details.product_variant_id in (
+						select id 
+						from product_variants
+						where product_variants.product_id = ?
+					)
+				)`, productId).Scan(&score).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return score, nil
 }
