@@ -16,6 +16,7 @@ import (
 type ProductService interface {
 	GetProducts(keyword string, filters *helper.Filters) ([]dto.ProductResponse, *helper.Metadata, error)
 	GetTopSellerProduct() ([]dto.DtoProducts, error)
+	GetProductDetail(productId uint64) (*dto.ProductDetailResponse, error)
 }
 
 type productService struct {
@@ -193,4 +194,44 @@ func (p productService) GetTopSellerProduct() ([]dto.DtoProducts, error) {
 		dtoResponse[i].ReviewScore = productScore
 	}
 	return dtoResponse, nil
+}
+
+func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailResponse, error) {
+	product, err := p.productRepository.GetProductDetails(productId)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+		default:
+			return nil, err
+		}
+	}
+
+	var stock int
+	for _, variant := range product.ProductVariants {
+		stock += variant.Stock
+	}
+
+	productResponse := &dto.ProductDetailResponse{
+		Id:                      product.Id,
+		Title:                   product.Name,
+		Description:             product.Description,
+		MinimumOrder:            product.MinimumOrder,
+		ThumbnailUrl:            product.ThumbnailUrl,
+		IsHazardous:             product.IsHazardous,
+		Weight:                  product.Weight,
+		ViewCount:               product.ViewCount,
+		UnitSold:                product.UnitSold,
+		FavouriteCount:          product.FavouriteCount,
+		Stock:                   stock,
+		Availability:            product.Availability,
+		SellerCategoryId:        product.SellerCategoryId,
+		CategoryId:              product.CategoryId,
+		ComplementaryCategoryId: product.ComplementaryCategoryId,
+		MerchantID:              product.MerchantID,
+		ProductPhotos:           product.ProductPhotos,
+		ProductVariants:         product.ProductVariants,
+	}
+
+	return productResponse, nil
 }

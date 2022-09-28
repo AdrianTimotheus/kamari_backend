@@ -19,7 +19,9 @@ type Product struct {
 	CategoryId              uint64
 	SubcategoryId           uint64
 	ComplementaryCategoryId uint64
-	Category                Category
 	MerchantID              uint64
 	Merchant                Merchant
+	Category                Category
+	ProductPhotos           []ProductPhoto
+	ProductVariants         []ProductVariant
 }

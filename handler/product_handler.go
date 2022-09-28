@@ -35,3 +35,19 @@ func (h Handler) GetRecommendedProduct(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, resp)
 }
+
+func (h Handler) GetProductDetail(c *gin.Context) {
+	productId, err := helper.GetParam(c, "id", "int")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "INVALID_PARAM"))
+		return
+	}
+
+	product, err := h.productService.GetProductDetail(uint64(productId.(int)))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, product)
+}
