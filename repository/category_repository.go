@@ -44,8 +44,12 @@ func (c categoryRepository) GetCategories(keyword string, filters *helper.Filter
 		return nil, nil, res.Error
 	}
 
-	res = res.Count(&count)
-	if res.Error != nil {
+	err := c.db.
+		Table("categories").
+		Select("COUNT(*) OVER() AS COUNT").
+		Limit(1).
+		Scan(&count).Error
+	if err != nil {
 		return nil, nil, res.Error
 	}
 
