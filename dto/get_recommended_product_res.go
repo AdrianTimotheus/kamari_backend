@@ -10,4 +10,5 @@ type GetRecommendedProductsResponse struct {
 	MerchantName string `json:"merchant"`
 	ItemSold     uint64 `json:"item_sold"`
 	ReviewScore  int    `json:"review_score"`
+	ReviewCount  int    `json:"review_count"`
 }

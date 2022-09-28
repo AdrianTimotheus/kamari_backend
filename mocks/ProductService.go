@@ -47,15 +47,15 @@ func (_m *ProductService) GetProducts(keyword string, filters *helper.Filters) (
 }
 
 // GetTopSellerProduct provides a mock function with given fields:
-func (_m *ProductService) GetTopSellerProduct() ([]dto.DtoProducts, error) {
+func (_m *ProductService) GetTopSellerProduct() ([]dto.Product, error) {
 	ret := _m.Called()
 
-	var r0 []dto.DtoProducts
-	if rf, ok := ret.Get(0).(func() []dto.DtoProducts); ok {
+	var r0 []dto.Product
+	if rf, ok := ret.Get(0).(func() []dto.Product); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]dto.DtoProducts)
+			r0 = ret.Get(0).([]dto.Product)
 		}
 	}
 

@@ -14,6 +14,7 @@ type ProductResponse struct {
 	MerchantId       uint64         `json:"merchant_id"`
 	MerchantUsername string         `json:"merchant_username"`
 	ReviewScore      int            `json:"review_score"`
+	ReviewCount      int            `json:"review_count"`
 	CategoryId       uint64         `json:"category_id"`
 	Category         model.Category `json:"category"`
 }

@@ -12,7 +12,7 @@ type ProductRepository interface {
 	GetAllProducts(keyword string, filters *helper.Filters) ([]model.ProductList, *helper.Metadata, error)
 	GetMerchantProducts(MerchantID uint64, pageOffset int, orderBy string) ([]model.Product, error)
 	GetCountMerchantProducts(username string) (int64, error)
-	GetProductReviewScore(productID uint64) (int, error)
+	GetProductReviewScore(productID uint64) (count int, score int, err error)
 	GetProductFirstVariant(productID uint64) (*model.ProductVariant, error)
 	GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string) ([]model.Product, error)
 	GetTopSellProduct() ([]model.Product, error)
@@ -108,24 +108,25 @@ func (p productRepository) GetAllProducts(keyword string, filters *helper.Filter
 	return products, &metadata, nil
 }
 
-func (p productRepository) GetProductReviewScore(productId uint64) (int, error) {
+func (p productRepository) GetProductReviewScore(productId uint64) (int, int, error) {
 	var score int
+	var count int
 	err := p.db.
-		Raw(`SELECT COALESCE(ROUND(avg(score)),0) AS score 
-				from product_reviews where order_detail_id in (
-					select id 
-					from order_details
-					where order_details.product_variant_id in (
-						select id 
-						from product_variants
-						where product_variants.product_id = ?
-					)
-				)`, productId).Scan(&score).Error
+		Raw(`SELECT count(product_reviews.id) AS count,COALESCE(ROUND(avg(score)),0) AS score
+from product_reviews where order_detail_id in (
+    select id
+    from order_details
+    where order_details.product_variant_id in (
+        select id
+        from product_variants
+        where product_variants.product_id = ?
+    )
+)`, productId).Row().Scan(&count, &score)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	return score, nil
+	return count, score, nil
 }
 func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int, orderBy string) ([]model.Product, error) {
 	fmt.Println(pageOffset)
