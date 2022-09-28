@@ -92,6 +92,7 @@ func (w walletService) GetWalletTransactionHistories(userModel model.User, paylo
 	}
 	for _, data := range wtModels {
 		var temp dto.TransactionRecord
+		temp.Id = data.Id
 		temp.SourceWallet = data.SrcWalletId
 		temp.DestinationWallet = data.DstWalletId
 		temp.Amount = data.Amount
