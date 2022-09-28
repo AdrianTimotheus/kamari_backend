@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgconn"
+	"gorm.io/gorm"
 	"kamari.com/config"
 	"kamari.com/dto"
 	"kamari.com/helper"
@@ -18,6 +19,7 @@ import (
 type UserService interface {
 	CreateNewUser(req *dto.RegisterRequest) error
 	Login(req *dto.LoginRequest) (*dto.TokenResponse, error)
+	CheckAuthPassword(payload dto.CheckAuthPassword, userId uint64) (bool, error)
 }
 
 type userService struct {
@@ -94,4 +96,18 @@ func (u userService) Login(req *dto.LoginRequest) (*dto.TokenResponse, error) {
 	}
 	token, err := u.generateJWTToken(user)
 	return token, err
+}
+
+func (u userService) CheckAuthPassword(payload dto.CheckAuthPassword, userId uint64) (bool, error) {
+	hashedPassword := fmt.Sprintf("%X", sha256.Sum256([]byte(payload.Password)))
+	_, err := u.userRepository.CheckPassword(userId, hashedPassword)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return false, httperror.BadRequestError(err.Error(), "NO_ROWS")
+		default:
+			return false, httperror.InternalServerError(err.Error())
+		}
+	}
+	return true, nil
 }
