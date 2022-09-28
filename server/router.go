@@ -14,14 +14,15 @@ import (
 )
 
 type RouterConfig struct {
-	UserService        service.UserService
-	ProvinceService    service.ProvinceService
-	MerchantService    service.MerchantService
-	CartService        service.CartService
-	MarketplaceService service.MarketplaceService
-	ProductService     service.ProductService
-	WalletService      service.WalletService
-	CategoryService    service.CategoryService
+	UserService              service.UserService
+	ProvinceService          service.ProvinceService
+	MerchantService          service.MerchantService
+	CartService              service.CartService
+	MarketplaceService       service.MarketplaceService
+	ProductService           service.ProductService
+	WalletService            service.WalletService
+	CategoryService          service.CategoryService
+	WalletTransactionService service.WalletTransactionService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -36,14 +37,15 @@ func NewRouter(c RouterConfig) *gin.Engine {
 	}))
 
 	h := handler.New(handler.HConfig{
-		UserService:        c.UserService,
-		ProvinceService:    c.ProvinceService,
-		MerchantService:    c.MerchantService,
-		ProductService:     c.ProductService,
-		CartService:        c.CartService,
-		MarketplaceService: c.MarketplaceService,
-		WalletService:      c.WalletService,
-		CategoryService:    c.CategoryService,
+		UserService:              c.UserService,
+		ProvinceService:          c.ProvinceService,
+		MerchantService:          c.MerchantService,
+		ProductService:           c.ProductService,
+		CartService:              c.CartService,
+		MarketplaceService:       c.MarketplaceService,
+		WalletService:            c.WalletService,
+		CategoryService:          c.CategoryService,
+		WalletTransactionService: c.WalletTransactionService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -71,6 +73,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/carts/hover", middleware.AuthorizeJWT, h.GetCartHoverItems, middleware.ErrorHandler)
 		api.GET("/wallets", middleware.AuthorizeJWT, h.GetWalletDetail, middleware.ErrorHandler)
 		api.GET("/wallets/histories", middleware.AuthorizeJWT, h.GetWalletTransactionHistories, middleware.ErrorHandler)
+		api.GET("/wallets/transactions", middleware.AuthorizeJWT, h.GetWalletTransactionDetail, middleware.ErrorHandler)
 	}
 
 	return router

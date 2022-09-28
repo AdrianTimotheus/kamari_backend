@@ -9,11 +9,11 @@ type WalletTransactionResponse struct {
 }
 
 type TransactionRecord struct {
-	Id                uint64 `json:"id"`
-	SourceWallet      uint64 `json:"source_wallet"`
-	DestinationWallet uint64 `json:"destination_wallet"`
-	Amount            uint64 `json:"amount"`
-	TransactionType   string `json:"transaction_type"`
-	Description       string `json:"description"`
-	DateOfTime        string `json:"date_of_time"`
+	Id              uint64     `json:"id"`
+	Source          WalletData `json:"source"`
+	Destination     WalletData `json:"destination"`
+	Amount          uint64     `json:"amount"`
+	TransactionType string     `json:"transaction_type"`
+	Description     string     `json:"description"`
+	DateOfTime      string     `json:"date_of_time"`
 }

@@ -96,15 +96,21 @@ func Init() {
 		WalletTransactionRepository: walletTransactionRepository,
 	})
 
+	walletTransactionService := service.NewWalletTransactionService(service.WTSConfig{
+		WalletTransactionRepository: walletTransactionRepository,
+		WalletRepository:            walletRepository,
+	})
+
 	r := NewRouter(RouterConfig{
-		UserService:        userService,
-		ProvinceService:    provinceService,
-		MerchantService:    merchantService,
-		ProductService:     productService,
-		CartService:        cartService,
-		MarketplaceService: marketplaceService,
-		WalletService:      walletService,
-		CategoryService:    categoryService,
+		UserService:              userService,
+		ProvinceService:          provinceService,
+		MerchantService:          merchantService,
+		ProductService:           productService,
+		CartService:              cartService,
+		MarketplaceService:       marketplaceService,
+		WalletService:            walletService,
+		CategoryService:          categoryService,
+		WalletTransactionService: walletTransactionService,
 	})
 
 	log.Fatal(r.Run())

@@ -9,6 +9,7 @@ type WalletTransactionRepository interface {
 	GetUserWalletTransaction(walletId uint64, dataOffset int) ([]model.WalletTransaction, error)
 	GetUserWalletTransactionByType(walletId uint64, dataOffset int, filter string) ([]model.WalletTransaction, error)
 	CountWalletTransactionRecords(walletId uint64) (int64, error)
+	GetWalletTransactionByID(TransactionID uint64) (*model.WalletTransaction, error)
 }
 
 type walletTransaction struct {
@@ -30,6 +31,7 @@ func (w walletTransaction) GetUserWalletTransaction(walletId uint64, dataOffset 
 		Where("src_wallet_id = ? OR dst_wallet_id = ?", walletId, walletId).
 		Order("id DESC").
 		Offset(dataOffset).
+		Limit(10).
 		Find(&models).Error
 	if err != nil {
 		return nil, err
@@ -62,4 +64,16 @@ func (w walletTransaction) CountWalletTransactionRecords(walletId uint64) (int64
 	}
 	return numOfRecords, nil
 
+}
+
+func (w walletTransaction) GetWalletTransactionByID(TransactionID uint64) (*model.WalletTransaction, error) {
+	var wTModel model.WalletTransaction
+	err := w.db.
+		Where("wallet_transactions.id=?", TransactionID).
+		Joins("TransactionType").
+		First(&wTModel).Error
+	if err != nil {
+		return nil, err
+	}
+	return &wTModel, nil
 }
