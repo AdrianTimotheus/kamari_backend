@@ -9,6 +9,7 @@ type WalletTransactionResponse struct {
 }
 
 type TransactionRecord struct {
+	Id                uint64 `json:"id"`
 	SourceWallet      uint64 `json:"source_wallet"`
 	DestinationWallet uint64 `json:"destination_wallet"`
 	Amount            uint64 `json:"amount"`
