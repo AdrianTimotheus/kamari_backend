@@ -90,11 +90,30 @@ func (w walletService) GetWalletTransactionHistories(userModel model.User, paylo
 			return nil, httperror.InternalServerError(err.Error())
 		}
 	}
+	tempWalletData := make(map[uint64]*model.Wallet)
 	for _, data := range wtModels {
-		var temp dto.TransactionRecord
-		temp.Id = data.Id
-		temp.SourceWallet = data.SrcWalletId
-		temp.DestinationWallet = data.DstWalletId
+		temp := dto.TransactionRecord{
+			Id: data.Id,
+		}
+		if data.SrcWalletId != 0 {
+			_, ok := tempWalletData[data.SrcWalletId]
+			if !ok {
+				tempWModel, _ := w.walletRepository.GetMyWalletDetailByWalletID(data.SrcWalletId)
+				tempWalletData[tempWModel.Id] = tempWModel
+			}
+			temp.Source.WalletId = tempWalletData[data.SrcWalletId].Id
+			temp.Source.Name = tempWalletData[data.SrcWalletId].User.Name
+		}
+		if data.DstWalletId != 0 {
+			_, ok := tempWalletData[data.DstWalletId]
+			if !ok {
+				tempWModel, _ := w.walletRepository.GetMyWalletDetailByWalletID(data.DstWalletId)
+				tempWalletData[tempWModel.Id] = tempWModel
+			}
+			temp.Destination.WalletId = tempWalletData[data.DstWalletId].Id
+			temp.Destination.Name = tempWalletData[data.DstWalletId].User.Name
+		}
+
 		temp.Amount = data.Amount
 		temp.Description = data.Description
 		if data.SrcWalletId == wModel.Id {

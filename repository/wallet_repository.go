@@ -7,6 +7,7 @@ import (
 
 type WalletRepository interface {
 	GetMyWalletDetail(userID uint64) (*model.Wallet, error)
+	GetMyWalletDetailByWalletID(WalletId uint64) (*model.Wallet, error)
 }
 
 type walletRepository struct {
@@ -24,7 +25,20 @@ func NewWalletRepository(c WConfig) WalletRepository {
 func (w walletRepository) GetMyWalletDetail(userID uint64) (*model.Wallet, error) {
 	var wModel model.Wallet
 	err := w.db.
+		Joins("User").
 		Where("user_id=?", userID).
+		First(&wModel).Error
+	if err != nil {
+		return nil, err
+	}
+	return &wModel, nil
+}
+
+func (w walletRepository) GetMyWalletDetailByWalletID(WalletId uint64) (*model.Wallet, error) {
+	var wModel model.Wallet
+	err := w.db.
+		Joins("User").
+		Where("wallets.id=?", WalletId).
 		First(&wModel).Error
 	if err != nil {
 		return nil, err

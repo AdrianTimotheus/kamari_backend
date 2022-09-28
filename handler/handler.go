@@ -7,37 +7,40 @@ import (
 )
 
 type Handler struct {
-	userService        service.UserService
-	provinceService    service.ProvinceService
-	merchantService    service.MerchantService
-	cartService        service.CartService
-	marketplaceService service.MarketplaceService
-	productService     service.ProductService
-	walletService      service.WalletService
-	categoryService    service.CategoryService
+	userService              service.UserService
+	provinceService          service.ProvinceService
+	merchantService          service.MerchantService
+	cartService              service.CartService
+	marketplaceService       service.MarketplaceService
+	productService           service.ProductService
+	walletService            service.WalletService
+	categoryService          service.CategoryService
+	walletTransactionService service.WalletTransactionService
 }
 
 type HConfig struct {
-	UserService        service.UserService
-	ProvinceService    service.ProvinceService
-	MerchantService    service.MerchantService
-	CartService        service.CartService
-	MarketplaceService service.MarketplaceService
-	ProductService     service.ProductService
-	WalletService      service.WalletService
-	CategoryService    service.CategoryService
+	UserService              service.UserService
+	ProvinceService          service.ProvinceService
+	MerchantService          service.MerchantService
+	CartService              service.CartService
+	MarketplaceService       service.MarketplaceService
+	ProductService           service.ProductService
+	WalletService            service.WalletService
+	CategoryService          service.CategoryService
+	WalletTransactionService service.WalletTransactionService
 }
 
 func New(h HConfig) Handler {
 	return Handler{
-		userService:        h.UserService,
-		provinceService:    h.ProvinceService,
-		merchantService:    h.MerchantService,
-		cartService:        h.CartService,
-		marketplaceService: h.MarketplaceService,
-		productService:     h.ProductService,
-		walletService:      h.WalletService,
-		categoryService:    h.CategoryService,
+		userService:              h.UserService,
+		provinceService:          h.ProvinceService,
+		merchantService:          h.MerchantService,
+		cartService:              h.CartService,
+		marketplaceService:       h.MarketplaceService,
+		productService:           h.ProductService,
+		walletService:            h.WalletService,
+		categoryService:          h.CategoryService,
+		walletTransactionService: h.WalletTransactionService,
 	}
 }
 

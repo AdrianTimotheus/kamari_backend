@@ -46,3 +46,11 @@ func InvalidLogin(message string) AppError {
 		StatusCode: http.StatusUnauthorized,
 	}
 }
+
+func ForbiddenError() AppError {
+	return AppError{
+		Code:       "FORBIDDEN_ERROR",
+		Message:    "Forbidden Access",
+		StatusCode: http.StatusForbidden,
+	}
+}
