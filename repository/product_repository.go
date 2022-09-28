@@ -10,11 +10,11 @@ import (
 type ProductRepository interface {
 	GetMerchantProduct(merchantId uint64) ([]model.Product, error)
 	GetAllProducts(keyword string, filters *helper.Filters) ([]model.ProductList, *helper.Metadata, error)
-	GetMerchantProducts(MerchantID uint64, pageOffset int, orderBy string) ([]model.Product, error)
-	GetCountMerchantProducts(username string) (int64, error)
+	GetMerchantProducts(MerchantID uint64, pageOffset int, orderBy string, Limit int) ([]model.Product, error)
+	GetCountMerchantProduct(username string) (int64, error)
 	GetProductReviewScore(productID uint64) (count int, score int, err error)
 	GetProductFirstVariant(productID uint64) (*model.ProductVariant, error)
-	GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string) ([]model.Product, error)
+	GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int) ([]model.Product, error)
 	GetTopSellProduct() ([]model.Product, error)
 	GetProductDetails(productId uint64) (*model.Product, error)
 }
@@ -128,13 +128,13 @@ from product_reviews where order_detail_id in (
 
 	return count, score, nil
 }
-func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int, orderBy string) ([]model.Product, error) {
+func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int, orderBy string, Limit int) ([]model.Product, error) {
 	fmt.Println(pageOffset)
 	var products []model.Product
 	err := p.db.
 		Where("merchant_id=?", merchantID).
 		Offset(pageOffset).
-		Limit(20).
+		Limit(Limit).
 		Order(orderBy).
 		Find(&products).Error
 	if err != nil {
@@ -143,11 +143,25 @@ func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int
 	return products, nil
 }
 
-func (p productRepository) GetCountMerchantProducts(username string) (int64, error) {
-	var numOfRecords int64
-	var pvModel model.ProductVariant
+//func (p productRepository) GetCountMerchantProductVariants(username string) (int64, error) {
+//	var numOfRecords int64
+//	var pvModel model.ProductVariant
+//
+//	err := p.db.Model(&pvModel).Joins("JOIN users ON users.username=?", username).Count(&numOfRecords).Error
+//	if err != nil {
+//		return 0, err
+//	}
+//	return numOfRecords, nil
+//}
 
-	err := p.db.Model(&pvModel).Joins("JOIN users ON users.username=?", username).Count(&numOfRecords).Error
+func (p productRepository) GetCountMerchantProduct(username string) (int64, error) {
+	var numOfRecords int64
+	var pvModel model.Product
+
+	err := p.db.Model(&pvModel).
+		Joins("JOIN users ON users.username=?", username).
+		Where("availability=?", true).
+		Count(&numOfRecords).Error
 	if err != nil {
 		return 0, err
 	}
@@ -163,7 +177,7 @@ func (p productRepository) GetProductFirstVariant(productID uint64) (*model.Prod
 	return &pvModel, nil
 }
 
-func (p productRepository) GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string) ([]model.Product, error) {
+func (p productRepository) GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int) ([]model.Product, error) {
 	fmt.Println(pageOffset)
 	var products []model.Product
 	ilikeStatement := fmt.Sprintf("products.name ilike '%%%v%%'", keyword)
@@ -171,7 +185,7 @@ func (p productRepository) GetSearchProducts(merchantID uint64, pageOffset int, 
 		Where("merchant_id=?", merchantID).
 		Where(ilikeStatement).
 		Offset(pageOffset).
-		Limit(20).
+		Limit(Limit).
 		Order(orderBy).
 		Order("unit_sold DESC").
 		Find(&products).Error
