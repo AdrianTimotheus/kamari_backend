@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+
 	"gorm.io/gorm"
 	"kamari.com/helper"
 	"kamari.com/model"
@@ -208,24 +209,4 @@ func (p productRepository) GetProductDetails(productId uint64) (*model.Product, 
 	}
 
 	return product, err
-}
-
-func (p productRepository) GetProductReview(productId uint64) (int, error) {
-	var score int
-	err := p.db.
-		Raw(`SELECT COALESCE(ROUND(avg(score)),0) AS score 
-				from product_reviews where order_detail_id in (
-					select id 
-					from order_details
-					where order_details.product_variant_id in (
-						select id 
-						from product_variants
-						where product_variants.product_id = ?
-					)
-				)`, productId).Scan(&score).Error
-	if err != nil {
-		return 0, err
-	}
-
-	return score, nil
 }

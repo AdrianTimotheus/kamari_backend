@@ -1,6 +1,9 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	"time"
+)
 
 type ProductReview struct {
 	gorm.Model    `json:"-"`
@@ -8,4 +11,6 @@ type ProductReview struct {
 	OrderDetailId uint64
 	Score         float32
 	Feedback      string
+	ReviewPhotos  []ReviewPhoto
+	CreatedAt     time.Time
 }
