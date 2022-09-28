@@ -11,6 +11,7 @@ import (
 type UserRepository interface {
 	MatchingCredential(string, password string) (*model.User, error)
 	CreateUser(user *model.User) error
+	CheckPassword(id uint64, password string) (*model.User, error)
 }
 
 type userRepository struct {
@@ -45,4 +46,15 @@ func (u userRepository) MatchingCredential(email, password string) (*model.User,
 
 func (u userRepository) CreateUser(user *model.User) error {
 	return u.db.Create(&user).Error
+}
+
+func (u userRepository) CheckPassword(id uint64, password string) (*model.User, error) {
+	var uModel model.User
+	err := u.db.Where("id=?", id).
+		Where("password=?", password).
+		First(&uModel).Error
+	if err != nil {
+		return nil, err
+	}
+	return &uModel, nil
 }
