@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 	"strings"
 
@@ -15,7 +14,7 @@ import (
 
 type ProductService interface {
 	GetProducts(keyword string, filters *helper.Filters) ([]dto.ProductResponse, *helper.Metadata, error)
-	GetTopSellerProduct() ([]dto.DtoProducts, error)
+	GetTopSellerProduct() ([]dto.Product, error)
 	GetProductDetail(productId uint64) (*dto.ProductDetailResponse, error)
 }
 
@@ -64,7 +63,7 @@ func (p productService) GetProducts(keyword string, filters *helper.Filters) ([]
 			return nil, nil, httperror.InternalServerError(err.Error())
 		}
 
-		rating, err := p.productRepository.GetProductReviewScore(product.Id)
+		count, rating, err := p.productRepository.GetProductReviewScore(product.Id)
 		if err != nil {
 			return nil, nil, httperror.InternalServerError(err.Error())
 		}
@@ -78,6 +77,7 @@ func (p productService) GetProducts(keyword string, filters *helper.Filters) ([]
 			City:             product.City,
 			ThumbnailUrl:     product.ThumbnailUrl,
 			ReviewScore:      rating,
+			ReviewCount:      count,
 			MerchantUsername: product.Seller,
 			FavouriteCount:   product.FavouriteCount,
 			MerchantId:       product.MerchantId,
@@ -119,7 +119,7 @@ func (p productService) GetProducts(keyword string, filters *helper.Filters) ([]
 	return productResponse, metadata, nil
 }
 
-func (p productService) GetTopSellerProduct() ([]dto.DtoProducts, error) {
+func (p productService) GetTopSellerProduct() ([]dto.Product, error) {
 	productModels, err := p.productRepository.GetTopSellProduct()
 	if err != nil {
 		switch {
@@ -129,21 +129,16 @@ func (p productService) GetTopSellerProduct() ([]dto.DtoProducts, error) {
 			return nil, httperror.InternalServerError(err.Error())
 		}
 	}
-	var dtoResponse []dto.DtoProducts
+	var dtoResponse []dto.Product
 	for _, data := range productModels {
 
-		temp := dto.DtoProducts{
+		temp := dto.Product{
 			ID:           data.Id,
 			Title:        data.Name,
 			ThumbnailURL: data.ThumbnailUrl,
-			//ProvinceName: "",
-			//CityName:     "",
 			MerchantName: data.Merchant.Name,
 			ItemSold:     data.UnitSold,
-			//ReviewScore:  0,
 		}
-		fmt.Println("title", data.Name)
-		fmt.Println("Merchant ID", data.MerchantID)
 
 		merchantModel, err := p.merchantRepository.GetMerchantDetailById(data.MerchantID)
 		if err != nil {
@@ -182,7 +177,7 @@ func (p productService) GetTopSellerProduct() ([]dto.DtoProducts, error) {
 		dtoResponse[i].Price = pvModel.Price
 
 		//product score
-		productScore, err := p.productRepository.GetProductReviewScore(data.ID)
+		count, productScore, err := p.productRepository.GetProductReviewScore(data.ID)
 		if err != nil {
 			switch {
 			case errors.Is(err, gorm.ErrRecordNotFound):
@@ -192,6 +187,7 @@ func (p productService) GetTopSellerProduct() ([]dto.DtoProducts, error) {
 			}
 		}
 		dtoResponse[i].ReviewScore = productScore
+		dtoResponse[i].ReviewCount = count
 	}
 	return dtoResponse, nil
 }

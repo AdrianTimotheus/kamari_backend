@@ -131,9 +131,9 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 		}
 	}
 
-	var dtoItem []dto.DtoProducts
+	var dtoItem []dto.Product
 	for _, modelData := range models {
-		temp := dto.DtoProducts{
+		temp := dto.Product{
 			ID:           modelData.Id,
 			Title:        modelData.Name,
 			ThumbnailURL: modelData.ThumbnailUrl,
@@ -146,11 +146,12 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 	}
 
 	for i, _ := range dtoItem {
-		score, err := m.productRepository.GetProductReviewScore(dtoItem[i].ID)
+		count, score, err := m.productRepository.GetProductReviewScore(dtoItem[i].ID)
 		if err != nil {
 			return nil, httperror.InternalServerError(err.Error())
 		}
 		dtoItem[i].ReviewScore = score
+		dtoItem[i].ReviewCount = count
 	}
 
 	for i, _ := range dtoItem {
