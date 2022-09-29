@@ -42,7 +42,7 @@ type idTokenClaims struct {
 }
 
 func (u *userService) generateJWTToken(user *model.User) (*dto.TokenResponse, error) {
-	idExp := config.Config.JWTExpireInMinutes * 5
+	idExp := config.Config.JWTExpireInMinutes * 60
 	unixTime := time.Now().Unix()
 	tokenExp := unixTime + int64(idExp)
 	timeExpire := jwt.NumericDate{Time: time.Unix(tokenExp, 0)}

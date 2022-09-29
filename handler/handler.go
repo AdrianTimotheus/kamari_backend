@@ -7,10 +7,10 @@ import (
 )
 
 type Handler struct {
-	userService              service.UserService
-	provinceService          service.ProvinceService
-	merchantService          service.MerchantService
-	cartService              service.CartService
+	userService                 service.UserService
+	provinceService             service.ProvinceService
+	merchantService             service.MerchantService
+	cartService                 service.CartService
 	marketplaceService       service.MarketplaceService
 	productService           service.ProductService
 	walletService            service.WalletService
@@ -20,10 +20,10 @@ type Handler struct {
 }
 
 type HConfig struct {
-	UserService              service.UserService
-	ProvinceService          service.ProvinceService
-	MerchantService          service.MerchantService
-	CartService              service.CartService
+	UserService                 service.UserService
+	ProvinceService             service.ProvinceService
+	MerchantService             service.MerchantService
+	CartService                 service.CartService
 	MarketplaceService       service.MarketplaceService
 	ProductService           service.ProductService
 	WalletService            service.WalletService

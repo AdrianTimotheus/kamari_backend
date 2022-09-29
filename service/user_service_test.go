@@ -8,8 +8,10 @@ import (
 	"kamari.com/dto"
 	"kamari.com/httperror"
 	"kamari.com/mocks"
+	"kamari.com/model"
 	"kamari.com/service"
 	"testing"
+	"time"
 )
 
 func TestNewUserService(t *testing.T) {
@@ -97,5 +99,61 @@ func Test_userService_CreateNewUser(t *testing.T) {
 		})
 
 		assert.Error(t, err)
+	})
+}
+
+func TestUserService_Login(t *testing.T) {
+	t.Run("Should return error when email and password don't match", func(t *testing.T) {
+		mockRepo := &mocks.UserRepository{}
+		userService := service.NewUserService(service.USConfig{
+			UserRepository: mockRepo,
+		})
+		//p := fmt.Sprintf("%X", sha256.Sum256([]byte("password")))
+		req := &dto.LoginRequest{
+			Email:    "adrian@gmail.com",
+			Password: "password",
+		}
+		mockRepo.On("MatchingCredential", req.Email, req.Password).Return(nil, httperror.InvalidLogin("Invalid email or password"))
+
+		tokenResponse, err := userService.Login(&dto.LoginRequest{
+			Email:    "adrian@gmail.com",
+			Password: "password",
+		})
+
+		assert.NotNil(t, err)
+		assert.Nil(t, tokenResponse)
+	})
+
+	t.Run("Should return token if email and password match", func(t *testing.T) {
+		mockRepo := &mocks.UserRepository{}
+		userService := service.NewUserService(service.USConfig{
+			UserRepository: mockRepo,
+		})
+		//p := fmt.Sprintf("%X", sha256.Sum256([]byte("password")))
+		req := &dto.LoginRequest{
+			Email:    "adrian@gmail.com",
+			Password: "password",
+		}
+
+		user := model.User{
+			Id:          4,
+			Name:        "Adrian",
+			Username:    "adrian",
+			Email:       "adrian@gmail.com",
+			Phone:       "08123456789",
+			DateOfBirth: time.Unix(0, 0).UTC(),
+			GenderId:    1,
+			RoleId:      2,
+		}
+
+		mockRepo.On("MatchingCredential", req.Email, req.Password).Return(&user, nil)
+
+		tokenResponse, err := userService.Login(&dto.LoginRequest{
+			Email:    "adrian@gmail.com",
+			Password: "password",
+		})
+
+		assert.Nil(t, err)
+		assert.NotNil(t, tokenResponse)
 	})
 }
