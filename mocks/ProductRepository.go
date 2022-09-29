@@ -45,8 +45,8 @@ func (_m *ProductRepository) GetAllProducts(keyword string, filters *helper.Filt
 	return r0, r1, r2
 }
 
-// GetCountMerchantProducts provides a mock function with given fields: username
-func (_m *ProductRepository) GetCountMerchantProducts(username string) (int64, error) {
+// GetCountMerchantProduct provides a mock function with given fields: username
+func (_m *ProductRepository) GetCountMerchantProduct(username string) (int64, error) {
 	ret := _m.Called(username)
 
 	var r0 int64
@@ -89,13 +89,13 @@ func (_m *ProductRepository) GetMerchantProduct(merchantId uint64) ([]model.Prod
 	return r0, r1
 }
 
-// GetMerchantProducts provides a mock function with given fields: MerchantID, pageOffset, orderBy
-func (_m *ProductRepository) GetMerchantProducts(MerchantID uint64, pageOffset int, orderBy string) ([]model.Product, error) {
-	ret := _m.Called(MerchantID, pageOffset, orderBy)
+// GetMerchantProducts provides a mock function with given fields: MerchantID, pageOffset, orderBy, Limit
+func (_m *ProductRepository) GetMerchantProducts(MerchantID uint64, pageOffset int, orderBy string, Limit int) ([]model.Product, error) {
+	ret := _m.Called(MerchantID, pageOffset, orderBy, Limit)
 
 	var r0 []model.Product
-	if rf, ok := ret.Get(0).(func(uint64, int, string) []model.Product); ok {
-		r0 = rf(MerchantID, pageOffset, orderBy)
+	if rf, ok := ret.Get(0).(func(uint64, int, string, int) []model.Product); ok {
+		r0 = rf(MerchantID, pageOffset, orderBy, Limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Product)
@@ -103,8 +103,31 @@ func (_m *ProductRepository) GetMerchantProducts(MerchantID uint64, pageOffset i
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(uint64, int, string) error); ok {
-		r1 = rf(MerchantID, pageOffset, orderBy)
+	if rf, ok := ret.Get(1).(func(uint64, int, string, int) error); ok {
+		r1 = rf(MerchantID, pageOffset, orderBy, Limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetProductDetails provides a mock function with given fields: productId
+func (_m *ProductRepository) GetProductDetails(productId uint64) (*model.Product, error) {
+	ret := _m.Called(productId)
+
+	var r0 *model.Product
+	if rf, ok := ret.Get(0).(func(uint64) *model.Product); ok {
+		r0 = rf(productId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Product)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(productId)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -136,7 +159,7 @@ func (_m *ProductRepository) GetProductFirstVariant(productID uint64) (*model.Pr
 }
 
 // GetProductReviewScore provides a mock function with given fields: productID
-func (_m *ProductRepository) GetProductReviewScore(productID uint64) (int, error) {
+func (_m *ProductRepository) GetProductReviewScore(productID uint64) (int, int, error) {
 	ret := _m.Called(productID)
 
 	var r0 int
@@ -146,23 +169,30 @@ func (_m *ProductRepository) GetProductReviewScore(productID uint64) (int, error
 		r0 = ret.Get(0).(int)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+	var r1 int
+	if rf, ok := ret.Get(1).(func(uint64) int); ok {
 		r1 = rf(productID)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(int)
 	}
 
-	return r0, r1
+	var r2 error
+	if rf, ok := ret.Get(2).(func(uint64) error); ok {
+		r2 = rf(productID)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
-// GetSearchProducts provides a mock function with given fields: merchantID, pageOffset, orderBy, keyword
-func (_m *ProductRepository) GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string) ([]model.Product, error) {
-	ret := _m.Called(merchantID, pageOffset, orderBy, keyword)
+// GetSearchProducts provides a mock function with given fields: merchantID, pageOffset, orderBy, keyword, Limit
+func (_m *ProductRepository) GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int) ([]model.Product, error) {
+	ret := _m.Called(merchantID, pageOffset, orderBy, keyword, Limit)
 
 	var r0 []model.Product
-	if rf, ok := ret.Get(0).(func(uint64, int, string, string) []model.Product); ok {
-		r0 = rf(merchantID, pageOffset, orderBy, keyword)
+	if rf, ok := ret.Get(0).(func(uint64, int, string, string, int) []model.Product); ok {
+		r0 = rf(merchantID, pageOffset, orderBy, keyword, Limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Product)
@@ -170,8 +200,8 @@ func (_m *ProductRepository) GetSearchProducts(merchantID uint64, pageOffset int
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(uint64, int, string, string) error); ok {
-		r1 = rf(merchantID, pageOffset, orderBy, keyword)
+	if rf, ok := ret.Get(1).(func(uint64, int, string, string, int) error); ok {
+		r1 = rf(merchantID, pageOffset, orderBy, keyword, Limit)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -4,6 +4,7 @@ package mocks
 
 import (
 	mock "github.com/stretchr/testify/mock"
+	dto "kamari.com/dto"
 	model "kamari.com/model"
 )
 
@@ -52,6 +53,20 @@ func (_m *MerchantRepository) GetMerchantDetailById(id uint64) (model.Merchant, 
 	}
 
 	return r0, r1
+}
+
+// RegisterMerchant provides a mock function with given fields: userId, req
+func (_m *MerchantRepository) RegisterMerchant(userId uint64, req *dto.MerchantRegisterRequest) error {
+	ret := _m.Called(userId, req)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(uint64, *dto.MerchantRegisterRequest) error); ok {
+		r0 = rf(userId, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 type mockConstructorTestingTNewMerchantRepository interface {

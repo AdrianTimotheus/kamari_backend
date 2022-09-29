@@ -12,6 +12,29 @@ type ProductVariantRepository struct {
 	mock.Mock
 }
 
+// GetProductVariantById provides a mock function with given fields: variantId
+func (_m *ProductVariantRepository) GetProductVariantById(variantId uint64) ([]model.ProductVariant, error) {
+	ret := _m.Called(variantId)
+
+	var r0 []model.ProductVariant
+	if rf, ok := ret.Get(0).(func(uint64) []model.ProductVariant); ok {
+		r0 = rf(variantId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ProductVariant)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(variantId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetProductVariants provides a mock function with given fields: productId
 func (_m *ProductVariantRepository) GetProductVariants(productId uint64) ([]model.ProductVariant, error) {
 	ret := _m.Called(productId)

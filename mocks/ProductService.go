@@ -14,6 +14,29 @@ type ProductService struct {
 	mock.Mock
 }
 
+// GetProductDetail provides a mock function with given fields: productId
+func (_m *ProductService) GetProductDetail(productId uint64) (*dto.ProductDetailResponse, error) {
+	ret := _m.Called(productId)
+
+	var r0 *dto.ProductDetailResponse
+	if rf, ok := ret.Get(0).(func(uint64) *dto.ProductDetailResponse); ok {
+		r0 = rf(productId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dto.ProductDetailResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(productId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetProducts provides a mock function with given fields: keyword, filters
 func (_m *ProductService) GetProducts(keyword string, filters *helper.Filters) ([]dto.ProductResponse, *helper.Metadata, error) {
 	ret := _m.Called(keyword, filters)

@@ -12,6 +12,27 @@ type UserService struct {
 	mock.Mock
 }
 
+// CheckAuthPassword provides a mock function with given fields: payload, userId
+func (_m *UserService) CheckAuthPassword(payload dto.CheckAuthPassword, userId uint64) (bool, error) {
+	ret := _m.Called(payload, userId)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(dto.CheckAuthPassword, uint64) bool); ok {
+		r0 = rf(payload, userId)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(dto.CheckAuthPassword, uint64) error); ok {
+		r1 = rf(payload, userId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateNewUser provides a mock function with given fields: req
 func (_m *UserService) CreateNewUser(req *dto.RegisterRequest) error {
 	ret := _m.Called(req)
