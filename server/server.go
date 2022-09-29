@@ -61,6 +61,10 @@ func Init() {
 		DB: db.Get(),
 	})
 
+	wishlistRepository := repository.NewWishlistRepository(repository.WLConfig{
+		DB: db.Get(),
+	})
+
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository: userRepository,
@@ -109,6 +113,10 @@ func Init() {
 		WalletRepository:            walletRepository,
 	})
 
+	wishlistService := service.NewWishlistService(service.WLConfig{
+		WishlistRepository: wishlistRepository,
+	})
+
 	r := NewRouter(RouterConfig{
 		UserService:              userService,
 		ProvinceService:          provinceService,
@@ -120,6 +128,7 @@ func Init() {
 		CategoryService:          categoryService,
 		ProductReviewService:     productReviewService,
 		WalletTransactionService: walletTransactionService,
+		WishlistService:          wishlistService,
 	})
 
 	log.Fatal(r.Run())
