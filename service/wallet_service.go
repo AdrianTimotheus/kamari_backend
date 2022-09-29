@@ -1,7 +1,9 @@
 package service
 
 import (
+	"crypto/sha256"
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"kamari.com/dto"
 	"kamari.com/httperror"
@@ -12,6 +14,7 @@ import (
 type WalletService interface {
 	GetUserWalletDetail(userModel model.User) (*dto.DetailWalletResponse, error)
 	GetWalletTransactionHistories(userModel model.User, payload dto.WalletTransactionRequest) (*dto.WalletTransactionResponse, error)
+	ChangeUserWalletPin(userId uint64, Password string) (bool, error)
 }
 
 type walletService struct {
@@ -130,4 +133,13 @@ func (w walletService) GetWalletTransactionHistories(userModel model.User, paylo
 		dtoResponse.Records = append(dtoResponse.Records, temp)
 	}
 	return &dtoResponse, nil
+}
+
+func (w walletService) ChangeUserWalletPin(userId uint64, Password string) (bool, error) {
+	hashedPassword := fmt.Sprintf("%X", sha256.Sum256([]byte(Password)))
+	status, err := w.walletRepository.ChangeUserWalletPin(userId, hashedPassword)
+	if err != nil {
+		return false, err
+	}
+	return status, nil
 }

@@ -1,5 +1,5 @@
 package dto
 
-type CheckAuthPassResponse struct {
+type StatusMessageResponse struct {
 	Status bool `json:"message"`
 }
