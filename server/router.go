@@ -24,6 +24,7 @@ type RouterConfig struct {
 	CategoryService          service.CategoryService
 	ProductReviewService     service.ProductReviewService
 	WalletTransactionService service.WalletTransactionService
+	WishlistService          service.WishlistService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -48,6 +49,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		CategoryService:          c.CategoryService,
 		ProductReviewService:     c.ProductReviewService,
 		WalletTransactionService: c.WalletTransactionService,
+		WishlistService:          c.WishlistService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -81,6 +83,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.PATCH("/users/wallet", middleware.AuthorizeJWT, h.ChangeWalletPin, middleware.ErrorHandler)
 		api.GET("/users/wallet/check", middleware.AuthorizeJWT, h.IsUserHasWallet, middleware.ErrorHandler)
 		api.POST("/users/wallet", middleware.AuthorizeJWT, h.CreateUserWallet, middleware.ErrorHandler)
+		api.POST("/wishlists", middleware.AuthorizeJWT, h.Favorite, middleware.ErrorHandler)
 	}
 
 	return router
