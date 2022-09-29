@@ -49,6 +49,29 @@ func (_m *UserRepository) MatchingCredential(string string, password string) (*m
 	return r0, r1
 }
 
+// MatchingCredential provides a mock function with given fields: string, password
+func (_m *UserRepository) MatchingCredential(email string, password string) (*model.User, error) {
+	ret := _m.Called(email, password)
+
+	var r0 *model.User
+	if rf, ok := ret.Get(0).(func(string, string) *model.User); ok {
+		r0 = rf(email, password)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(email, password)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewUserRepository interface {
 	mock.TestingT
 	Cleanup(func())

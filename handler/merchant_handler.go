@@ -2,10 +2,11 @@ package handler
 
 import (
 	"fmt"
+	"kamari.com/dto"
+	"kamari.com/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
 )
@@ -52,4 +53,30 @@ func (h Handler) GetSellerProduct(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, dtoResponse)
+}
+
+func (h Handler) RegisterMerchant(c *gin.Context) {
+	var (
+		req *dto.MerchantRegisterRequest
+		err error
+	)
+
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(httperror.BadRequestError(ErrFailedBindingValidation.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	err = h.merchantService.RegisterMerchant(user, req)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "merchant created successfully",
+	})
 }

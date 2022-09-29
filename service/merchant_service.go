@@ -14,6 +14,7 @@ import (
 type MerchantService interface {
 	GetMerchantDetail(username string) (*dto.MerchantDetailResponse, error)
 	GetMerchantProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetMerchantProductsResponse, error)
+	RegisterMerchant(user model.User, req *dto.MerchantRegisterRequest) error
 }
 
 type merchantService struct {
@@ -195,4 +196,12 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 	dtoResp.Page = payload.Page
 	dtoResp.Products = dtoItem
 	return &dtoResp, nil
+}
+
+func (m merchantService) RegisterMerchant(user model.User, req *dto.MerchantRegisterRequest) error {
+	err := m.merchantRepository.RegisterMerchant(user.Id, req)
+	if err != nil {
+		return err
+	}
+	return nil
 }
