@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"gorm.io/gorm"
 	"kamari.com/model"
 )
@@ -8,6 +9,7 @@ import (
 type WalletRepository interface {
 	GetMyWalletDetail(userID uint64) (*model.Wallet, error)
 	GetMyWalletDetailByWalletID(WalletId uint64) (*model.Wallet, error)
+	ChangeUserWalletPin(userId uint64, Password string) (bool, error)
 }
 
 type walletRepository struct {
@@ -44,4 +46,18 @@ func (w walletRepository) GetMyWalletDetailByWalletID(WalletId uint64) (*model.W
 		return nil, err
 	}
 	return &wModel, nil
+}
+
+func (w walletRepository) ChangeUserWalletPin(userId uint64, Password string) (bool, error) {
+	var wModel model.Wallet
+	db := w.db.Model(&wModel).
+		Where("user_id=?", userId).
+		Update("pin", Password)
+	if db.Error != nil {
+		return false, db.Error
+	}
+	if db.RowsAffected < 1 {
+		return false, errors.New("no data change")
+	}
+	return true, nil
 }

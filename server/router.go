@@ -77,6 +77,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/wallets/histories", middleware.AuthorizeJWT, h.GetWalletTransactionHistories, middleware.ErrorHandler)
 		api.GET("/wallets/transactions", middleware.AuthorizeJWT, h.GetWalletTransactionDetail, middleware.ErrorHandler)
 		api.POST("/users/auth/check", middleware.AuthorizeJWT, h.CheckPasswordAuth, middleware.ErrorHandler)
+		api.PATCH("/users/wallet", middleware.AuthorizeJWT, h.ChangeWalletPin, middleware.ErrorHandler)
 	}
 
 	return router

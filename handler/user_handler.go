@@ -65,5 +65,5 @@ func (h Handler) CheckPasswordAuth(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.CheckAuthPassResponse{Status: status})
+	c.JSON(http.StatusOK, dto.StatusMessageResponse{Status: status})
 }

@@ -36,3 +36,19 @@ func (h Handler) GetWalletTransactionHistories(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, response)
 }
+
+func (h Handler) ChangeWalletPin(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	var payload dto.ChangePinWalletRequest
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		_ = c.Error(httperror.BadRequestError("Missing Required Body", "MISSING_REQUIRED_BODY"))
+		return
+	}
+	status, err := h.walletService.ChangeUserWalletPin(user.Id, payload.Password)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, dto.StatusMessageResponse{Status: status})
+}
