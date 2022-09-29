@@ -16,6 +16,7 @@ type WalletService interface {
 	GetWalletTransactionHistories(userModel model.User, payload dto.WalletTransactionRequest) (*dto.WalletTransactionResponse, error)
 	ChangeUserWalletPin(userId uint64, Password string) (bool, error)
 	IsUserHasWallet(userId uint64) (bool, error)
+	CreateNewWallet(userId uint64, hashedPassword string) (*dto.DetailWalletResponse, error)
 }
 
 type walletService struct {
@@ -154,4 +155,22 @@ func (w walletService) IsUserHasWallet(userId uint64) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+func (w walletService) CreateNewWallet(userId uint64, hashedPassword string) (*dto.DetailWalletResponse, error) {
+	wModel := model.Wallet{
+		Id:      707000 + userId,
+		Balance: 0,
+		Pin:     hashedPassword,
+		UserId:  userId,
+	}
+	nWModel, err := w.walletRepository.CreateWallet(wModel)
+	if err != nil {
+		return nil, err
+	}
+	dtoResponse := dto.DetailWalletResponse{
+		Id:      nWModel.Id,
+		Balance: nWModel.Balance,
+	}
+	return &dtoResponse, nil
 }
