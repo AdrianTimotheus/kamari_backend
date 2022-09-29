@@ -80,6 +80,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/merchants", middleware.AuthorizeJWT, h.RegisterMerchant, middleware.ErrorHandler)
 		api.PATCH("/users/wallet", middleware.AuthorizeJWT, h.ChangeWalletPin, middleware.ErrorHandler)
 		api.GET("/users/wallet/check", middleware.AuthorizeJWT, h.IsUserHasWallet, middleware.ErrorHandler)
+		api.POST("/users/wallet", middleware.AuthorizeJWT, h.CreateUserWallet, middleware.ErrorHandler)
 	}
 
 	return router

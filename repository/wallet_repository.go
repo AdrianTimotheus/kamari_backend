@@ -11,6 +11,7 @@ type WalletRepository interface {
 	GetMyWalletDetailByWalletID(WalletId uint64) (*model.Wallet, error)
 	ChangeUserWalletPin(userId uint64, Password string) (bool, error)
 	CountUserWallet(userId uint64) (int64, error)
+	CreateWallet(model model.Wallet) (*model.Wallet, error)
 }
 
 type walletRepository struct {
@@ -72,4 +73,13 @@ func (w walletRepository) CountUserWallet(userId uint64) (int64, error) {
 		return 0, err
 	}
 	return count, nil
+}
+
+func (w walletRepository) CreateWallet(inModel model.Wallet) (*model.Wallet, error) {
+	err := w.db.Create(&inModel).First(&inModel).Error
+	if err != nil {
+		return nil, err
+	}
+	return &inModel, nil
+
 }

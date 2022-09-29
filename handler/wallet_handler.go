@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"kamari.com/dto"
 	"kamari.com/httperror"
@@ -62,5 +64,34 @@ func (h Handler) IsUserHasWallet(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, dto.StatusMessageResponse{Status: status})
+}
 
+func (h Handler) CreateUserWallet(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	var payload dto.CreateWalletRequest
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	if len(payload.Pin) != 6 {
+		_ = c.Error(httperror.BadRequestError("Pin should 6 character long", "BAD_REQUEST"))
+		return
+	}
+	hashedPassword := fmt.Sprintf("%X", sha256.Sum256([]byte(payload.Pin)))
+	isWalletExist, err := h.walletService.IsUserHasWallet(user.Id)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	if isWalletExist == true {
+		_ = c.Error(httperror.BadRequestError("Wallet Already Exist", "BAD_REQUEST"))
+		return
+	}
+	response, err := h.walletService.CreateNewWallet(user.Id, hashedPassword)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusCreated, response)
 }
