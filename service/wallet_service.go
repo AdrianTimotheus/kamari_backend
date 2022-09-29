@@ -15,6 +15,7 @@ type WalletService interface {
 	GetUserWalletDetail(userModel model.User) (*dto.DetailWalletResponse, error)
 	GetWalletTransactionHistories(userModel model.User, payload dto.WalletTransactionRequest) (*dto.WalletTransactionResponse, error)
 	ChangeUserWalletPin(userId uint64, Password string) (bool, error)
+	IsUserHasWallet(userId uint64) (bool, error)
 }
 
 type walletService struct {
@@ -142,4 +143,15 @@ func (w walletService) ChangeUserWalletPin(userId uint64, Password string) (bool
 		return false, err
 	}
 	return status, nil
+}
+
+func (w walletService) IsUserHasWallet(userId uint64) (bool, error) {
+	count, err := w.walletRepository.CountUserWallet(userId)
+	if err != nil {
+		return false, err
+	}
+	if count == 0 {
+		return false, nil
+	}
+	return true, nil
 }

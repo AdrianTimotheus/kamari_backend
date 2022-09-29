@@ -52,3 +52,15 @@ func (h Handler) ChangeWalletPin(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, dto.StatusMessageResponse{Status: status})
 }
+
+func (h Handler) IsUserHasWallet(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	status, err := h.walletService.IsUserHasWallet(user.Id)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, dto.StatusMessageResponse{Status: status})
+
+}

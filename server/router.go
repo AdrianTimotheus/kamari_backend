@@ -14,10 +14,10 @@ import (
 )
 
 type RouterConfig struct {
-	UserService                 service.UserService
-	ProvinceService             service.ProvinceService
-	MerchantService             service.MerchantService
-	CartService                 service.CartService
+	UserService              service.UserService
+	ProvinceService          service.ProvinceService
+	MerchantService          service.MerchantService
+	CartService              service.CartService
 	MarketplaceService       service.MarketplaceService
 	ProductService           service.ProductService
 	WalletService            service.WalletService
@@ -79,6 +79,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/users/auth/check", middleware.AuthorizeJWT, h.CheckPasswordAuth, middleware.ErrorHandler)
 		api.POST("/merchants", middleware.AuthorizeJWT, h.RegisterMerchant, middleware.ErrorHandler)
 		api.PATCH("/users/wallet", middleware.AuthorizeJWT, h.ChangeWalletPin, middleware.ErrorHandler)
+		api.GET("/users/wallet/check", middleware.AuthorizeJWT, h.IsUserHasWallet, middleware.ErrorHandler)
 	}
 
 	return router
