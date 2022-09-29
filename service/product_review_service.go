@@ -2,11 +2,12 @@ package service
 
 import (
 	"kamari.com/dto"
+	"kamari.com/helper"
 	"kamari.com/repository"
 )
 
 type ProductReviewService interface {
-	GetProductReviews(productId uint64) (*dto.ReviewResponse, error)
+	GetProductReviews(productId uint64, filters *helper.Filters) (*dto.ReviewResponse, *helper.Metadata, error)
 }
 
 type productReviewService struct {
@@ -29,32 +30,34 @@ func NewProductReviewService(c PRSConfig) ProductReviewService {
 	}
 }
 
-//TODO: add metada
-func (p productReviewService) GetProductReviews(productId uint64) (*dto.ReviewResponse, error) {
-	reviews, err := p.productReviewRepository.GetProductReview(productId)
+func (p productReviewService) GetProductReviews(productId uint64, filters *helper.Filters) (*dto.ReviewResponse, *helper.Metadata, error) {
+	filters.Limit = helper.ReadInt(filters.Limit, 6)
+	filters.Page = helper.ReadInt(filters.Page, 1)
+
+	reviews, metadata, err := p.productReviewRepository.GetProductReview(productId, filters)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	productReviews := make([]dto.ProductReviewResponse, len(reviews))
-	
+
 	reviewsResponse := &dto.ReviewResponse{
 		ProductReviews: productReviews,
 	}
 	if len(reviews) < 1 {
-		return reviewsResponse, nil
+		return reviewsResponse, nil, nil
 	}
 
 	var score float32 = 0
 	for i, review := range reviews {
 		od, err := p.orderDetailRepository.GetOrderDetails(review.OrderDetailId)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		v, err := p.productVariantRepository.GetProductVariantById(od.ProductVariantId)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		r := dto.ProductReviewResponse{
@@ -73,5 +76,5 @@ func (p productReviewService) GetProductReviews(productId uint64) (*dto.ReviewRe
 	reviewsResponse.ReviewScore = score / float32(len(reviews))
 	reviewsResponse.ProductReviews = productReviews
 
-	return reviewsResponse, nil
+	return reviewsResponse, metadata, nil
 }
