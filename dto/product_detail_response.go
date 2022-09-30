@@ -24,6 +24,7 @@ type ProductDetailResponse struct {
 	Subcategory             model.Subcategory      `json:"subcategory"`
 	ProductPhotos           []model.ProductPhoto   `json:"product_photos"`
 	ProductVariants         []model.ProductVariant `json:"product_variants"`
+	PriceRange              []uint64               `json:"price_range"`
 	ReviewCount             int                    `json:"review_count"`
 	ReviewScore             float32                `json:"review_score"`
 }
