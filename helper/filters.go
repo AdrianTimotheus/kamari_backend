@@ -9,6 +9,7 @@ type Filters struct {
 	Sort          string  `form:"sort"`
 	SortDirection string  `form:"sortDirection"`
 	Location      string  `form:"location"`
+	FilterBy      string  `form:"filterBy"`
 	MaxPrice      *uint64 `form:"maxPrice"`
 	MinPrice      *uint64 `form:"minPrice"`
 	Rating        *int    `form:"rating"`
@@ -20,11 +21,12 @@ func (f Filters) Offset() int {
 }
 
 type Metadata struct {
-	CurrentPage  int `json:"currentPage,omitempty"`
-	Limit        int `json:"limit,omitempty"`
-	FirstPage    int `json:"firstPage,omitempty"`
-	LastPage     int `json:"lastPage,omitempty"`
-	TotalRecords int `json:"totalRecords,omitempty"`
+	CurrentPage  int      `json:"currentPage,omitempty"`
+	Limit        int      `json:"limit,omitempty"`
+	FirstPage    int      `json:"firstPage,omitempty"`
+	LastPage     int      `json:"lastPage,omitempty"`
+	TotalRecords int      `json:"totalRecords,omitempty"`
+	Cities       []string `json:"cities,omitempty"`
 }
 
 func CalculateMetaData(totalRecords, page, limit int) Metadata {

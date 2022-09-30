@@ -14,6 +14,7 @@ type ProductRepository interface {
 	GetMerchantProducts(MerchantID uint64, pageOffset int, orderBy string, Limit int) ([]model.Product, error)
 	GetCountMerchantProduct(username string) (int64, error)
 	GetProductReviewScore(productID uint64) (count int, score int, err error)
+	GetProductReviewScoreDecimal(productId uint64) (int, float32, error)
 	GetProductFirstVariant(productID uint64) (*model.ProductVariant, error)
 	GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int) ([]model.Product, error)
 	GetTopSellProduct() ([]model.Product, error)
@@ -129,6 +130,28 @@ from product_reviews where order_detail_id in (
 
 	return count, score, nil
 }
+
+func (p productRepository) GetProductReviewScoreDecimal(productId uint64) (int, float32, error) {
+	var score float32
+	var count int
+	err := p.db.
+		Raw(`SELECT count(product_reviews.id) AS count,COALESCE(avg(score),0) AS score
+from product_reviews where order_detail_id in (
+    select id
+    from order_details
+    where order_details.product_variant_id in (
+        select id
+        from product_variants
+        where product_variants.product_id = ?
+    )
+)`, productId).Row().Scan(&count, &score)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return count, score, nil
+}
+
 func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int, orderBy string, Limit int) ([]model.Product, error) {
 	fmt.Println(pageOffset)
 	var products []model.Product
@@ -214,6 +237,7 @@ func (p productRepository) GetProductDetails(productId uint64) (*model.Product, 
 	err := p.db.
 		Preload("Merchant").
 		Preload("Category").
+		Preload("Subcategory").
 		Preload("ProductPhotos").
 		Preload("ProductVariants").
 		Where("id = ?", productId).

@@ -22,6 +22,7 @@ type Product struct {
 	MerchantID              uint64
 	Merchant                Merchant
 	Category                Category
+	Subcategory             Subcategory
 	ProductPhotos           []ProductPhoto
 	ProductVariants         []ProductVariant
 }
