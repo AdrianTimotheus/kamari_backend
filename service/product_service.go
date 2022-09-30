@@ -222,6 +222,7 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 		stock += variant.Stock
 	}
 
+	priceRange := helper.CountPriceRange(product.ProductVariants)
 	productResponse := &dto.ProductDetailResponse{
 		Id:                      product.Id,
 		Title:                   product.Name,
@@ -245,6 +246,7 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 		ProductVariants:         product.ProductVariants,
 		ReviewCount:             count,
 		ReviewScore:             rating,
+		PriceRange:              priceRange,
 	}
 
 	return productResponse, nil
