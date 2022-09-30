@@ -117,10 +117,27 @@ func FilterProductByRating(products []dto.ProductResponse, rating int) []dto.Pro
 	var res []dto.ProductResponse
 
 	for _, product := range products {
-		if product.ReviewScore >= rating {
+		if int(product.ReviewScore) >= rating {
 			res = append(res, product)
 		}
 	}
 
 	return res
+}
+
+func FilterReviewsByMedia(reviews []model.ProductReview, metadata *Metadata) ([]model.ProductReview, *Metadata) {
+	var res []model.ProductReview
+
+	for _, review := range reviews {
+		if len(review.ReviewPhotos) > 0 {
+			res = append(res, review)
+		}
+	}
+
+	*metadata = CalculateMetaData(len(res), metadata.CurrentPage, metadata.Limit)
+	return res, metadata
+}
+
+func ValidCategory(category model.Category) bool {
+	return len(category.Products) > 0
 }

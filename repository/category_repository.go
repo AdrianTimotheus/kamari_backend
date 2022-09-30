@@ -32,9 +32,12 @@ func (c categoryRepository) GetCategories(keyword string, filters *helper.Filter
 	)
 
 	k := fmt.Sprintf("%%%s%%", keyword)
-	res := c.db.
+	condition := c.db.
 		Preload("Subcategories").
-		Where("name ILIKE ?", k).
+		Preload("Products").
+		Where("name ILIKE ?", k)
+
+	res := condition.
 		Order("id ASC").
 		Limit(filters.Limit).
 		Offset(filters.Offset()).
@@ -44,8 +47,7 @@ func (c categoryRepository) GetCategories(keyword string, filters *helper.Filter
 		return nil, nil, res.Error
 	}
 
-	err := c.db.
-		Table("categories").
+	err := condition.
 		Select("COUNT(*) OVER() AS COUNT").
 		Limit(1).
 		Scan(&count).Error
@@ -54,7 +56,5 @@ func (c categoryRepository) GetCategories(keyword string, filters *helper.Filter
 	}
 
 	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
-	fmt.Println("count", count)
-	fmt.Println("metadata", metadata)
 	return categories, &metadata, nil
 }

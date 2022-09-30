@@ -50,21 +50,34 @@ func (p productReviewRepository) GetProductReview(productId uint64, filters *hel
 		return nil, nil, err
 	}
 
-	err = p.db.
+	res := p.db.
 		Preload("ReviewPhotos").
-		Where("order_detail_id IN ?", productVariantId).
+		Where("order_detail_id IN ?", productVariantId)
+
+	switch filters.FilterBy {
+	case "score":
+		if filters.Rating == nil {
+			return nil, nil, err
+		}
+
+		res = res.Where("score = ?", *filters.Rating)
+	case "withComment":
+		res = res.Not("coalesce(feedback, '') = ''")
+	}
+	err = res.
 		Limit(filters.Limit).
 		Offset(filters.Offset()).
 		Find(&reviews).Error
+
 	if err != nil {
 		return nil, nil, err
 	}
 
-	err = p.db.
-		Table("product_reviews").
-		Select("COUNT(*) OVER() AS COUNT").
-		Limit(1).
-		Scan(&count).Error
+	err = res.
+		Select("COUNT(*) OVER()").
+		Limit(filters.Limit).
+		Offset(filters.Offset()).
+		Count(&count).Error
 	if err != nil {
 		return nil, nil, err
 	}
@@ -72,3 +85,7 @@ func (p productReviewRepository) GetProductReview(productId uint64, filters *hel
 	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
 	return reviews, &metadata, nil
 }
+
+//TODO:
+// city list in metadata /products
+// product search page rating to float

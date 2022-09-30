@@ -56,14 +56,18 @@ func (p productService) GetProducts(keyword string, filters *helper.Filters) ([]
 		return nil, nil, httperror.InternalServerError(err.Error())
 	}
 
+	cityMapper := make(map[string]bool)
+	cities := make([]string, 0)
+
 	productResponse := make([]dto.ProductResponse, len(products))
 	for i, product := range products {
+		cityMapper[product.City] = true
 		productVar, err := p.productVariantRepository.GetProductVariants(product.Id)
 		if err != nil {
 			return nil, nil, httperror.InternalServerError(err.Error())
 		}
 
-		count, rating, err := p.productRepository.GetProductReviewScore(product.Id)
+		count, rating, err := p.productRepository.GetProductReviewScoreDecimal(product.Id)
 		if err != nil {
 			return nil, nil, httperror.InternalServerError(err.Error())
 		}
@@ -86,6 +90,10 @@ func (p productService) GetProducts(keyword string, filters *helper.Filters) ([]
 			Category:         product.Category,
 		}
 		productResponse[i] = p
+	}
+
+	for c := range cityMapper {
+		cities = append(cities, c)
 	}
 
 	if filters.SortBy == "price" {
@@ -115,6 +123,7 @@ func (p productService) GetProducts(keyword string, filters *helper.Filters) ([]
 	}
 
 	metadata.TotalRecords = len(productResponse)
+	metadata.Cities = cities
 
 	return productResponse, metadata, nil
 }
@@ -203,6 +212,11 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 		}
 	}
 
+	count, rating, err := p.productRepository.GetProductReviewScoreDecimal(product.Id)
+	if err != nil {
+		return nil, err
+	}
+
 	var stock int
 	for _, variant := range product.ProductVariants {
 		stock += variant.Stock
@@ -225,8 +239,12 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 		CategoryId:              product.CategoryId,
 		ComplementaryCategoryId: product.ComplementaryCategoryId,
 		MerchantID:              product.MerchantID,
+		Category:                product.Category,
+		Subcategory:             product.Subcategory,
 		ProductPhotos:           product.ProductPhotos,
 		ProductVariants:         product.ProductVariants,
+		ReviewCount:             count,
+		ReviewScore:             rating,
 	}
 
 	return productResponse, nil

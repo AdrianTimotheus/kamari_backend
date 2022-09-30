@@ -7,7 +7,7 @@ import (
 )
 
 type ProductReviewService interface {
-	GetProductReviews(productId uint64, filters *helper.Filters) (*dto.ReviewResponse, *helper.Metadata, error)
+	GetProductReviews(productId uint64, filters *helper.Filters) ([]dto.ProductReviewResponse, *helper.Metadata, error)
 }
 
 type productReviewService struct {
@@ -30,7 +30,7 @@ func NewProductReviewService(c PRSConfig) ProductReviewService {
 	}
 }
 
-func (p productReviewService) GetProductReviews(productId uint64, filters *helper.Filters) (*dto.ReviewResponse, *helper.Metadata, error) {
+func (p productReviewService) GetProductReviews(productId uint64, filters *helper.Filters) ([]dto.ProductReviewResponse, *helper.Metadata, error) {
 	filters.Limit = helper.ReadInt(filters.Limit, 6)
 	filters.Page = helper.ReadInt(filters.Page, 1)
 
@@ -39,13 +39,14 @@ func (p productReviewService) GetProductReviews(productId uint64, filters *helpe
 		return nil, nil, err
 	}
 
+	if filters.FilterBy == "withMedia" {
+		reviews, metadata = helper.FilterReviewsByMedia(reviews, metadata)
+	}
+
 	productReviews := make([]dto.ProductReviewResponse, len(reviews))
 
-	reviewsResponse := &dto.ReviewResponse{
-		ProductReviews: productReviews,
-	}
 	if len(reviews) < 1 {
-		return reviewsResponse, nil, nil
+		return productReviews, nil, nil
 	}
 
 	var score float32 = 0
@@ -72,9 +73,5 @@ func (p productReviewService) GetProductReviews(productId uint64, filters *helpe
 		score += review.Score
 	}
 
-	reviewsResponse.ReviewCount = len(reviews)
-	reviewsResponse.ReviewScore = score / float32(len(reviews))
-	reviewsResponse.ProductReviews = productReviews
-
-	return reviewsResponse, metadata, nil
+	return productReviews, metadata, nil
 }
