@@ -47,6 +47,10 @@ func (h Handler) ChangeWalletPin(c *gin.Context) {
 		_ = c.Error(httperror.BadRequestError("Missing Required Body", "MISSING_REQUIRED_BODY"))
 		return
 	}
+	if len(payload.Password) != 6 {
+		_ = c.Error(httperror.BadRequestError("Missing Required Body", "PIN should be 6 character long"))
+		return
+	}
 	status, err := h.walletService.ChangeUserWalletPin(user.Id, payload.Password)
 	if err != nil {
 		_ = c.Error(err)
