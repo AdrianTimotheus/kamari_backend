@@ -56,6 +56,11 @@ func (p productReviewService) GetProductReviews(productId uint64, filters *helpe
 			return nil, nil, err
 		}
 
+		reviewer, err := p.orderDetailRepository.GetOrdererUser(review.OrderDetailId)
+		if err != nil {
+			return nil, nil, err
+		}
+
 		v, err := p.productVariantRepository.GetProductVariantById(od.ProductVariantId)
 		if err != nil {
 			return nil, nil, err
@@ -63,6 +68,7 @@ func (p productReviewService) GetProductReviews(productId uint64, filters *helpe
 
 		r := dto.ProductReviewResponse{
 			Id:             review.Id,
+			Reviewer:       reviewer.Username,
 			Score:          review.Score,
 			Feedback:       review.Feedback,
 			ProductVariant: v,

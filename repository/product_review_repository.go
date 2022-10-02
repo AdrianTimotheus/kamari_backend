@@ -59,7 +59,6 @@ func (p productReviewRepository) GetProductReview(productId uint64, filters *hel
 		if filters.Rating == nil {
 			return nil, nil, err
 		}
-
 		res = res.Where("score = ?", *filters.Rating)
 	case "withComment":
 		res = res.Not("coalesce(feedback, '') = ''")
@@ -85,7 +84,3 @@ func (p productReviewRepository) GetProductReview(productId uint64, filters *hel
 	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
 	return reviews, &metadata, nil
 }
-
-//TODO:
-// city list in metadata /products
-// product search page rating to float

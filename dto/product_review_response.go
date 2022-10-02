@@ -7,6 +7,7 @@ import (
 
 type ProductReviewResponse struct {
 	Id                uint64                 `json:"id"`
+	Reviewer          string                 `json:"reviewer"`
 	Score             float32                `json:"score"`
 	Feedback          string                 `json:"feedback"`
 	SimplifiedVariant string                 `json:"simplified_variant"`

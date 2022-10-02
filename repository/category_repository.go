@@ -34,7 +34,6 @@ func (c categoryRepository) GetCategories(keyword string, filters *helper.Filter
 	k := fmt.Sprintf("%%%s%%", keyword)
 	condition := c.db.
 		Preload("Subcategories").
-		Preload("Products").
 		Where("name ILIKE ?", k)
 
 	res := condition.

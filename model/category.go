@@ -8,5 +8,4 @@ type Category struct {
 	Name          string `json:"name"`
 	PicUrl        string `json:"pic_url"`
 	Subcategories []Subcategory
-	Products      []Product
 }
