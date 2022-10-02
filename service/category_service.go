@@ -26,7 +26,7 @@ func NewCategoryService(c CaSConfig) CategoryService {
 }
 
 func (c categoryService) GetCategories(keyword string, filters *helper.Filters) ([]dto.CategoryResponse, *helper.Metadata, error) {
-	filters.Limit = helper.ReadInt(filters.Limit, 15)
+	filters.Limit = helper.ReadInt(filters.Limit, 30)
 	filters.Page = helper.ReadInt(filters.Page, 1)
 
 	categories, metadata, err := c.categoryRepository.GetCategories(keyword, filters)
@@ -34,20 +34,17 @@ func (c categoryService) GetCategories(keyword string, filters *helper.Filters) 
 		return nil, nil, httperror.InternalServerError(err.Error())
 	}
 
-	//pp, _ := json.MarshalIndent(categories, "", "\t")
-	//fmt.Println("categories", string(pp))
-	categoryResponse := make([]dto.CategoryResponse, 0)
-	for _, category := range categories {
-		if helper.ValidCategory(category) {
-			c := dto.CategoryResponse{
-				Id:            category.Id,
-				Name:          category.Name,
-				PicUrl:        category.PicUrl,
-				Subcategories: category.Subcategories,
-			}
-			categoryResponse = append(categoryResponse, c)
+	categoryResponse := make([]dto.CategoryResponse, len(categories))
+	for i, category := range categories {
+		c := dto.CategoryResponse{
+			Id:            category.Id,
+			Name:          category.Name,
+			PicUrl:        category.PicUrl,
+			Subcategories: category.Subcategories,
 		}
+		categoryResponse[i] = c
 	}
 
 	return categoryResponse, metadata, nil
+
 }

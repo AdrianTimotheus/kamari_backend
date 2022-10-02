@@ -59,9 +59,16 @@ func (p productService) GetProducts(keyword string, filters *helper.Filters) ([]
 	cityMapper := make(map[string]bool)
 	cities := make([]string, 0)
 
+	categoryMapper := make(map[string]uint64)
+
 	productResponse := make([]dto.ProductResponse, len(products))
 	for i, product := range products {
 		cityMapper[product.City] = true
+		_, ok := categoryMapper[product.Category.Name]
+		if !ok {
+			categoryMapper[product.Category.Name] = product.Category.Id
+		}
+
 		productVar, err := p.productVariantRepository.GetProductVariants(product.Id)
 		if err != nil {
 			return nil, nil, httperror.InternalServerError(err.Error())
@@ -94,6 +101,10 @@ func (p productService) GetProducts(keyword string, filters *helper.Filters) ([]
 
 	for c := range cityMapper {
 		cities = append(cities, c)
+	}
+
+	for cat, id := range categoryMapper {
+		metadata.Categories = append(metadata.Categories, helper.NewCategoryMetadata(id, cat))
 	}
 
 	if filters.SortBy == "price" {

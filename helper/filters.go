@@ -1,6 +1,8 @@
 package helper
 
-import "math"
+import (
+	"math"
+)
 
 type Filters struct {
 	Page          int     `form:"page"`
@@ -20,13 +22,30 @@ func (f Filters) Offset() int {
 	return (f.Page - 1) * f.Limit
 }
 
+type categoryMetadata struct {
+	Id   uint64 `json:"id"`
+	Name string `json:"name"`
+}
+
+//category show all
+//reviewer name (product review)
+//review optional sort oldeest and newest
+
+func NewCategoryMetadata(id uint64, name string) categoryMetadata {
+	return categoryMetadata{
+		Id:   id,
+		Name: name,
+	}
+}
+
 type Metadata struct {
-	CurrentPage  int      `json:"currentPage,omitempty"`
-	Limit        int      `json:"limit,omitempty"`
-	FirstPage    int      `json:"firstPage,omitempty"`
-	LastPage     int      `json:"lastPage,omitempty"`
-	TotalRecords int      `json:"totalRecords,omitempty"`
-	Cities       []string `json:"cities,omitempty"`
+	CurrentPage  int                `json:"currentPage,omitempty"`
+	Limit        int                `json:"limit,omitempty"`
+	FirstPage    int                `json:"firstPage,omitempty"`
+	LastPage     int                `json:"lastPage,omitempty"`
+	TotalRecords int                `json:"totalRecords,omitempty"`
+	Cities       []string           `json:"cities,omitempty"`
+	Categories   []categoryMetadata `json:"categories,omitempty"`
 }
 
 func CalculateMetaData(totalRecords, page, limit int) Metadata {
