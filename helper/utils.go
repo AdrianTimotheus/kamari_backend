@@ -138,31 +138,6 @@ func FilterReviewsByMedia(reviews []model.ProductReview, metadata *Metadata) ([]
 	return res, metadata
 }
 
-//func ValidCategory(category model.Category) bool {
-//	return len(category.Products) > 0
-//}
-
-func CountPriceRange(variants []model.ProductVariant) []uint64 {
-	var (
-		res = make([]uint64, 2)
-		min uint64
-		max uint64
-	)
-
-	min, max = variants[0].Price, variants[0].Price
-	for _, variant := range variants {
-		if variant.Price < min {
-			min = variant.Price
-		}
-		if variant.Price > max {
-			max = variant.Price
-		}
-	}
-
-	res[0], res[1] = min, max
-	return res
-}
-
 func CountPriceRange(variants []model.ProductVariant) []uint64 {
 	var (
 		res = make([]uint64, 2)
