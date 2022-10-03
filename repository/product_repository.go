@@ -82,7 +82,7 @@ func (p productRepository) GetAllProducts(keyword string, filters *helper.Filter
 		res = res.Order(`"products"."view_count" DESC, "products"."favourite_count" DESC`)
 	case "newest":
 		res = res.Order(`"products"."created_at" DESC`)
-	case "mostBuy":
+	case "mostbuy":
 		res = res.Order(`"products"."unit_sold" DESC`)
 	default:
 		res = res.Order(`"products"."id" DESC`)
