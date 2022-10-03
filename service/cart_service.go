@@ -9,7 +9,7 @@ import (
 )
 
 type CartService interface {
-	GetCartHoverItems(user model.User) ([]dto.CartHoverRes, error)
+	GetCartHoverItems(user model.User) (*dto.CartHoverRes, error)
 }
 
 type cartService struct {
@@ -29,7 +29,7 @@ func NewCartService(c CSConfig) CartService {
 	}
 }
 
-func (c cartService) GetCartHoverItems(user model.User) ([]dto.CartHoverRes, error) {
+func (c cartService) GetCartHoverItems(user model.User) (*dto.CartHoverRes, error) {
 	result, err := c.cartRepository.GetCartHoverItems(user.Id)
 	if err != nil {
 		return nil, httperror.InternalServerError("Failed to get cart items")
