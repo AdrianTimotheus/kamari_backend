@@ -3,10 +3,16 @@ package repository
 import (
 	"gorm.io/gorm"
 	"kamari.com/dto"
+	"kamari.com/httperror"
+	"kamari.com/model"
 )
 
 type CartRepository interface {
 	GetCartHoverItems(userId uint64) (*dto.CartHoverRes, error)
+	GetCartItems(userId uint64) ([]dto.CartItemRaw, error)
+	CreateCartItem(userId uint64, req dto.AddCartItemRequest) error
+	UpdateCartItem(id int, userId uint64, req dto.UpdateCartItemRequest) error
+	DeleteCartItem(id int, userId uint64) error
 }
 
 type cartRepository struct {
@@ -57,4 +63,117 @@ func (c cartRepository) GetCartHoverItems(userId uint64) (*dto.CartHoverRes, err
 	cartHoverRes.Items = items
 
 	return &cartHoverRes, nil
+}
+
+func (c cartRepository) GetCartItems(userId uint64) ([]dto.CartItemRaw, error) {
+	var rawItems []dto.CartItemRaw
+
+	err := c.db.Raw("select products.name ,\n"+
+		"product_variants.main_variant as main_variant, \n"+
+		"product_variants.main_variant_item as main_variant_item,\n"+
+		"product_variants.sub_variant as sub_variant,\n"+
+		"product_variants.sub_variant_item as sub_variant_item,\n"+
+		"carts.quantity ,\n"+
+		"products.name as name,\n"+
+		"merchants.pic_url as pic_url ,\n"+
+		"product_variants.price as price,\n"+
+		"merchants.id as merchant_id, \n"+
+		"merchants.name as merchant_name, \n"+
+		"product_variants.id as id, \n"+
+		"merchants.pic_url as merchant_pic_url \n"+
+		"from carts inner join product_variants on carts.variant_id = product_variants.id \n"+
+		"inner join products on products.id = product_variants.product_id  \n"+
+		"inner join merchants on merchants.id = products.merchant_id \n"+
+		"where carts.user_id = ?", userId).Scan(&rawItems).Error
+
+	if err != nil {
+		return nil, httperror.InternalServerError("There was a problem getting cart items")
+	}
+
+	return rawItems, nil
+}
+
+func (c cartRepository) CreateCartItem(userId uint64, req dto.AddCartItemRequest) error {
+	var exists bool
+	//var cartItem model.CartItem
+	var err error
+
+	c.db.Table("carts").
+		Select("count(*) > 0").
+		Where("user_id = ?", userId).
+		Where("variant_id = ?", req.VariantId).
+		Find(&exists)
+
+	if exists {
+		err = c.db.Table("carts").
+			Where("user_id = ?", userId).
+			Where("variant_id = ?", req.VariantId).
+			Update("quantity", gorm.Expr("quantity + ?", req.Quantity)).Error
+
+		if err != nil {
+			return httperror.InternalServerError("Error updating quantity")
+		}
+		return nil
+	}
+
+	err = c.db.Table("carts").Create(&model.CartItem{
+		UserId:    userId,
+		VariantId: req.VariantId,
+		Quantity:  req.Quantity,
+	}).Error
+
+	if err != nil {
+		return httperror.BadRequestError("Variant not found", "VARIANT_NOT_FOUND")
+	}
+
+	return nil
+}
+
+func (c cartRepository) UpdateCartItem(id int, userId uint64, req dto.UpdateCartItemRequest) error {
+	var exists bool
+	//var cartItem model.CartItem
+	var err error
+
+	c.db.Table("carts").
+		Select("count(*) > 0").
+		Where("id = ?", id).
+		Where("user_id = ?", userId).
+		Find(&exists)
+
+	if exists {
+		err = c.db.Table("carts").
+			Where("id = ?", id).
+			Update("quantity", req.Quantity).Error
+
+		if err != nil {
+			return httperror.InternalServerError("Error updating quantity")
+		}
+		return nil
+
+	}
+
+	return httperror.BadRequestError("Cart item not found", "CART_ITEM_NOT_FOUND")
+}
+
+func (c cartRepository) DeleteCartItem(id int, userId uint64) error {
+	var exists bool
+	var cartItem model.CartItem
+	var err error
+
+	c.db.Table("carts").
+		Select("count(*) > 0").
+		Where("id = ?", id).
+		Where("user_id = ?", userId).
+		Find(&exists)
+
+	if exists {
+		err = c.db.Unscoped().Table("carts").Where("id = ?", id).Delete(&cartItem).Error
+
+		if err != nil {
+			return httperror.InternalServerError("Failed to remove item from cart")
+		}
+		return nil
+	}
+
+	return httperror.BadRequestError("Cart item not found", "CART_ITEM_NOT_FOUND")
 }
