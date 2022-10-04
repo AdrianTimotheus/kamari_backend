@@ -240,6 +240,7 @@ func (p productRepository) GetProductDetails(productId uint64) (*model.Product, 
 		Preload("Subcategory").
 		Preload("ProductPhotos").
 		Preload("ProductVariants").
+		Preload("ProductVariants.ProductPromo").
 		Where("id = ?", productId).
 		First(&product).Error
 	if err != nil {
