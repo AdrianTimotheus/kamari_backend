@@ -233,6 +233,12 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 		stock += variant.Stock
 	}
 
+	for i := range product.ProductVariants {
+		if product.ProductVariants[i].ProductPromoID != 0 {
+			product.ProductVariants[i].PromoPrice = product.ProductVariants[i].Price - product.ProductVariants[i].ProductPromo.DiscountAmount
+		}
+	}
+
 	priceRange := helper.CountPriceRange(product.ProductVariants)
 	productResponse := &dto.ProductDetailResponse{
 		Id:                      product.Id,
