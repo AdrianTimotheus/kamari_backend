@@ -10,6 +10,7 @@ import (
 
 type UserRepository interface {
 	MatchingCredential(string, password string) (*model.User, error)
+	FindUserByEmail(email string) (*model.User, error)
 	CreateUser(user *model.User) error
 	CheckPassword(id uint64, password string) (*model.User, error)
 }
@@ -38,6 +39,18 @@ func (u userRepository) MatchingCredential(email, password string) (*model.User,
 	}
 
 	if checksum := fmt.Sprintf("%X", sha256.Sum256([]byte(password))); checksum != user.Password {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (u userRepository) FindUserByEmail(email string) (*model.User, error) {
+	var user model.User
+	err := errors.New("Email not found")
+
+	result := u.db.First(&user, "email = ?", email)
+	if result.Error != nil {
 		return nil, err
 	}
 

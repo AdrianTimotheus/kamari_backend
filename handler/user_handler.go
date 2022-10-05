@@ -51,6 +51,27 @@ func (h Handler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h Handler) LoginWithGoogle(c *gin.Context) {
+	var (
+		req *dto.GoogleAuthTokenReq
+		err error
+	)
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(ErrFailedBindingValidation)
+		return
+	}
+
+	response, err := h.userService.LoginWithGmail(req)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func (h Handler) CheckPasswordAuth(c *gin.Context) {
 	userVal, _ := c.Get("user")
 	user := userVal.(model.User)
