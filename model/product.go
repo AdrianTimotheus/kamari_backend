@@ -8,6 +8,7 @@ type Product struct {
 	Name                    string `json:"name"`
 	Description             string `json:"description"`
 	MinimumOrder            uint64 `json:"minimum_order"`
+	MaximumOrder            uint64 `json:"maximum_order"`
 	ThumbnailUrl            string
 	IsHazardous             bool
 	Weight                  uint64
