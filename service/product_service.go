@@ -259,6 +259,7 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 		CategoryId:              product.CategoryId,
 		ComplementaryCategoryId: product.ComplementaryCategoryId,
 		MerchantID:              product.MerchantID,
+		MerchantUsername:        product.Merchant.User.Username,
 		Category:                product.Category,
 		Subcategory:             product.Subcategory,
 		ProductPhotos:           product.ProductPhotos,

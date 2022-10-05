@@ -21,6 +21,7 @@ type ProductDetailResponse struct {
 	SubcategoryId           uint64                 `json:"subcategory_id,omitempty"`
 	ComplementaryCategoryId uint64                 `json:"complementary_category_id"`
 	MerchantID              uint64                 `json:"merchant_id"`
+	MerchantUsername        string                 `json:"merchant_username"`
 	Category                model.Category         `json:"category"`
 	Subcategory             model.Subcategory      `json:"subcategory"`
 	ProductPhotos           []model.ProductPhoto   `json:"product_photos"`

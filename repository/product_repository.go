@@ -237,6 +237,7 @@ func (p productRepository) GetProductDetails(productId uint64) (*model.Product, 
 	var product *model.Product
 	err := p.db.
 		Preload("Merchant").
+		Preload("Merchant.User").
 		Preload("Category").
 		Preload("Subcategory").
 		Preload("ProductPhotos").
