@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"kamari.com/dto"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -50,4 +51,19 @@ func (h Handler) GetProductDetail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, product)
+}
+
+func (h Handler) GetSimilarProducts(c *gin.Context) {
+	var payload dto.GetSimilarProductRequest
+
+	if err := c.ShouldBind(&payload); err != nil {
+		_ = c.Error(httperror.BadRequestError("Invalid query", "INVALID_QUERY"))
+		return
+	}
+	resp, err := h.productService.GetSimilarProduct(payload)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
 }
