@@ -11,6 +11,7 @@ import (
 	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
+	"kamari.com/middleware"
 	"kamari.com/model"
 	"kamari.com/repository"
 	"time"
@@ -19,6 +20,7 @@ import (
 type UserService interface {
 	CreateNewUser(req *dto.RegisterRequest) error
 	Login(req *dto.LoginRequest) (*dto.TokenResponse, error)
+	LoginWithGmail(req *dto.GoogleAuthTokenReq) (*dto.TokenResponse, error)
 	CheckAuthPassword(payload dto.CheckAuthPassword, userId uint64) (bool, error)
 }
 
@@ -93,6 +95,21 @@ func (u userService) Login(req *dto.LoginRequest) (*dto.TokenResponse, error) {
 	user, err := u.userRepository.MatchingCredential(req.Email, req.Password)
 	if err != nil || user == nil {
 		return nil, httperror.InvalidLogin("Invalid email or password")
+	}
+	token, err := u.generateJWTToken(user)
+	return token, err
+}
+
+func (u userService) LoginWithGmail(req *dto.GoogleAuthTokenReq) (*dto.TokenResponse, error) {
+	unauthorizedErr := httperror.UnauthorizedError()
+	inputToken, err := middleware.VerifyGoogleToken(req.Token)
+	if err != nil {
+		return nil, unauthorizedErr
+	}
+
+	user, err := u.userRepository.FindUserByEmail(inputToken.Email)
+	if err != nil || user == nil {
+		return nil, httperror.InvalidLogin("Invalid email")
 	}
 	token, err := u.generateJWTToken(user)
 	return token, err

@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"google.golang.org/api/oauth2/v2"
 	"kamari.com/config"
 	"kamari.com/httperror"
 	"kamari.com/model"
+	"net/http"
 	"strings"
 )
 
@@ -18,6 +20,18 @@ func validateToken(encodedToken string) (*jwt.Token, error) {
 		}
 		return config.Config.JWTSecret, nil
 	})
+}
+
+func VerifyGoogleToken(idToken string) (*oauth2.Tokeninfo, error) {
+	var httpClient = &http.Client{}
+	oauth2Service, err := oauth2.New(httpClient)
+	tokenInfoCall := oauth2Service.Tokeninfo()
+	tokenInfoCall.IdToken(idToken)
+	tokenInfo, err := tokenInfoCall.Do()
+	if err != nil {
+		return nil, err
+	}
+	return tokenInfo, nil
 }
 
 func AuthorizeJWT(c *gin.Context) {
