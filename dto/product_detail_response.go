@@ -7,6 +7,7 @@ type ProductDetailResponse struct {
 	Title                   string                 `json:"title"`
 	Description             string                 `json:"description"`
 	MinimumOrder            uint64                 `json:"minimum_order"`
+	MaximumOrder            uint64                 `json:"maximum_order"`
 	ThumbnailUrl            string                 `json:"thumbnail_url"`
 	IsHazardous             bool                   `json:"is_hazardous"`
 	Weight                  uint64                 `json:"weight"`

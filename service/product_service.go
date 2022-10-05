@@ -245,6 +245,7 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 		Title:                   product.Name,
 		Description:             product.Description,
 		MinimumOrder:            product.MinimumOrder,
+		MaximumOrder:            product.MaximumOrder,
 		ThumbnailUrl:            product.ThumbnailUrl,
 		IsHazardous:             product.IsHazardous,
 		Weight:                  product.Weight,
