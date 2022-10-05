@@ -147,7 +147,7 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 	}
 
 	for i, _ := range dtoItem {
-		count, score, err := m.productRepository.GetProductReviewScore(dtoItem[i].ID)
+		count, score, err := m.productRepository.GetProductReviewScoreDecimal(dtoItem[i].ID)
 		if err != nil {
 			return nil, httperror.InternalServerError(err.Error())
 		}

@@ -16,6 +16,7 @@ type ProductService interface {
 	GetProducts(keyword string, filters *helper.Filters) ([]dto.ProductResponse, *helper.Metadata, error)
 	GetTopSellerProduct() ([]dto.Product, error)
 	GetProductDetail(productId uint64) (*dto.ProductDetailResponse, error)
+	GetSimilarProduct(payload dto.GetSimilarProductRequest) ([]dto.Product, error)
 }
 
 type productService struct {
@@ -197,7 +198,7 @@ func (p productService) GetTopSellerProduct() ([]dto.Product, error) {
 		dtoResponse[i].Price = pvModel.Price
 
 		//product score
-		count, productScore, err := p.productRepository.GetProductReviewScore(data.ID)
+		count, productScore, err := p.productRepository.GetProductReviewScoreDecimal(data.ID)
 		if err != nil {
 			switch {
 			case errors.Is(err, gorm.ErrRecordNotFound):
@@ -268,4 +269,88 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 	}
 
 	return productResponse, nil
+}
+
+func (p productService) GetSimilarProduct(payload dto.GetSimilarProductRequest) ([]dto.Product, error) {
+	currentProductModel, err := p.productRepository.GetProductDetails(payload.CurrentProductId)
+	if err != nil {
+		if err != nil {
+			switch {
+			case errors.Is(err, gorm.ErrRecordNotFound):
+				return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+			default:
+				return nil, httperror.InternalServerError(err.Error())
+			}
+		}
+	}
+
+	models, err := p.productRepository.GetSimilarProduct(payload.Keyword, currentProductModel.CategoryId, payload.CurrentProductId)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+		default:
+			return nil, httperror.InternalServerError(err.Error())
+		}
+	}
+
+	var dtoResponse []dto.Product
+	for _, data := range models {
+		temp := dto.Product{
+			ID:           data.Id,
+			Title:        data.Name,
+			ThumbnailURL: data.ThumbnailUrl,
+			MerchantName: data.Merchant.Name,
+			ItemSold:     data.UnitSold,
+			//ReviewScore:  0,
+			//ReviewCount:  0,
+		}
+		merchantModel, err := p.merchantRepository.GetMerchantDetailById(data.MerchantID)
+		if err != nil {
+			switch {
+			case errors.Is(err, gorm.ErrRecordNotFound):
+				return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+			default:
+				return nil, httperror.InternalServerError(err.Error())
+			}
+		}
+
+		cityModel, err := p.cityRepository.GetCity(merchantModel.User.CityId)
+		if err != nil {
+			switch {
+			case errors.Is(err, gorm.ErrRecordNotFound):
+				return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+			default:
+				return nil, httperror.InternalServerError(err.Error())
+			}
+		}
+		pvModel, err := p.productRepository.GetProductFirstVariant(temp.ID)
+		if err != nil {
+			switch {
+			case errors.Is(err, gorm.ErrRecordNotFound):
+				return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+			default:
+				return nil, httperror.InternalServerError(err.Error())
+			}
+		}
+
+		//product score
+		count, productScore, err := p.productRepository.GetProductReviewScoreDecimal(temp.ID)
+		if err != nil {
+			switch {
+			case errors.Is(err, gorm.ErrRecordNotFound):
+				return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+			default:
+				return nil, httperror.InternalServerError(err.Error())
+			}
+		}
+		temp.Price = pvModel.Price
+		temp.ProvinceName = cityModel.Province.Name
+		temp.CityName = cityModel.Name
+		temp.ReviewScore = productScore
+		temp.ReviewCount = count
+		dtoResponse = append(dtoResponse, temp)
+	}
+
+	return dtoResponse, nil
 }

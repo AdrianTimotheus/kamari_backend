@@ -19,6 +19,7 @@ type ProductRepository interface {
 	GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int) ([]model.Product, error)
 	GetTopSellProduct() ([]model.Product, error)
 	GetProductDetails(productId uint64) (*model.Product, error)
+	GetSimilarProduct(keyword string, category uint64, currentProductId uint64) ([]model.Product, error)
 }
 
 type productRepository struct {
@@ -248,4 +249,20 @@ func (p productRepository) GetProductDetails(productId uint64) (*model.Product, 
 	}
 
 	return product, err
+}
+
+func (p productRepository) GetSimilarProduct(keyword string, categoryId uint64, currentProductId uint64) ([]model.Product, error) {
+	var outputModels []model.Product
+	//THIS ONLY WORK WITH POSTGRES THAT HAVE pg_trgm EXTENSION
+	err := p.db.
+		Joins("Merchant").
+		Where("similarity(products.name,?)>=0.2", keyword).
+		Where("category_id=?", categoryId).
+		Where("products.id<>?", currentProductId).
+		Limit(24).
+		Find(&outputModels).Error
+	if err != nil {
+		return nil, err
+	}
+	return outputModels, err
 }
