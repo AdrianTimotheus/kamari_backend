@@ -8,6 +8,7 @@ import (
 )
 
 type CategoryRepository interface {
+	GetCategory(category *model.Category) (*model.Category, error)
 	GetCategories(keyword string, filters *helper.Filters) ([]model.Category, *helper.Metadata, error)
 }
 
@@ -23,6 +24,11 @@ func NewCategoryRepository(c CaRConfig) CategoryRepository {
 	return categoryRepository{
 		db: c.DB,
 	}
+}
+
+func (c categoryRepository) GetCategory(category *model.Category) (*model.Category, error) {
+	result := c.db.Find(&category)
+	return category, result.Error
 }
 
 func (c categoryRepository) GetCategories(keyword string, filters *helper.Filters) ([]model.Category, *helper.Metadata, error) {

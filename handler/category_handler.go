@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"kamari.com/helper"
@@ -30,4 +31,20 @@ func (h Handler) GetCategories(c *gin.Context) {
 		"__metadata": metadata,
 		"categories": categories,
 	})
+}
+
+func (h Handler) GetCategory(c *gin.Context) {
+	categoryId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "INVALID_PARAM"))
+		return
+	}
+
+	category, err := h.categoryService.GetCategory(uint64(categoryId))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, category)
 }

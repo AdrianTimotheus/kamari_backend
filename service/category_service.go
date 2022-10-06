@@ -4,10 +4,12 @@ import (
 	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
+	"kamari.com/model"
 	"kamari.com/repository"
 )
 
 type CategoryService interface {
+	GetCategory(categoryId uint64) (*model.Category, error)
 	GetCategories(keyword string, filters *helper.Filters) ([]dto.CategoryResponse, *helper.Metadata, error)
 }
 
@@ -23,6 +25,10 @@ func NewCategoryService(c CaSConfig) CategoryService {
 	return categoryService{
 		categoryRepository: c.CategoryRepository,
 	}
+}
+
+func (c categoryService) GetCategory(categoryId uint64) (*model.Category, error) {
+	return c.categoryRepository.GetCategory(&model.Category{Id: categoryId})
 }
 
 func (c categoryService) GetCategories(keyword string, filters *helper.Filters) ([]dto.CategoryResponse, *helper.Metadata, error) {
