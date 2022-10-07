@@ -65,6 +65,10 @@ func Init() {
 		DB: db.Get(),
 	})
 
+	sealabsAccountRepository := repository.NewSealabsAccountRepository(repository.SARConfig{
+		DB: db.Get(),
+	})
+
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository: userRepository,
@@ -117,6 +121,10 @@ func Init() {
 		WishlistRepository: wishlistRepository,
 	})
 
+	sealabsAccountService := service.NewSealabsAccountService(service.SASConfig{
+		SealabsAccountRepository: sealabsAccountRepository,
+	})
+
 	r := NewRouter(RouterConfig{
 		UserService:              userService,
 		ProvinceService:          provinceService,
@@ -129,6 +137,7 @@ func Init() {
 		ProductReviewService:     productReviewService,
 		WalletTransactionService: walletTransactionService,
 		WishlistService:          wishlistService,
+		SealabsAccountService:    sealabsAccountService,
 	})
 
 	log.Fatal(r.Run())
