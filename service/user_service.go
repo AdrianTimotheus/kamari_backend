@@ -43,7 +43,7 @@ type idTokenClaims struct {
 	User *model.User `json:"user"`
 }
 
-func (u *userService) generateJWTToken(user *model.User) (*dto.TokenResponse, error) {
+func (u userService) generateJWTToken(user *model.User) (*dto.TokenResponse, error) {
 	idExp := config.Config.JWTExpireInMinutes * 60
 	unixTime := time.Now().Unix()
 	tokenExp := unixTime + int64(idExp)
