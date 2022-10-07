@@ -2,6 +2,7 @@ package helper
 
 import (
 	"errors"
+	"kamari.com/httperror"
 	"strconv"
 	"strings"
 
@@ -157,4 +158,16 @@ func CountPriceRange(variants []model.ProductVariant) []uint64 {
 
 	res[0], res[1] = min, max
 	return res
+}
+
+func GetUserContext(context *gin.Context) (model.User, error) {
+	var user model.User
+
+	u, exist := context.Get("user")
+	if !exist {
+		return user, httperror.UnauthorizedError()
+	}
+
+	user = u.(model.User)
+	return user, nil
 }

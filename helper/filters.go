@@ -27,10 +27,6 @@ type categoryMetadata struct {
 	Name string `json:"name"`
 }
 
-//category show all
-//reviewer name (product review)
-//review optional sort oldeest and newest
-
 func NewCategoryMetadata(id uint64, name string) categoryMetadata {
 	return categoryMetadata{
 		Id:   id,
