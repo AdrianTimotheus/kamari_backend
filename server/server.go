@@ -65,13 +65,18 @@ func Init() {
 		DB: db.Get(),
 	})
 
+	otpCodeRepository := repository.NewOtpCodeRepository(repository.OCRConfig{
+		DB: db.Get(),
+	})
+
 	sealabsAccountRepository := repository.NewSealabsAccountRepository(repository.SARConfig{
 		DB: db.Get(),
 	})
 
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
-		UserRepository: userRepository,
+		UserRepository:    userRepository,
+		OtpCodeRepository: otpCodeRepository,
 	})
 	productService := service.NewProductService(service.PConfig{
 		ProductRepository:        productRepository,

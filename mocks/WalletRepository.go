@@ -33,6 +33,50 @@ func (_m *WalletRepository) ChangeUserWalletPin(userId uint64, Password string) 
 	return r0, r1
 }
 
+// CountUserWallet provides a mock function with given fields: userId
+func (_m *WalletRepository) CountUserWallet(userId uint64) (int64, error) {
+	ret := _m.Called(userId)
+
+	var r0 int64
+	if rf, ok := ret.Get(0).(func(uint64) int64); ok {
+		r0 = rf(userId)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(userId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CreateWallet provides a mock function with given fields: _a0
+func (_m *WalletRepository) CreateWallet(_a0 model.Wallet) (*model.Wallet, error) {
+	ret := _m.Called(_a0)
+
+	var r0 *model.Wallet
+	if rf, ok := ret.Get(0).(func(model.Wallet) *model.Wallet); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Wallet)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.Wallet) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMyWalletDetail provides a mock function with given fields: userID
 func (_m *WalletRepository) GetMyWalletDetail(userID uint64) (*model.Wallet, error) {
 	ret := _m.Called(userID)

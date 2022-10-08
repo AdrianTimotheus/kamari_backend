@@ -12,16 +12,44 @@ type CartRepository struct {
 	mock.Mock
 }
 
+// CreateCartItem provides a mock function with given fields: userId, req
+func (_m *CartRepository) CreateCartItem(userId uint64, req dto.AddCartItemRequest) error {
+	ret := _m.Called(userId, req)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(uint64, dto.AddCartItemRequest) error); ok {
+		r0 = rf(userId, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteCartItem provides a mock function with given fields: id, userId
+func (_m *CartRepository) DeleteCartItem(id int, userId uint64) error {
+	ret := _m.Called(id, userId)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(int, uint64) error); ok {
+		r0 = rf(id, userId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetCartHoverItems provides a mock function with given fields: userId
-func (_m *CartRepository) GetCartHoverItems(userId uint64) ([]dto.CartHoverRes, error) {
+func (_m *CartRepository) GetCartHoverItems(userId uint64) (*dto.CartHoverRes, error) {
 	ret := _m.Called(userId)
 
-	var r0 []dto.CartHoverRes
-	if rf, ok := ret.Get(0).(func(uint64) []dto.CartHoverRes); ok {
+	var r0 *dto.CartHoverRes
+	if rf, ok := ret.Get(0).(func(uint64) *dto.CartHoverRes); ok {
 		r0 = rf(userId)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]dto.CartHoverRes)
+			r0 = ret.Get(0).(*dto.CartHoverRes)
 		}
 	}
 
@@ -33,6 +61,43 @@ func (_m *CartRepository) GetCartHoverItems(userId uint64) ([]dto.CartHoverRes, 
 	}
 
 	return r0, r1
+}
+
+// GetCartItems provides a mock function with given fields: userId
+func (_m *CartRepository) GetCartItems(userId uint64) ([]dto.CartItemRaw, error) {
+	ret := _m.Called(userId)
+
+	var r0 []dto.CartItemRaw
+	if rf, ok := ret.Get(0).(func(uint64) []dto.CartItemRaw); ok {
+		r0 = rf(userId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.CartItemRaw)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(userId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateCartItem provides a mock function with given fields: id, userId, req
+func (_m *CartRepository) UpdateCartItem(id int, userId uint64, req dto.UpdateCartItemRequest) error {
+	ret := _m.Called(id, userId, req)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(int, uint64, dto.UpdateCartItemRequest) error); ok {
+		r0 = rf(id, userId, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 type mockConstructorTestingTNewCartRepository interface {

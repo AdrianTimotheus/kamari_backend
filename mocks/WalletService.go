@@ -34,6 +34,29 @@ func (_m *WalletService) ChangeUserWalletPin(userId uint64, Password string) (bo
 	return r0, r1
 }
 
+// CreateNewWallet provides a mock function with given fields: userId, hashedPassword
+func (_m *WalletService) CreateNewWallet(userId uint64, hashedPassword string) (*dto.DetailWalletResponse, error) {
+	ret := _m.Called(userId, hashedPassword)
+
+	var r0 *dto.DetailWalletResponse
+	if rf, ok := ret.Get(0).(func(uint64, string) *dto.DetailWalletResponse); ok {
+		r0 = rf(userId, hashedPassword)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dto.DetailWalletResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64, string) error); ok {
+		r1 = rf(userId, hashedPassword)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetUserWalletDetail provides a mock function with given fields: userModel
 func (_m *WalletService) GetUserWalletDetail(userModel model.User) (*dto.DetailWalletResponse, error) {
 	ret := _m.Called(userModel)
@@ -73,6 +96,27 @@ func (_m *WalletService) GetWalletTransactionHistories(userModel model.User, pay
 	var r1 error
 	if rf, ok := ret.Get(1).(func(model.User, dto.WalletTransactionRequest) error); ok {
 		r1 = rf(userModel, payload)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// IsUserHasWallet provides a mock function with given fields: userId
+func (_m *WalletService) IsUserHasWallet(userId uint64) (bool, error) {
+	ret := _m.Called(userId)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(uint64) bool); ok {
+		r0 = rf(userId)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(userId)
 	} else {
 		r1 = ret.Error(1)
 	}

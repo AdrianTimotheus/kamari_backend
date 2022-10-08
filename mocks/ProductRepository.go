@@ -186,6 +186,34 @@ func (_m *ProductRepository) GetProductReviewScore(productID uint64) (int, int, 
 	return r0, r1, r2
 }
 
+// GetProductReviewScoreDecimal provides a mock function with given fields: productId
+func (_m *ProductRepository) GetProductReviewScoreDecimal(productId uint64) (int, float32, error) {
+	ret := _m.Called(productId)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(uint64) int); ok {
+		r0 = rf(productId)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 float32
+	if rf, ok := ret.Get(1).(func(uint64) float32); ok {
+		r1 = rf(productId)
+	} else {
+		r1 = ret.Get(1).(float32)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(uint64) error); ok {
+		r2 = rf(productId)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetSearchProducts provides a mock function with given fields: merchantID, pageOffset, orderBy, keyword, Limit
 func (_m *ProductRepository) GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int) ([]model.Product, error) {
 	ret := _m.Called(merchantID, pageOffset, orderBy, keyword, Limit)
@@ -202,6 +230,29 @@ func (_m *ProductRepository) GetSearchProducts(merchantID uint64, pageOffset int
 	var r1 error
 	if rf, ok := ret.Get(1).(func(uint64, int, string, string, int) error); ok {
 		r1 = rf(merchantID, pageOffset, orderBy, keyword, Limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetSimilarProduct provides a mock function with given fields: keyword, category, currentProductId
+func (_m *ProductRepository) GetSimilarProduct(keyword string, category uint64, currentProductId uint64) ([]model.Product, error) {
+	ret := _m.Called(keyword, category, currentProductId)
+
+	var r0 []model.Product
+	if rf, ok := ret.Get(0).(func(string, uint64, uint64) []model.Product); ok {
+		r0 = rf(keyword, category, currentProductId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Product)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, uint64, uint64) error); ok {
+		r1 = rf(keyword, category, currentProductId)
 	} else {
 		r1 = ret.Error(1)
 	}

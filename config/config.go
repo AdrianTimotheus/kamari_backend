@@ -1,9 +1,8 @@
 package config
 
 import (
-	"os"
-
 	_ "github.com/joho/godotenv/autoload"
+	"os"
 )
 
 type dbConfig struct {
@@ -15,6 +14,11 @@ type dbConfig struct {
 	SSLMode  string
 }
 
+type redisConfig struct {
+	Host     string
+	Password string
+}
+
 type AppConfig struct {
 	BaseURL            string
 	Env                string
@@ -23,6 +27,7 @@ type AppConfig struct {
 	JWTExpireInMinutes int
 	StoragePath        string
 	DBConfig           dbConfig
+	RedisConfig        redisConfig
 }
 
 func getEnv(key, defaultVal string) string {
@@ -46,5 +51,9 @@ var Config = AppConfig{
 		DBName:   getEnv("DB_NAME", "kamari_db"),
 		Port:     getEnv("DB_PORT", "5432"),
 		SSLMode:  getEnv("DB_SSL", "disable"),
+	},
+	RedisConfig: redisConfig{
+		Host:     getEnv("REDIS_HOST", "localhost:6379"),
+		Password: getEnv("REDIS_PASSWORD", ""),
 	},
 }

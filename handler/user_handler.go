@@ -88,3 +88,34 @@ func (h Handler) CheckPasswordAuth(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dto.StatusMessageResponse{Status: status})
 }
+func (h Handler) GenerateOTP(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	response, err := h.userService.GenerateOTPRedis(user)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h Handler) AuthOTP(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	var payload dto.AuthOTPRequest
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		_ = c.Error(httperror.BadRequestError("Missing required body", "MISSING_REQUIRED_BODY"))
+		return
+	}
+	response, err := h.userService.AuthOTP(user, payload)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	if response.Status {
+		c.JSON(http.StatusOK, response)
+		return
+	}
+	c.JSON(http.StatusUnauthorized, response)
+}
