@@ -35,6 +35,29 @@ func (_m *OrderDetailsRepository) GetOrderDetails(id uint64) (*model.OrderDetail
 	return r0, r1
 }
 
+// GetOrdererUser provides a mock function with given fields: orderDetailId
+func (_m *OrderDetailsRepository) GetOrdererUser(orderDetailId uint64) (*model.User, error) {
+	ret := _m.Called(orderDetailId)
+
+	var r0 *model.User
+	if rf, ok := ret.Get(0).(func(uint64) *model.User); ok {
+		r0 = rf(orderDetailId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(orderDetailId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewOrderDetailsRepository interface {
 	mock.TestingT
 	Cleanup(func())

@@ -15,15 +15,15 @@ type ProductReviewService struct {
 }
 
 // GetProductReviews provides a mock function with given fields: productId, filters
-func (_m *ProductReviewService) GetProductReviews(productId uint64, filters *helper.Filters) (*dto.ReviewResponse, *helper.Metadata, error) {
+func (_m *ProductReviewService) GetProductReviews(productId uint64, filters *helper.Filters) ([]dto.ProductReviewResponse, *helper.Metadata, error) {
 	ret := _m.Called(productId, filters)
 
-	var r0 *dto.ReviewResponse
-	if rf, ok := ret.Get(0).(func(uint64, *helper.Filters) *dto.ReviewResponse); ok {
+	var r0 []dto.ProductReviewResponse
+	if rf, ok := ret.Get(0).(func(uint64, *helper.Filters) []dto.ProductReviewResponse); ok {
 		r0 = rf(productId, filters)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*dto.ReviewResponse)
+			r0 = ret.Get(0).([]dto.ProductReviewResponse)
 		}
 	}
 

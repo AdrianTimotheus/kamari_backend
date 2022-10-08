@@ -13,16 +13,44 @@ type CartService struct {
 	mock.Mock
 }
 
+// CreateCartItem provides a mock function with given fields: user, req
+func (_m *CartService) CreateCartItem(user model.User, req dto.AddCartItemRequest) error {
+	ret := _m.Called(user, req)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.User, dto.AddCartItemRequest) error); ok {
+		r0 = rf(user, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteCartItem provides a mock function with given fields: id, userId
+func (_m *CartService) DeleteCartItem(id int, userId uint64) error {
+	ret := _m.Called(id, userId)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(int, uint64) error); ok {
+		r0 = rf(id, userId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetCartHoverItems provides a mock function with given fields: user
-func (_m *CartService) GetCartHoverItems(user model.User) ([]dto.CartHoverRes, error) {
+func (_m *CartService) GetCartHoverItems(user model.User) (*dto.CartHoverRes, error) {
 	ret := _m.Called(user)
 
-	var r0 []dto.CartHoverRes
-	if rf, ok := ret.Get(0).(func(model.User) []dto.CartHoverRes); ok {
+	var r0 *dto.CartHoverRes
+	if rf, ok := ret.Get(0).(func(model.User) *dto.CartHoverRes); ok {
 		r0 = rf(user)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]dto.CartHoverRes)
+			r0 = ret.Get(0).(*dto.CartHoverRes)
 		}
 	}
 
@@ -34,6 +62,43 @@ func (_m *CartService) GetCartHoverItems(user model.User) ([]dto.CartHoverRes, e
 	}
 
 	return r0, r1
+}
+
+// GetCartItems provides a mock function with given fields: user
+func (_m *CartService) GetCartItems(user model.User) ([]dto.CartItemsResponse, error) {
+	ret := _m.Called(user)
+
+	var r0 []dto.CartItemsResponse
+	if rf, ok := ret.Get(0).(func(model.User) []dto.CartItemsResponse); ok {
+		r0 = rf(user)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.CartItemsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.User) error); ok {
+		r1 = rf(user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateCartItem provides a mock function with given fields: id, userId, req
+func (_m *CartService) UpdateCartItem(id int, userId uint64, req dto.UpdateCartItemRequest) error {
+	ret := _m.Called(id, userId, req)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(int, uint64, dto.UpdateCartItemRequest) error); ok {
+		r0 = rf(id, userId, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 type mockConstructorTestingTNewCartService interface {

@@ -45,6 +45,29 @@ func (_m *CategoryRepository) GetCategories(keyword string, filters *helper.Filt
 	return r0, r1, r2
 }
 
+// GetCategory provides a mock function with given fields: category
+func (_m *CategoryRepository) GetCategory(category *model.Category) (*model.Category, error) {
+	ret := _m.Called(category)
+
+	var r0 *model.Category
+	if rf, ok := ret.Get(0).(func(*model.Category) *model.Category); ok {
+		r0 = rf(category)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Category)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*model.Category) error); ok {
+		r1 = rf(category)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewCategoryRepository interface {
 	mock.TestingT
 	Cleanup(func())

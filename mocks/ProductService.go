@@ -69,6 +69,29 @@ func (_m *ProductService) GetProducts(keyword string, filters *helper.Filters) (
 	return r0, r1, r2
 }
 
+// GetSimilarProduct provides a mock function with given fields: payload
+func (_m *ProductService) GetSimilarProduct(payload dto.GetSimilarProductRequest) ([]dto.Product, error) {
+	ret := _m.Called(payload)
+
+	var r0 []dto.Product
+	if rf, ok := ret.Get(0).(func(dto.GetSimilarProductRequest) []dto.Product); ok {
+		r0 = rf(payload)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.Product)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(dto.GetSimilarProductRequest) error); ok {
+		r1 = rf(payload)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTopSellerProduct provides a mock function with given fields:
 func (_m *ProductService) GetTopSellerProduct() ([]dto.Product, error) {
 	ret := _m.Called()
