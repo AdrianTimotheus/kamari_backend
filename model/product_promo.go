@@ -11,6 +11,7 @@ type ProductPromo struct {
 	Title          string    `json:"title"`
 	Code           string    `json:"code"`
 	PromoTypeId    uint8     `json:"promo_type_id"`
+	PromoType      PromoType `json:"promo_type,omitempty"`
 	DiscountAmount uint64    `json:"discount_amount"`
 	StartDate      time.Time `json:"start_date"`
 	EndDate        time.Time `json:"end_date"`

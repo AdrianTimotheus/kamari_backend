@@ -236,7 +236,14 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 
 	for i := range product.ProductVariants {
 		if product.ProductVariants[i].ProductPromoID != 0 {
-			product.ProductVariants[i].PromoPrice = product.ProductVariants[i].Price - product.ProductVariants[i].ProductPromo.DiscountAmount
+			switch product.ProductVariants[i].ProductPromo.PromoTypeId {
+			case 1:
+				product.ProductVariants[i].PromoPrice = product.ProductVariants[i].Price - product.ProductVariants[i].ProductPromo.DiscountAmount
+			case 2:
+				p := product.ProductVariants[i].Price
+				discountAmount := p * product.ProductVariants[i].ProductPromo.DiscountAmount / 100
+				product.ProductVariants[i].PromoPrice = p - discountAmount
+			}
 		}
 	}
 

@@ -73,6 +73,10 @@ func Init() {
 		DB: db.Get(),
 	})
 
+	//merchantVoucherRepository := repository.NewMerchantVoucherRepository(repository.MVRConfig{
+	//	DB: db.Get(),
+	//})
+
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository:    userRepository,
