@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"kamari.com/httperror"
 	"kamari.com/model"
 )
 
@@ -13,6 +14,8 @@ type UserRepository interface {
 	FindUserByEmail(email string) (*model.User, error)
 	CreateUser(user *model.User) error
 	CheckPassword(id uint64, password string) (*model.User, error)
+	GetUserDetail(userId uint64) (*model.User, error)
+	EditUserDetail(user model.User) (*model.User, error)
 }
 
 type userRepository struct {
@@ -70,4 +73,26 @@ func (u userRepository) CheckPassword(id uint64, password string) (*model.User, 
 		return nil, err
 	}
 	return &uModel, nil
+}
+
+func (u userRepository) GetUserDetail(userId uint64) (*model.User, error) {
+	var user model.User
+	err := u.db.Where("id = ?", userId).First(&user).Error
+	if err != nil {
+		return nil, httperror.InternalServerError("Failed to get user detail")
+	}
+	return &user, nil
+}
+
+func (u userRepository) EditUserDetail(user model.User) (*model.User, error) {
+	var updatedUser model.User
+	err := u.db.Where("id = ?", user.Id).Updates(&user).Error
+	if err != nil {
+		return nil, httperror.InternalServerError("Failed to edit user detail")
+	}
+	err = u.db.Where("id = ?", user.Id).First(&updatedUser).Error
+	if err != nil {
+		return nil, httperror.InternalServerError("Failed to get user detail")
+	}
+	return &updatedUser, nil
 }

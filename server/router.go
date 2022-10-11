@@ -85,6 +85,8 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/carts", middleware.AuthorizeJWT, h.CreateCartItem, middleware.ErrorHandler)
 		api.PATCH("/carts/:id", middleware.AuthorizeJWT, h.UpdateCartItem, middleware.ErrorHandler)
 		api.DELETE("/carts/:id", middleware.AuthorizeJWT, h.DeleteCartItem, middleware.ErrorHandler)
+		api.GET("/users", middleware.AuthorizeJWT, h.GetUserDetail, middleware.ErrorHandler)
+		api.PATCH("/users", middleware.AuthorizeJWT, h.EditUserDetail, middleware.ErrorHandler)
 		api.GET("/wallets", middleware.AuthorizeJWT, h.GetWalletDetail, middleware.ErrorHandler)
 		api.GET("/wallets/histories", middleware.AuthorizeJWT, h.GetWalletTransactionHistories, middleware.ErrorHandler)
 		api.GET("/wallets/transactions", middleware.AuthorizeJWT, h.GetWalletTransactionDetail, middleware.ErrorHandler)
