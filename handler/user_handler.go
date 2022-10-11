@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"kamari.com/dto"
 	"kamari.com/httperror"
 	"kamari.com/model"
-	"net/http"
 )
 
 func (h Handler) Register(c *gin.Context) {
@@ -118,4 +119,42 @@ func (h Handler) AuthOTP(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusUnauthorized, response)
+}
+
+func (h Handler) GetUserDetail(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	response, err := h.userService.GetUserDetail(user.Id)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h Handler) EditUserDetail(c *gin.Context) {
+	var (
+		req dto.EditUserDetailReq
+		err error
+	)
+
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(ErrFailedBindingValidation)
+		return
+	}
+
+	response, err := h.userService.EditUserDetail(req, user.Id)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
 }

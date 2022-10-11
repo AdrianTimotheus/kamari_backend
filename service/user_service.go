@@ -4,6 +4,10 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"math/rand"
+	"strconv"
+	"time"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgconn"
 	"github.com/mailjet/mailjet-apiv3-go"
@@ -15,9 +19,6 @@ import (
 	"kamari.com/middleware"
 	"kamari.com/model"
 	"kamari.com/repository"
-	"math/rand"
-	"strconv"
-	"time"
 )
 
 type UserService interface {
@@ -28,6 +29,8 @@ type UserService interface {
 	//GenerateOTP(user model.User) (dto.StatusMessageResponse, error)
 	GenerateOTPRedis(user model.User) (dto.StatusMessageResponse, error)
 	AuthOTP(user model.User, OTPCode dto.AuthOTPRequest) (dto.StatusMessageResponse, error)
+	GetUserDetail(userId uint64) (*model.User, error)
+	EditUserDetail(req dto.EditUserDetailReq, userId uint64) (*model.User, error)
 }
 
 type userService struct {
@@ -233,4 +236,32 @@ func (u userService) AuthOTP(user model.User, OTPCode dto.AuthOTPRequest) (dto.S
 	}
 	_ = redisHelper.Delete(otpKey)
 	return dto.StatusMessageResponse{Status: true}, nil
+}
+
+func (u userService) GetUserDetail(userId uint64) (*model.User, error) {
+	response, err := u.userRepository.GetUserDetail(userId)
+	if err != nil {
+		return nil, err
+	}
+	return response, err
+}
+
+func (u userService) EditUserDetail(req dto.EditUserDetailReq, userId uint64) (*model.User, error) {
+	user := model.User{
+		Id:          userId,
+		Name:        req.Name,
+		Username:    req.Username,
+		Email:       req.Email,
+		Phone:       req.Phone,
+		DateOfBirth: req.DateOfBirth,
+		PicUrl:      req.PicUrl,
+		GenderId:    req.GenderId,
+	}
+
+	response, err := u.userRepository.EditUserDetail(user)
+
+	if err != nil {
+		return nil, err
+	}
+	return response, err
 }
