@@ -33,6 +33,12 @@ func GetParam(c *gin.Context, key string, returnType string) (interface{}, error
 			return nil, err
 		}
 		return n, nil
+	case "uint64":
+		n, err := strconv.ParseUint(p, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
 	default:
 		return nil, ErrInvalidReturnType
 	}

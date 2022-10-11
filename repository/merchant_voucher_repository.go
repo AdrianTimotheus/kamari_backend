@@ -1,8 +1,16 @@
 package repository
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+	"kamari.com/model"
+)
 
 type MerchantVoucherRepository interface {
+	DeleteVoucher(voucher *model.MerchantVoucher) error
+	ValidVoucherOwner(merchantId, voucherId uint64) (bool, error)
+	IsRemovable(voucher *model.MerchantVoucher) (bool, error)
 }
 
 type merchantVoucherRepository struct {
@@ -13,14 +21,41 @@ type MVRConfig struct {
 	DB *gorm.DB
 }
 
-func NewMerchantVoucherRepository(c MVRConfig) MerchantRepository {
-	return merchantRepository{
+func NewMerchantVoucherRepository(c MVRConfig) MerchantVoucherRepository {
+	return merchantVoucherRepository{
 		db: c.DB,
 	}
 }
 
-//func (m merchantVoucherRepository) DeleteVoucher(voucherId uint64) error {
-//	m.db.
-//		Where("id = ?", voucherId).
-//		Delete()
-//}
+func (m merchantVoucherRepository) ValidVoucherOwner(merchantId, voucherId uint64) (bool, error) {
+	var voucher model.MerchantVoucher
+	res := m.db.
+		Where("id = ?", voucherId).
+		Where("merchant_id = ?", merchantId).
+		Limit(1).
+		Find(&voucher)
+
+	if res.Error != nil {
+		return false, res.Error
+	}
+
+	return res.RowsAffected > 0, nil
+}
+
+func (m merchantVoucherRepository) IsRemovable(voucher *model.MerchantVoucher) (bool, error) {
+	var now = time.Now()
+	res := m.db.
+		Where("id = ?", voucher.Id).
+		Where("start_date > ?", now.Format("2006-01-02")).
+		Limit(1).
+		Find(&voucher)
+	if res.Error != nil {
+		return false, res.Error
+	}
+
+	return res.RowsAffected > 0, nil
+}
+
+func (m merchantVoucherRepository) DeleteVoucher(voucher *model.MerchantVoucher) error {
+	return m.db.Delete(&voucher).Error
+}

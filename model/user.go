@@ -9,9 +9,9 @@ type RoleId uint
 
 const (
 	_ RoleId = iota
-	RoleAdmin
 	RoleBuyer
-	RoleMerchant
+	RoleSeller
+	RoleAdmin
 )
 
 type User struct {
