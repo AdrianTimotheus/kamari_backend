@@ -26,6 +26,7 @@ type RouterConfig struct {
 	WalletTransactionService service.WalletTransactionService
 	WishlistService          service.WishlistService
 	SealabsAccountService    service.SealabsAccountService
+	MerchantVoucherService   service.MerchantVoucherService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -52,6 +53,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		WalletTransactionService: c.WalletTransactionService,
 		WishlistService:          c.WishlistService,
 		SealabsAccountService:    c.SealabsAccountService,
+		MerchantVoucherService:   c.MerchantVoucherService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -98,6 +100,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/users/sealabspay", middleware.AuthorizeJWT, h.GetUserSealabsAccount, middleware.ErrorHandler)
 		api.POST("/users/sealabspay", middleware.AuthorizeJWT, h.AddSealabsPayAccount, middleware.ErrorHandler)
 		api.PATCH("/users/sealabspay", middleware.AuthorizeJWT, h.SetDefaultSealabsAccount, middleware.ErrorHandler)
+		api.DELETE("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSeller, h.DeleteMerchantVoucher, middleware.ErrorHandler)
 		api.POST("/otp/auth", middleware.AuthorizeJWT, h.AuthOTP, middleware.ErrorHandler)
 	}
 

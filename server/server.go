@@ -73,9 +73,9 @@ func Init() {
 		DB: db.Get(),
 	})
 
-	//merchantVoucherRepository := repository.NewMerchantVoucherRepository(repository.MVRConfig{
-	//	DB: db.Get(),
-	//})
+	merchantVoucherRepository := repository.NewMerchantVoucherRepository(repository.MVRConfig{
+		DB: db.Get(),
+	})
 
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
@@ -134,6 +134,11 @@ func Init() {
 		SealabsAccountRepository: sealabsAccountRepository,
 	})
 
+	merchantVoucherService := service.NewMerchantVoucherService(service.MVSConfig{
+		MerchantVoucherRepository: merchantVoucherRepository,
+		MerchantRepository:        merchantRepository,
+	})
+
 	r := NewRouter(RouterConfig{
 		UserService:              userService,
 		ProvinceService:          provinceService,
@@ -147,6 +152,7 @@ func Init() {
 		WalletTransactionService: walletTransactionService,
 		WishlistService:          wishlistService,
 		SealabsAccountService:    sealabsAccountService,
+		MerchantVoucherService:   merchantVoucherService,
 	})
 
 	log.Fatal(r.Run())
