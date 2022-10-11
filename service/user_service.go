@@ -231,5 +231,6 @@ func (u userService) AuthOTP(user model.User, OTPCode dto.AuthOTPRequest) (dto.S
 	if res != hashedOtpCode {
 		return dto.StatusMessageResponse{Status: false}, nil
 	}
+	_ = redisHelper.Delete(otpKey)
 	return dto.StatusMessageResponse{Status: true}, nil
 }
