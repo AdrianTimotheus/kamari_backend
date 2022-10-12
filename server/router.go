@@ -27,6 +27,7 @@ type RouterConfig struct {
 	WishlistService          service.WishlistService
 	SealabsAccountService    service.SealabsAccountService
 	MerchantVoucherService   service.MerchantVoucherService
+	AddressService           service.AddressService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -54,6 +55,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		WishlistService:          c.WishlistService,
 		SealabsAccountService:    c.SealabsAccountService,
 		MerchantVoucherService:   c.MerchantVoucherService,
+		AddressService:           c.AddressService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -104,6 +106,12 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.PATCH("/users/sealabspay", middleware.AuthorizeJWT, h.SetDefaultSealabsAccount, middleware.ErrorHandler)
 		api.DELETE("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSeller, h.DeleteMerchantVoucher, middleware.ErrorHandler)
 		api.POST("/otp/auth", middleware.AuthorizeJWT, h.AuthOTP, middleware.ErrorHandler)
+		api.GET("/address", middleware.AuthorizeJWT, h.GetAddress, middleware.ErrorHandler)
+		api.POST("/address", middleware.AuthorizeJWT, h.AddNewAddress, middleware.ErrorHandler)
+		api.PATCH("/address", middleware.AuthorizeJWT, h.EditAddress, middleware.ErrorHandler)
+		api.DELETE("/address/:id", middleware.AuthorizeJWT, h.DeleteAddress, middleware.ErrorHandler)
+		api.GET("/address/default", middleware.AuthorizeJWT, h.GetDefaultAddress, middleware.ErrorHandler)
+		api.PATCH("/address/default/:id", middleware.AuthorizeJWT, h.SetDefaultAddress, middleware.ErrorHandler)
 	}
 
 	return router

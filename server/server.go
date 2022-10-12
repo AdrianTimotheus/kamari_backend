@@ -73,6 +73,10 @@ func Init() {
 		DB: db.Get(),
 	})
 
+	addressRepository := repository.NewAddressRepository(repository.ARConfig{
+		DB: db.Get(),
+	})
+
 	merchantVoucherRepository := repository.NewMerchantVoucherRepository(repository.MVRConfig{
 		DB: db.Get(),
 	})
@@ -139,6 +143,10 @@ func Init() {
 		MerchantRepository:        merchantRepository,
 	})
 
+	addressService := service.NewAddressService(service.ASConfig{
+		AddressRepository: addressRepository,
+	})
+
 	r := NewRouter(RouterConfig{
 		UserService:              userService,
 		ProvinceService:          provinceService,
@@ -153,6 +161,7 @@ func Init() {
 		WishlistService:          wishlistService,
 		SealabsAccountService:    sealabsAccountService,
 		MerchantVoucherService:   merchantVoucherService,
+		AddressService:           addressService,
 	})
 
 	log.Fatal(r.Run())
