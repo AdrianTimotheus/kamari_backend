@@ -1,14 +1,12 @@
 package handler
 
 import (
-	"bytes"
-	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
 	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
-	"net/http"
 )
 
 func (h Handler) AddSealabsPayAccount(c *gin.Context) {
@@ -42,13 +40,14 @@ func (h Handler) SetDefaultSealabsAccount(c *gin.Context) {
 		return
 	}
 
-	var req dto.SealabsAccountChangeDefault
-	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
+	p, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "BAD_PARAMS"))
 		return
 	}
 
-	if err := h.sealabsAccountService.SetDefaultSealabsAccount(user.Id, req.SealabsAccountId); err != nil {
+	accountId := p.(uint64)
+	if err := h.sealabsAccountService.SetDefaultSealabsAccount(user.Id, accountId); err != nil {
 		_ = c.Error(err)
 		return
 	}
@@ -81,20 +80,36 @@ func (h Handler) CheckSealabsOwner(c *gin.Context) {
 		return
 	}
 
-	byteBody, _ := ioutil.ReadAll(c.Request.Body)
-	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(byteBody))
-	var payload dto.SealabsAccountChangeDefault
-	if err = c.ShouldBindJSON(&payload); err != nil {
-		fmt.Println("THE ERROR", err, err == nil)
-		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+	p, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "BAD_PARAMS"))
 		return
 	}
 
-	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(byteBody))
-
-	err = h.sealabsAccountService.IsValidAccountOwner(user.Id, payload.SealabsAccountId)
+	accountId := p.(uint64)
+	err = h.sealabsAccountService.IsValidAccountOwner(user.Id, accountId)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusForbidden, httperror.ForbiddenError())
 		return
 	}
+}
+
+func (h Handler) DeleteSealabsAccount(c *gin.Context) {
+	p, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "BAD_PARAMS"))
+		return
+	}
+
+	accountId := p.(uint64)
+	err = h.sealabsAccountService.RemoveAccount(accountId)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "successfully deleted an account",
+	})
 }
