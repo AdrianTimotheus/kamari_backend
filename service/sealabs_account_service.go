@@ -12,6 +12,7 @@ type SealabsAccountService interface {
 	GetUsesSealabsAccounts(userId uint64) ([]dto.SealabsPayAccountResponse, error)
 	SetDefaultSealabsAccount(userId, accountId uint64) error
 	IsValidAccountOwner(userId, accountId uint64) error
+	RemoveAccount(accountId uint64) error
 }
 
 type sealabsAccountService struct {
@@ -91,6 +92,16 @@ func (s sealabsAccountService) IsValidAccountOwner(userId, accountId uint64) err
 	valid, err := s.sealabsAccountRepository.IsValidOwner(userId, accountId)
 	if err != nil || !valid {
 		return httperror.ForbiddenError()
+	}
+
+	return nil
+}
+
+func (s sealabsAccountService) RemoveAccount(accountId uint64) error {
+	account := model.SealabsPayAccount{Id: accountId}
+	err := s.sealabsAccountRepository.RemoveAccount(&account)
+	if err != nil {
+		return err
 	}
 
 	return nil
