@@ -118,7 +118,7 @@ func (h Handler) AuthOTP(c *gin.Context) {
 		c.JSON(http.StatusOK, response)
 		return
 	}
-	c.JSON(http.StatusUnauthorized, response)
+	c.JSON(http.StatusOK, response)
 }
 
 func (h Handler) GetUserDetail(c *gin.Context) {
