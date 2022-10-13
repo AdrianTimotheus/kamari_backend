@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"encoding/json"
-	"fmt"
 	"gorm.io/gorm"
 	"kamari.com/model"
 )
@@ -48,7 +46,5 @@ func (o orderDetailsRepository) GetOrdererUser(orderDetailId uint64) (*model.Use
 		return nil, err
 	}
 
-	pp, _ := json.MarshalIndent(orderDetail.Order.Transaction.User, "", "\t")
-	fmt.Println("SOMEMEE", string(pp))
 	return &orderDetail.Order.Transaction.User, nil
 }

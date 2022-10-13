@@ -10,6 +10,7 @@ type SealabsAccountRepository interface {
 	ChangeDefaultTransaction(userId, accountId uint64) error
 	HasSameCard(sealabsAccount *model.SealabsPayAccount) bool
 	GetAccounts(userId uint64) ([]model.SealabsPayAccount, error)
+	IsValidOwner(userId, accountId uint64) (bool, error)
 }
 
 type sealabsAccountRepository struct {
@@ -99,4 +100,17 @@ func (s sealabsAccountRepository) GetAccounts(userId uint64) ([]model.SealabsPay
 	}
 
 	return accounts, nil
+}
+
+func (s sealabsAccountRepository) IsValidOwner(userId, accountId uint64) (bool, error) {
+	res := s.db.
+		Where("user_id = ?", userId).
+		Where("id = ?", accountId).
+		Limit(1).
+		Find(&model.SealabsPayAccount{})
+	if res.Error != nil {
+		return false, res.Error
+	}
+
+	return res.RowsAffected > 0, nil
 }

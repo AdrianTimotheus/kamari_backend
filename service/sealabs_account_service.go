@@ -11,6 +11,7 @@ type SealabsAccountService interface {
 	CreateNewAccount(*dto.SealabsAccountRequest, *model.User) error
 	GetUsesSealabsAccounts(userId uint64) ([]dto.SealabsPayAccountResponse, error)
 	SetDefaultSealabsAccount(userId, accountId uint64) error
+	IsValidAccountOwner(userId, accountId uint64) error
 }
 
 type sealabsAccountService struct {
@@ -81,6 +82,15 @@ func (s sealabsAccountService) SetDefaultSealabsAccount(userId, accountId uint64
 	err := s.sealabsAccountRepository.ChangeDefaultTransaction(userId, accountId)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (s sealabsAccountService) IsValidAccountOwner(userId, accountId uint64) error {
+	valid, err := s.sealabsAccountRepository.IsValidOwner(userId, accountId)
+	if err != nil || !valid {
+		return httperror.ForbiddenError()
 	}
 
 	return nil
