@@ -4,11 +4,15 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"github.com/golang-jwt/jwt/v4"
 	"gorm.io/gorm"
+	"kamari.com/config"
 	"kamari.com/dto"
+	"kamari.com/helper"
 	"kamari.com/httperror"
 	"kamari.com/model"
 	"kamari.com/repository"
+	"time"
 )
 
 type WalletService interface {
@@ -17,6 +21,7 @@ type WalletService interface {
 	ChangeUserWalletPin(userId uint64, Password string) (bool, error)
 	IsUserHasWallet(userId uint64) (bool, error)
 	CreateNewWallet(userId uint64, hashedPassword string) (*dto.DetailWalletResponse, error)
+	ValidateUserPinForPayment(user model.User, payload dto.ValidatePinRequest) (*dto.TokenResponse, error)
 }
 
 type walletService struct {
@@ -173,4 +178,59 @@ func (w walletService) CreateNewWallet(userId uint64, hashedPassword string) (*d
 		Balance: nWModel.Balance,
 	}
 	return &dtoResponse, nil
+}
+
+type levelOneJWTToken struct {
+	jwt.RegisteredClaims
+	User  *model.User `json:"user"`
+	Scope string      `json:"scope"`
+}
+
+func generateStepUpToken(user *model.User) (*dto.TokenResponse, error) {
+	idExp := config.Config.JWTExpireInMinutes * 60
+	unixTime := time.Now().Unix()
+	tokenExp := unixTime + int64(idExp)
+	timeExpire := jwt.NumericDate{Time: time.Unix(tokenExp, 0)}
+	timeNow := jwt.NumericDate{Time: time.Now()}
+	claims := &levelOneJWTToken{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    config.Config.AppName,
+			IssuedAt:  &timeNow,
+			ExpiresAt: &timeExpire,
+		},
+		User:  user,
+		Scope: "Level1",
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(config.Config.JWTSecret)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.TokenResponse{IDToken: tokenString}, err
+}
+
+func (w walletService) ValidateUserPinForPayment(user model.User, payload dto.ValidatePinRequest) (*dto.TokenResponse, error) {
+	hashedPin := fmt.Sprintf("%X", sha256.Sum256([]byte(payload.Pin)))
+	fmt.Println(user.Id)
+	fmt.Println(hashedPin)
+	if !w.walletRepository.ValidatePin(user.Id, hashedPin) {
+		return nil, httperror.ForbiddenError()
+	}
+
+	dtoResponse, err := generateStepUpToken(&user)
+	if err != nil {
+		return nil, httperror.InternalServerError("Internal Server Error")
+	}
+
+	redis := helper.NewRedisClient(1)
+	stepUpKey := "stepUp-" + user.Email
+
+	err = redis.SetData(stepUpKey, dtoResponse.IDToken)
+	if err != nil {
+		return nil, httperror.InternalServerError("Internal Server Error")
+	}
+
+	return dtoResponse, nil
 }

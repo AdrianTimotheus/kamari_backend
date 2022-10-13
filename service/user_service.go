@@ -180,7 +180,7 @@ func (u userService) GenerateOTPRedis(user model.User) (dto.StatusMessageRespons
 	}
 	otpString := string(otpCode)
 	otpKey := "OTP" + strconv.Itoa(int(user.Id))
-	redisHelper := helper.NewRedisClient()
+	redisHelper := helper.NewRedisClient(0)
 	hashedOtpString := fmt.Sprintf("%X", sha256.Sum256([]byte(otpString)))
 	err := redisHelper.SetData(otpKey, hashedOtpString)
 	if err != nil {
@@ -225,7 +225,7 @@ func SendOTPMailToUser(userModel model.User, otpCode string) error {
 
 func (u userService) AuthOTP(user model.User, OTPCode dto.AuthOTPRequest) (dto.StatusMessageResponse, error) {
 	otpKey := "OTP" + strconv.Itoa(int(user.Id))
-	redisHelper := helper.NewRedisClient()
+	redisHelper := helper.NewRedisClient(0)
 	hashedOtpCode := fmt.Sprintf("%X", sha256.Sum256([]byte(OTPCode.Code)))
 	res, err := redisHelper.GetData(otpKey)
 	if err != nil {

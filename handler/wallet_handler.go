@@ -99,3 +99,21 @@ func (h Handler) CreateUserWallet(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, response)
 }
+
+func (h Handler) ValidatePin(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	var payload dto.ValidatePinRequest
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		_ = c.Error(httperror.BadRequestError("Missing Required Body", "MISSING_REQUIRED_BODY"))
+		return
+	}
+
+	stepUpToken, err := h.walletService.ValidateUserPinForPayment(user, payload)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, stepUpToken)
+}
