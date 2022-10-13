@@ -108,6 +108,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.DELETE("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSeller, h.DeleteMerchantVoucher, middleware.ErrorHandler)
 		api.PATCH("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSeller, h.UpdateMerchantVoucher, middleware.ErrorHandler)
 		api.POST("/otp/auth", middleware.AuthorizeJWT, h.AuthOTP, middleware.ErrorHandler)
+		api.POST("/step-up/pin", middleware.AuthorizeJWT, h.ValidatePin, middleware.ErrorHandler)
 		api.GET("/address", middleware.AuthorizeJWT, h.GetAddress, middleware.ErrorHandler)
 		api.POST("/address", middleware.AuthorizeJWT, h.AddNewAddress, middleware.ErrorHandler)
 		api.PATCH("/address", middleware.AuthorizeJWT, h.EditAddress, middleware.ErrorHandler)

@@ -11,11 +11,11 @@ type RedisHelper struct {
 	Client *redis.Client
 }
 
-func NewRedisClient() RedisHelper {
+func NewRedisClient(instanceNumber int) RedisHelper {
 	client := redis.NewClient(&redis.Options{
 		Addr:     config.Config.RedisConfig.Host,
 		Password: config.Config.RedisConfig.Password,
-		DB:       0,
+		DB:       instanceNumber,
 	})
 	return RedisHelper{Client: client}
 }

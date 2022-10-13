@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"kamari.com/model"
 )
@@ -12,6 +13,7 @@ type WalletRepository interface {
 	ChangeUserWalletPin(userId uint64, Password string) (bool, error)
 	CountUserWallet(userId uint64) (int64, error)
 	CreateWallet(model model.Wallet) (*model.Wallet, error)
+	ValidatePin(userId uint64, HashedPIN string) bool
 }
 
 type walletRepository struct {
@@ -82,4 +84,17 @@ func (w walletRepository) CreateWallet(inModel model.Wallet) (*model.Wallet, err
 	}
 	return &inModel, nil
 
+}
+
+func (w walletRepository) ValidatePin(userId uint64, HashedPIN string) bool {
+	var numberOfRecord int64
+	var walletModel model.Wallet
+	w.db.Model(&walletModel).Where("user_id=?", userId).
+		Where("pin=?", HashedPIN).
+		Count(&numberOfRecord)
+	fmt.Println(numberOfRecord)
+	if numberOfRecord != 1 {
+		return false
+	}
+	return true
 }
