@@ -28,6 +28,7 @@ type RouterConfig struct {
 	SealabsAccountService    service.SealabsAccountService
 	MerchantVoucherService   service.MerchantVoucherService
 	AddressService           service.AddressService
+	CityService              service.CityService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -56,6 +57,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		SealabsAccountService:    c.SealabsAccountService,
 		MerchantVoucherService:   c.MerchantVoucherService,
 		AddressService:           c.AddressService,
+		CityService:              c.CityService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -82,6 +84,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/products/:id", h.GetProductDetail, middleware.ErrorHandler)
 		api.GET("/categories", h.GetCategories, middleware.ErrorHandler)
 		api.GET("/categories/:id", h.GetCategory, middleware.ErrorHandler)
+		api.GET("/cities", h.GetCities, middleware.ErrorHandler)
 
 		// need auth
 		api.GET("/carts/hover", middleware.AuthorizeJWT, h.GetCartHoverItems, middleware.ErrorHandler)

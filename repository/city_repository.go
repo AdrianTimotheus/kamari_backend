@@ -7,6 +7,7 @@ import (
 
 type CityRepository interface {
 	GetCity(id uint64) (model.City, error)
+	GetCityPerProvince() ([]model.City, error)
 }
 
 type cityRepository struct {
@@ -31,4 +32,13 @@ func (c cityRepository) GetCity(id uint64) (model.City, error) {
 	}
 
 	return city, nil
+}
+
+func (c cityRepository) GetCityPerProvince() ([]model.City, error) {
+	var models []model.City
+	err := c.db.Joins("Province").Find(&models).Error
+	if err != nil {
+		return nil, err
+	}
+	return models, nil
 }

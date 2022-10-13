@@ -147,6 +147,8 @@ func Init() {
 		AddressRepository: addressRepository,
 	})
 
+	cityService := service.NewCityService(service.CiSConfig{CityRepository: cityRepository})
+
 	r := NewRouter(RouterConfig{
 		UserService:              userService,
 		ProvinceService:          provinceService,
@@ -162,6 +164,7 @@ func Init() {
 		SealabsAccountService:    sealabsAccountService,
 		MerchantVoucherService:   merchantVoucherService,
 		AddressService:           addressService,
+		CityService:              cityService,
 	})
 
 	log.Fatal(r.Run())
