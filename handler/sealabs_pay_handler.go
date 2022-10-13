@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
@@ -41,7 +44,7 @@ func (h Handler) SetDefaultSealabsAccount(c *gin.Context) {
 
 	var req dto.SealabsAccountChangeDefault
 	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(ErrFailedBindingValidation)
+		_ = c.Error(err)
 		return
 	}
 
@@ -58,7 +61,7 @@ func (h Handler) SetDefaultSealabsAccount(c *gin.Context) {
 func (h Handler) GetUserSealabsAccount(c *gin.Context) {
 	user, err := helper.GetUserContext(c)
 	if err != nil {
-		_ = c.Error(err)
+		_ = c.Error(httperror.UnauthorizedError())
 		return
 	}
 
@@ -69,4 +72,29 @@ func (h Handler) GetUserSealabsAccount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, accounts)
+}
+
+func (h Handler) CheckSealabsOwner(c *gin.Context) {
+	user, err := helper.GetUserContext(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, httperror.UnauthorizedError())
+		return
+	}
+
+	byteBody, _ := ioutil.ReadAll(c.Request.Body)
+	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(byteBody))
+	var payload dto.SealabsAccountChangeDefault
+	if err = c.ShouldBindJSON(&payload); err != nil {
+		fmt.Println("THE ERROR", err, err == nil)
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
+
+	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(byteBody))
+
+	err = h.sealabsAccountService.IsValidAccountOwner(user.Id, payload.SealabsAccountId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusForbidden, httperror.ForbiddenError())
+		return
+	}
 }

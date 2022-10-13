@@ -101,8 +101,9 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/otp", middleware.AuthorizeJWT, h.GenerateOTP, middleware.ErrorHandler)
 		api.GET("/users/sealabspay", middleware.AuthorizeJWT, h.GetUserSealabsAccount, middleware.ErrorHandler)
 		api.POST("/users/sealabspay", middleware.AuthorizeJWT, h.AddSealabsPayAccount, middleware.ErrorHandler)
-		api.PATCH("/users/sealabspay", middleware.AuthorizeJWT, h.SetDefaultSealabsAccount, middleware.ErrorHandler)
+		api.PATCH("/users/sealabspay", middleware.AuthorizeJWT, h.CheckSealabsOwner, h.SetDefaultSealabsAccount, middleware.ErrorHandler)
 		api.DELETE("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSeller, h.DeleteMerchantVoucher, middleware.ErrorHandler)
+		api.PATCH("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSeller, h.UpdateMerchantVoucher, middleware.ErrorHandler)
 		api.POST("/otp/auth", middleware.AuthorizeJWT, h.AuthOTP, middleware.ErrorHandler)
 	}
 
