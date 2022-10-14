@@ -68,11 +68,15 @@ func NewRouter(c RouterConfig) *gin.Engine {
 
 	api := router.Group("/api")
 	{
-		// guest
-		api.Static("/docs", "swaggerui")
+		// auth
 		api.POST("/users", h.Register, middleware.ErrorHandler)
 		api.POST("/login", h.Login, middleware.ErrorHandler)
 		api.POST("/login-with-google", h.LoginWithGoogle, middleware.ErrorHandler)
+		api.GET("/refresh-token", h.GetNewTokenFromRefresh, middleware.ErrorHandler)
+		api.GET("/logout", h.Logout)
+
+		// guest
+		api.Static("/docs", "swaggerui")
 		api.GET("/provinces", h.GetAllProvinces, middleware.ErrorHandler)
 		api.GET("/sellers/:username", h.GetMerchantDetail, middleware.ErrorHandler)
 		api.GET("/sellers/:username/products", h.GetSellerProduct, middleware.ErrorHandler)

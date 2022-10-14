@@ -36,19 +36,15 @@ func (h Handler) Login(c *gin.Context) {
 		req *dto.LoginRequest
 		err error
 	)
-
 	if err = c.ShouldBindJSON(&req); err != nil {
 		_ = c.Error(ErrFailedBindingValidation)
 		return
 	}
-
 	response, err := h.userService.Login(req)
-
 	if err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 		return
 	}
-
 	c.JSON(http.StatusOK, response)
 }
 
@@ -57,20 +53,36 @@ func (h Handler) LoginWithGoogle(c *gin.Context) {
 		req *dto.GoogleAuthTokenReq
 		err error
 	)
-
 	if err = c.ShouldBindJSON(&req); err != nil {
 		_ = c.Error(ErrFailedBindingValidation)
 		return
 	}
-
 	response, err := h.userService.LoginWithGmail(req)
-
 	if err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 		return
 	}
-
 	c.JSON(http.StatusOK, response)
+}
+
+func (h Handler) GetNewTokenFromRefresh(c *gin.Context) {
+	response, err := h.userService.RefreshToken()
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, response)
+}
+
+func (h Handler) Logout(c *gin.Context) {
+	err := h.userService.DeleteLogin()
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "logout success",
+	})
 }
 
 func (h Handler) CheckPasswordAuth(c *gin.Context) {

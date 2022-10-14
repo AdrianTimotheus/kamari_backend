@@ -43,7 +43,7 @@ var Config = AppConfig{
 	Env:                getEnv("ENV", "testing"),
 	AppName:            "kamari",
 	JWTSecret:          []byte("kamari-secret"),
-	JWTExpireInMinutes: 600,
+	JWTExpireInMinutes: 15,
 	DBConfig: dbConfig{
 		Host:     getEnv("DB_HOST", "localhost"),
 		User:     getEnv("DB_USER", "postgres"),

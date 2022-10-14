@@ -102,3 +102,23 @@ func AuthorizeStepUpJWT(c *gin.Context) {
 	c.Set("user", user)
 	c.Set("Scope", scope)
 }
+
+func GetUserFromToken(encodedToken string) (*model.User, error) {
+	unauthorizedErr := httperror.UnauthorizedError()
+	token, err := validateToken(encodedToken)
+	if err != nil || !token.Valid {
+		return nil, unauthorizedErr
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	fmt.Println(claims)
+	if !ok {
+		return nil, unauthorizedErr
+	}
+	userJson, err := json.Marshal(claims["user"])
+	var user model.User
+	err = json.Unmarshal(userJson, &user)
+	if err != nil {
+		return nil, unauthorizedErr
+	}
+	return &user, nil
+}
