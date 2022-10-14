@@ -23,8 +23,11 @@ import (
 
 type UserService interface {
 	CreateNewUser(req *dto.RegisterRequest) error
+	SetRefreshTokenRedis(user *model.User) error
 	Login(req *dto.LoginRequest) (*dto.TokenResponse, error)
 	LoginWithGmail(req *dto.GoogleAuthTokenReq) (*dto.TokenResponse, error)
+	RefreshToken() (*dto.TokenResponse, error)
+	DeleteLogin() error
 	CheckAuthPassword(payload dto.CheckAuthPassword, userId uint64) (bool, error)
 	//GenerateOTP(user model.User) (dto.StatusMessageResponse, error)
 	GenerateOTPRedis(user model.User) (dto.StatusMessageResponse, error)
@@ -79,6 +82,24 @@ func (u userService) generateJWTToken(user *model.User) (*dto.TokenResponse, err
 	return &dto.TokenResponse{IDToken: tokenString}, err
 }
 
+func (u userService) generateRefreshToken(user *model.User) (string, error) {
+	idExp := 60 * 60 * 24 * 7
+	unixTime := time.Now().Unix()
+	tokenExp := unixTime + int64(idExp)
+	timeExpire := jwt.NumericDate{Time: time.Unix(tokenExp, 0)}
+	timeNow := jwt.NumericDate{Time: time.Now()}
+	claims := &idTokenClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    config.Config.AppName,
+			IssuedAt:  &timeNow,
+			ExpiresAt: &timeExpire,
+		},
+		User: user,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(config.Config.JWTSecret)
+}
+
 func (u userService) CreateNewUser(req *dto.RegisterRequest) error {
 	if helper.EmailNotValid(req.Username, req.Password) {
 		return httperror.BadRequestError("password cannot contains username", "INVALID_PASSWORD_PAYLOAD")
@@ -103,13 +124,28 @@ func (u userService) CreateNewUser(req *dto.RegisterRequest) error {
 	return nil
 }
 
+func (u userService) SetRefreshTokenRedis(user *model.User) error {
+	refresh, err := u.generateRefreshToken(user)
+	if err != nil {
+		return err
+	}
+	redisHelper := helper.NewRedisClient(2)
+	err = redisHelper.SetData7Days("refreshToken", refresh)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u userService) Login(req *dto.LoginRequest) (*dto.TokenResponse, error) {
 	user, err := u.userRepository.MatchingCredential(req.Email, req.Password)
 	if err != nil || user == nil {
 		return nil, httperror.InvalidLogin("Invalid email or password")
 	}
-	token, err := u.generateJWTToken(user)
-	return token, err
+	if err := u.SetRefreshTokenRedis(user); err != nil {
+		return nil, err
+	}
+	return u.generateJWTToken(user)
 }
 
 func (u userService) LoginWithGmail(req *dto.GoogleAuthTokenReq) (*dto.TokenResponse, error) {
@@ -123,8 +159,31 @@ func (u userService) LoginWithGmail(req *dto.GoogleAuthTokenReq) (*dto.TokenResp
 	if err != nil || user == nil {
 		return nil, httperror.InvalidLogin("Invalid email")
 	}
-	token, err := u.generateJWTToken(user)
-	return token, err
+	if err := u.SetRefreshTokenRedis(user); err != nil {
+		return nil, err
+	}
+	return u.generateJWTToken(user)
+}
+
+func (u userService) RefreshToken() (*dto.TokenResponse, error) {
+	unauthorizedErr := httperror.UnauthorizedError()
+	redisHelper := helper.NewRedisClient(2)
+	refresh, err := redisHelper.GetData("refreshToken")
+	if err != nil {
+		_ = u.DeleteLogin()
+		return nil, unauthorizedErr
+	}
+	user, err := middleware.GetUserFromToken(refresh)
+	if err != nil {
+		_ = u.DeleteLogin()
+		return nil, unauthorizedErr
+	}
+	return u.generateJWTToken(user)
+}
+
+func (u userService) DeleteLogin() error {
+	redisHelper := helper.NewRedisClient(2)
+	return redisHelper.Delete("refreshToken")
 }
 
 func (u userService) CheckAuthPassword(payload dto.CheckAuthPassword, userId uint64) (bool, error) {

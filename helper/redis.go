@@ -11,6 +11,11 @@ type RedisHelper struct {
 	Client *redis.Client
 }
 
+/*
+instanceNumber 0 : OTP
+instanceNumber 1 : step up token
+instanceNumber 2 : refresh token
+*/
 func NewRedisClient(instanceNumber int) RedisHelper {
 	client := redis.NewClient(&redis.Options{
 		Addr:     config.Config.RedisConfig.Host,
@@ -22,6 +27,12 @@ func NewRedisClient(instanceNumber int) RedisHelper {
 
 func (redis RedisHelper) SetData(key string, data string) error {
 	ttl := time.Duration(5) * time.Minute
+	op1 := redis.Client.Set(context.Background(), key, data, ttl)
+	return op1.Err()
+}
+
+func (redis RedisHelper) SetData7Days(key string, data string) error {
+	ttl := time.Duration(24) * time.Hour * 7
 	op1 := redis.Client.Set(context.Background(), key, data, ttl)
 	return op1.Err()
 }
