@@ -63,3 +63,80 @@ func (h Handler) UpdateMerchantVoucher(c *gin.Context) {
 		"message": "successfully updated a voucher",
 	})
 }
+
+func (h Handler) GetMerchantVouchers(c *gin.Context) {
+	var query struct {
+		Keyword string `form:"keyword"`
+		helper.Filters
+	}
+
+	err := c.BindQuery(&query)
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "INVALID_QUERY_PARAMS"))
+		return
+	}
+
+	user, err := helper.GetUserContext(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, httperror.UnauthorizedError())
+		return
+	}
+
+	u, err := h.merchantService.GetMerchantDetail(user.Username)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	vouchers, metadata, err := h.merchantVoucherService.GetVouchers(u.Id, query.Keyword, &query.Filters)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"__metadata": metadata,
+		"vouchers":   vouchers,
+	})
+}
+
+func (h Handler) CreateMerchantVoucher(c *gin.Context) {
+	var payload dto.MerchantVoucherRequest
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	user, err := helper.GetUserContext(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, httperror.UnauthorizedError())
+		return
+	}
+
+	err = h.merchantVoucherService.CreateVoucher(&payload, user.Username)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "successfully created voucher",
+	})
+}
+
+func (h Handler) GetMerchantVoucherDetail(c *gin.Context) {
+	p, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = httperror.BadRequestError(err.Error(), "BAD_PARAMS")
+		return
+	}
+
+	voucherId := p.(uint64)
+	voucher, err := h.merchantVoucherService.GetVoucherDetail(voucherId)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, voucher)
+}

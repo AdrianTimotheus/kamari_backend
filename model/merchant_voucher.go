@@ -16,4 +16,6 @@ type MerchantVoucher struct {
 	EndDate        time.Time
 	StockLeft      uint
 	MerchantId     uint64
+	MinimumPayment uint64
+	PromoType      PromoType
 }

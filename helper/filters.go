@@ -16,6 +16,7 @@ type Filters struct {
 	MinPrice      *uint64 `form:"minPrice"`
 	Rating        *int    `form:"rating"`
 	CategoryId    *uint64 `form:"categoryId"`
+	VoucherStatus *string `form:"voucherStatus"`
 }
 
 func (f Filters) Offset() int {

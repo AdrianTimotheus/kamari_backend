@@ -8,7 +8,7 @@ import (
 
 type RegisterRequest struct {
 	Name        string `json:"name" binding:"required"`
-	Username    string `json:"username" binding:"required,alphanum,min=3"`
+	Username    string `json:"username" binding:"required,alphanum,min=4"`
 	Email       string `json:"email" binding:"required,email"`
 	Password    string `json:"password" binding:"required,min=8"`
 	DateOfBirth int64  `json:"date_of_birth,omitempty"`
