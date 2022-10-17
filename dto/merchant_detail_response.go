@@ -3,6 +3,7 @@ package dto
 import "time"
 
 type MerchantDetailResponse struct {
+	Id                uint64    `json:"id"`
 	Name              string    `json:"name"`
 	Username          string    `json:"username"`
 	Description       string    `json:"description"`

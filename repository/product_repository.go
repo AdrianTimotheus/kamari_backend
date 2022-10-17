@@ -54,7 +54,6 @@ func (p productRepository) GetAllProducts(keyword string, filters *helper.Filter
 		count    int64
 	)
 
-	k := fmt.Sprintf("%%%s%%", keyword)
 	res := p.db.
 		Select(
 			"cities.name AS city",
@@ -73,10 +72,10 @@ func (p productRepository) GetAllProducts(keyword string, filters *helper.Filter
 		Joins(`JOIN users ON users.id = "Merchant"."user_id"`).
 		Joins(`LEFT JOIN user_addresses ON user_addresses.id = "Merchant"."user_address_id"`).
 		Joins(`LEFT JOIN cities ON cities.id = user_addresses.city_id`).
-		Where(`"products"."name" ILIKE ?`, k)
+		Where(`to_tsvector('simple', "products"."name") @@ plainto_tsquery('simple', ?) OR ? = ''`, keyword, keyword)
 
 	if filters.CategoryId != nil {
-		res = res.Where(`"products"."category_id" = ?`, filters.CategoryId)
+		res = res.Where(`"products"."category_id" = ?`, *filters.CategoryId)
 	}
 	switch filters.SortBy {
 	case "recommended":
@@ -89,6 +88,10 @@ func (p productRepository) GetAllProducts(keyword string, filters *helper.Filter
 		res = res.Order(`"products"."id" DESC`)
 	}
 
+	if err := res.Find(&products).Count(&count).Error; err != nil {
+		return nil, nil, err
+	}
+
 	res = res.
 		Limit(filters.Limit).
 		Offset(filters.Offset()).
@@ -97,14 +100,14 @@ func (p productRepository) GetAllProducts(keyword string, filters *helper.Filter
 		return nil, nil, res.Error
 	}
 
-	err := p.db.
-		Table("products").
-		Select("COUNT(*) OVER() AS COUNT").
-		Limit(1).
-		Scan(&count).Error
-	if err != nil {
-		return nil, nil, res.Error
-	}
+	//err := p.db.
+	//	Table("products").
+	//	Select("COUNT(*) OVER() AS COUNT").
+	//	Limit(1).
+	//	Scan(&count).Error
+	//if err != nil {
+	//	return nil, nil, res.Error
+	//}
 
 	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
 

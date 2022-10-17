@@ -134,7 +134,6 @@ func (p productService) GetProducts(keyword string, filters *helper.Filters) ([]
 		productResponse = helper.FilterBySellerLocation(productResponse, filters.Location)
 	}
 
-	metadata.TotalRecords = len(productResponse)
 	metadata.Cities = cities
 
 	return productResponse, metadata, nil
