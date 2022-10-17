@@ -7,6 +7,7 @@ import (
 )
 
 type WishlistRepository interface {
+	CheckFavorite(userId uint64, productId uint64) bool
 	Favorite(userId uint64, productId uint64) (*dto.StatusMessageResponse, error)
 }
 
@@ -20,6 +21,17 @@ type WLConfig struct {
 
 func NewWishlistRepository(c WLConfig) WishlistRepository {
 	return wishlistRepository{db: c.DB}
+}
+
+func (w wishlistRepository) CheckFavorite(userId uint64, productId uint64) bool {
+	var exists bool
+	var wishlist model.Wishlist
+	w.db.Model(&wishlist).
+		Select("count(*) > 0").
+		Where("user_id = ?", userId).
+		Where("product_id = ?", productId).
+		Find(&exists)
+	return exists
 }
 
 func (w wishlistRepository) Favorite(userId uint64, productId uint64) (*dto.StatusMessageResponse, error) {

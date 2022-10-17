@@ -107,6 +107,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/users/wallet/check", middleware.AuthorizeJWT, h.IsUserHasWallet, middleware.ErrorHandler)
 		api.POST("/users/wallet", middleware.AuthorizeJWT, h.CreateUserWallet, middleware.ErrorHandler)
 		api.POST("/wishlists", middleware.AuthorizeJWT, h.Favorite, middleware.ErrorHandler)
+		api.GET("/products/:id/user-favorite", middleware.AuthorizeJWT, h.CheckFavorite, middleware.ErrorHandler)
 		api.POST("/otp", middleware.AuthorizeJWT, h.GenerateOTP, middleware.ErrorHandler)
 		api.GET("/users/sealabspay", middleware.AuthorizeJWT, h.GetUserSealabsAccount, middleware.ErrorHandler)
 		api.POST("/users/sealabspay", middleware.AuthorizeJWT, h.AddSealabsPayAccount, middleware.ErrorHandler)

@@ -8,6 +8,7 @@ import (
 )
 
 type WishlistService interface {
+	IsThisProductInWishlist(user model.User, productId uint64) bool
 	Favorite(user model.User, productId uint64) (*dto.StatusMessageResponse, error)
 }
 
@@ -23,6 +24,10 @@ func NewWishlistService(c WLConfig) WishlistService {
 	return wishlistService{
 		wishlistRepository: c.WishlistRepository,
 	}
+}
+
+func (w wishlistService) IsThisProductInWishlist(user model.User, productId uint64) bool {
+	return w.wishlistRepository.CheckFavorite(user.Id, productId)
 }
 
 func (w wishlistService) Favorite(user model.User, productId uint64) (*dto.StatusMessageResponse, error) {
