@@ -22,6 +22,7 @@ type Handler struct {
 	merchantVoucherService   service.MerchantVoucherService
 	addressService           service.AddressService
 	cityService              service.CityService
+	checkoutItemService      service.CheckoutItemService
 }
 
 type HConfig struct {
@@ -40,6 +41,7 @@ type HConfig struct {
 	MerchantVoucherService   service.MerchantVoucherService
 	AddressService           service.AddressService
 	CityService              service.CityService
+	CheckoutItemService      service.CheckoutItemService
 }
 
 func New(h HConfig) Handler {
@@ -59,6 +61,7 @@ func New(h HConfig) Handler {
 		merchantVoucherService:   h.MerchantVoucherService,
 		addressService:           h.AddressService,
 		cityService:              h.CityService,
+		checkoutItemService:      h.CheckoutItemService,
 	}
 }
 

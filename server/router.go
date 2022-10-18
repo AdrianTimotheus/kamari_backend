@@ -29,6 +29,7 @@ type RouterConfig struct {
 	MerchantVoucherService   service.MerchantVoucherService
 	AddressService           service.AddressService
 	CityService              service.CityService
+	CheckoutItemService      service.CheckoutItemService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -58,6 +59,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		MerchantVoucherService:   c.MerchantVoucherService,
 		AddressService:           c.AddressService,
 		CityService:              c.CityService,
+		CheckoutItemService:      c.CheckoutItemService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -135,6 +137,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/products", middleware.AuthorizeJWT, h.AddNewProduct, middleware.ErrorHandler)
 		api.PUT("/products/:id", middleware.AuthorizeJWT, h.EditProduct, middleware.ErrorHandler)
 		api.DELETE("/products/:id", middleware.AuthorizeJWT, h.DeleteProduct, middleware.ErrorHandler)
+		api.POST("/checkout/items", middleware.AuthorizeJWT, h.AddCheckOutItems, middleware.ErrorHandler)
 	}
 
 	return router
