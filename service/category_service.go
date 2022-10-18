@@ -11,6 +11,10 @@ import (
 type CategoryService interface {
 	GetCategory(categoryId uint64) (*model.Category, error)
 	GetCategories(keyword string, filters *helper.Filters) ([]dto.CategoryResponse, *helper.Metadata, error)
+	GetSubcategories() ([]model.Subcategory, error)
+	GetSubcategory(id uint64) (*model.Subcategory, error)
+	GetComplementaries() ([]model.Complementary, error)
+	GetComplementary(id uint64) (*model.Complementary, error)
 }
 
 type categoryService struct {
@@ -53,4 +57,20 @@ func (c categoryService) GetCategories(keyword string, filters *helper.Filters) 
 
 	return categoryResponse, metadata, nil
 
+}
+
+func (c categoryService) GetSubcategories() ([]model.Subcategory, error) {
+	return c.categoryRepository.GetSubcategories()
+}
+
+func (c categoryService) GetSubcategory(id uint64) (*model.Subcategory, error) {
+	return c.categoryRepository.GetSubcategory(id)
+}
+
+func (c categoryService) GetComplementaries() ([]model.Complementary, error) {
+	return c.categoryRepository.GetComplementaries()
+}
+
+func (c categoryService) GetComplementary(id uint64) (*model.Complementary, error) {
+	return c.categoryRepository.GetComplementary(id)
 }

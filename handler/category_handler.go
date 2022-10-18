@@ -48,3 +48,55 @@ func (h Handler) GetCategory(c *gin.Context) {
 
 	c.JSON(http.StatusOK, category)
 }
+
+func (h Handler) GetSubcategories(c *gin.Context) {
+	response, err := h.categoryService.GetSubcategories()
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h Handler) GetSubcategory(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "INVALID_PARAM"))
+		return
+	}
+
+	response, err := h.categoryService.GetSubcategory(uint64(id))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h Handler) GetComplementaries(c *gin.Context) {
+	response, err := h.categoryService.GetComplementaries()
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h Handler) GetComplementary(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "INVALID_PARAM"))
+		return
+	}
+
+	response, err := h.categoryService.GetComplementary(uint64(id))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
