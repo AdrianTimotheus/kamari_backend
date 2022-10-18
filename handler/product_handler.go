@@ -2,6 +2,7 @@ package handler
 
 import (
 	"kamari.com/dto"
+	"kamari.com/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -66,4 +67,73 @@ func (h Handler) GetSimilarProducts(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, resp)
+}
+
+func (h Handler) AddNewProduct(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	var payload dto.AddProductReq
+
+	if err := c.ShouldBind(&payload); err != nil {
+		//_ = c.Error(httperror.BadRequestError("Invalid request body", "INVALID_REQ_BODY"))
+		c.Error(err)
+		return
+	}
+
+	err := h.productService.AddNewProduct(payload, user)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Product successfully created",
+	})
+}
+
+func (h Handler) EditProduct(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	var payload dto.EditProductReq
+
+	if err := c.ShouldBind(&payload); err != nil {
+		_ = c.Error(httperror.BadRequestError("Invalid query", "INVALID_QUERY"))
+		return
+	}
+
+	id, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(helper.ErrInvalidReturnType.Error(), "BAD_PARAMS"))
+		return
+	}
+
+	err = h.productService.EditProduct(payload, user, id.(uint64))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Product successfully updated",
+	})
+}
+
+func (h Handler) DeleteProduct(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	id, err := helper.GetParam(c, "id", "int")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(helper.ErrInvalidReturnType.Error(), "BAD_PARAMS"))
+		return
+	}
+
+	err = h.productService.DeleteProduct(id.(int), user)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Product successfully deleted",
+	})
 }

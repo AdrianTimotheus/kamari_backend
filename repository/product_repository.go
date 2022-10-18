@@ -2,9 +2,9 @@ package repository
 
 import (
 	"fmt"
-
 	"gorm.io/gorm"
 	"kamari.com/helper"
+	"kamari.com/httperror"
 	"kamari.com/model"
 )
 
@@ -20,6 +20,9 @@ type ProductRepository interface {
 	GetTopSellProduct() ([]model.Product, error)
 	GetProductDetails(productId uint64) (*model.Product, error)
 	GetSimilarProduct(keyword string, category uint64, currentProductId uint64) ([]model.Product, error)
+	AddNewProduct(payload model.Product, user model.User) error
+	EditProduct(payload model.Product, user model.User) error
+	DeleteProduct(id int, user model.User) error
 }
 
 type productRepository struct {
@@ -270,4 +273,141 @@ func (p productRepository) GetSimilarProduct(keyword string, categoryId uint64, 
 		return nil, err
 	}
 	return outputModels, err
+}
+
+func (p productRepository) AddNewProduct(product model.Product, user model.User) error {
+	var newProduct model.Product
+	var exists bool
+	var err error
+	var merchant model.Merchant
+
+	if product.ComplementaryCategoryId == 0 {
+		err = p.db.Table("categories").
+			Joins("join subcategories on categories.id = subcategories.category_id").
+			Select("count(*) > 0").
+			Where("subcategories.category_id = ?", product.SubcategoryId).
+			Where("categories.id = ?", product.CategoryId).
+			Find(&exists).
+			Error
+	} else {
+		err = p.db.Table("categories").
+			Joins("join subcategories on categories.id = subcategories.category_id").
+			Joins("join complementary_categories on subcategories.id = complementary_categories.subcategory_id").
+			Select("count(*) > 0").
+			Where("complementary_categories.id = ?", product.ComplementaryCategoryId).
+			Where("subcategories.id = ?", product.SubcategoryId).
+			Where("categories.id = ?", product.CategoryId).
+			Find(&exists).
+			Error
+	}
+
+	if !exists {
+		return httperror.BadRequestError("Categories, subcategories, and complementary categories don't match", "CATEGORIES_NOT_MATCH")
+	}
+
+	err = p.db.Table("merchants").Where("user_id = ?", user.Id).First(&merchant).Error
+	if err != nil {
+		return httperror.BadRequestError("User has not registered as a merchant", "USER_NOT_MERCHANT")
+	}
+
+	product.MerchantID = merchant.Id
+	err = p.db.Table("products").Create(&product).Scan(&newProduct).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func (p productRepository) EditProduct(product model.Product, user model.User) error {
+	//var newProduct model.Product
+	var exists bool
+	var err error
+	var merchant model.Merchant
+
+	err = p.db.Table("merchants").Where("user_id = ?", user.Id).First(&merchant).Error
+	if err != nil {
+		return httperror.BadRequestError("User has not registered as a merchant", "USER_NOT_MERCHANT")
+	}
+
+	err = p.db.Table("products").
+		Select("count(*) > 0").
+		Where("id = ?", product.Id).
+		Where("merchant_id = ?", merchant.Id).
+		Find(&exists).
+		Error
+
+	if !exists {
+		return httperror.BadRequestError("Product not found", "PRODUCT_NOT_FOUND")
+	}
+
+	if product.ComplementaryCategoryId == 0 {
+		err = p.db.Table("categories").
+			Joins("join subcategories on categories.id = subcategories.category_id").
+			Select("count(*) > 0").
+			Where("subcategories.category_id = ?", product.SubcategoryId).
+			Where("categories.id = ?", product.CategoryId).
+			Find(&exists).
+			Error
+	} else {
+		err = p.db.Table("categories").
+			Joins("join subcategories on categories.id = subcategories.category_id").
+			Joins("join complementary_categories on subcategories.id = complementary_categories.subcategory_id").
+			Select("count(*) > 0").
+			Where("complementary_categories.id = ?", product.ComplementaryCategoryId).
+			Where("subcategories.id = ?", product.SubcategoryId).
+			Where("categories.id = ?", product.CategoryId).
+			Find(&exists).
+			Error
+	}
+
+	if !exists {
+		return httperror.BadRequestError("Categories, subcategories, and complementary categories don't match", "CATEGORIES_NOT_MATCH")
+	}
+
+	var variant model.ProductVariant
+	err = p.db.Table("product_variants").Where("product_id = ?", product.Id).Delete(&variant).Error
+	if err != nil {
+		return err
+	}
+
+	err = p.db.Table("products").Where("id = ?", product.Id).Updates(&product).Error
+	if err != nil {
+		return err
+	}
+	return err
+}
+func (p productRepository) DeleteProduct(id int, user model.User) error {
+	var exists bool
+	var err error
+	var merchant model.Merchant
+
+	err = p.db.Table("merchants").Where("user_id = ?", user.Id).First(&merchant).Error
+	if err != nil {
+		return httperror.BadRequestError("User has not registered as a merchant", "USER_NOT_MERCHANT")
+	}
+
+	err = p.db.Table("products").
+		Select("count(*) > 0").
+		Where("id = ?", id).
+		Where("merchant_id = ?", merchant.Id).
+		Find(&exists).
+		Error
+
+	if !exists {
+		return httperror.BadRequestError("Product not found", "PRODUCT_NOT_FOUND")
+	}
+
+	var newProduct model.Product
+	err = p.db.Table("products").Where("id = ?", id).Delete(&newProduct).Error
+	if err != nil {
+		return err
+	}
+
+	var variant model.ProductVariant
+	err = p.db.Table("product_variants").Where("product_id = ?", id).Delete(&variant).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
