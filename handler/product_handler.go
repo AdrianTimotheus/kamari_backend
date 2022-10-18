@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"kamari.com/dto"
 	"kamari.com/model"
 	"net/http"
@@ -73,12 +74,14 @@ func (h Handler) AddNewProduct(c *gin.Context) {
 	userVal, _ := c.Get("user")
 	user := userVal.(model.User)
 	var payload dto.AddProductReq
+	fmt.Println(payload)
 
 	if err := c.ShouldBind(&payload); err != nil {
 		//_ = c.Error(httperror.BadRequestError("Invalid request body", "INVALID_REQ_BODY"))
 		c.Error(err)
 		return
 	}
+	fmt.Println(payload)
 
 	err := h.productService.AddNewProduct(payload, user)
 	if err != nil {

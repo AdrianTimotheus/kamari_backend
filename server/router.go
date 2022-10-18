@@ -88,6 +88,10 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/products/:id", h.GetProductDetail, middleware.ErrorHandler)
 		api.GET("/categories", h.GetCategories, middleware.ErrorHandler)
 		api.GET("/categories/:id", h.GetCategory, middleware.ErrorHandler)
+		api.GET("/subcategories", h.GetSubcategories, middleware.ErrorHandler)
+		api.GET("/subcategories/:id", h.GetSubcategory, middleware.ErrorHandler)
+		api.GET("/complementary", h.GetComplementaries, middleware.ErrorHandler)
+		api.GET("/complementary/:id", h.GetComplementary, middleware.ErrorHandler)
 		api.GET("/cities", h.GetCities, middleware.ErrorHandler)
 
 		// need auth

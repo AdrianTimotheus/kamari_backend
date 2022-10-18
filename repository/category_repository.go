@@ -10,6 +10,10 @@ import (
 type CategoryRepository interface {
 	GetCategory(category *model.Category) (*model.Category, error)
 	GetCategories(keyword string, filters *helper.Filters) ([]model.Category, *helper.Metadata, error)
+	GetSubcategories() ([]model.Subcategory, error)
+	GetSubcategory(id uint64) (*model.Subcategory, error)
+	GetComplementaries() ([]model.Complementary, error)
+	GetComplementary(id uint64) (*model.Complementary, error)
 }
 
 type categoryRepository struct {
@@ -62,4 +66,40 @@ func (c categoryRepository) GetCategories(keyword string, filters *helper.Filter
 
 	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
 	return categories, &metadata, nil
+}
+
+func (c categoryRepository) GetSubcategories() ([]model.Subcategory, error) {
+	var subcategories []model.Subcategory
+	err := c.db.Find(&subcategories).Error
+	if err != nil {
+		return nil, err
+	}
+	return subcategories, nil
+}
+
+func (c categoryRepository) GetSubcategory(id uint64) (*model.Subcategory, error) {
+	var subcategory model.Subcategory
+	err := c.db.Where("id = ?", id).First(&subcategory).Error
+	if err != nil {
+		return nil, err
+	}
+	return &subcategory, nil
+}
+
+func (c categoryRepository) GetComplementaries() ([]model.Complementary, error) {
+	var complementaries []model.Complementary
+	err := c.db.Table("complementary_categories").Find(&complementaries).Error
+	if err != nil {
+		return nil, err
+	}
+	return complementaries, nil
+}
+
+func (c categoryRepository) GetComplementary(id uint64) (*model.Complementary, error) {
+	var complementary model.Complementary
+	err := c.db.Table("complementary_categories").Where("id = ?", id).First(&complementary).Error
+	if err != nil {
+		return nil, err
+	}
+	return &complementary, nil
 }

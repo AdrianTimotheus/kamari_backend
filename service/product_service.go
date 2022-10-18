@@ -237,18 +237,18 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 		stock += variant.Stock
 	}
 
-	for i := range product.ProductVariants {
-		if product.ProductVariants[i].ProductPromoID != 0 {
-			switch product.ProductVariants[i].ProductPromo.PromoTypeId {
-			case 1:
-				product.ProductVariants[i].PromoPrice = product.ProductVariants[i].Price - product.ProductVariants[i].ProductPromo.DiscountAmount
-			case 2:
-				p := product.ProductVariants[i].Price
-				discountAmount := p * product.ProductVariants[i].ProductPromo.DiscountAmount / 100
-				product.ProductVariants[i].PromoPrice = p - discountAmount
-			}
-		}
-	}
+	//for i := range product.ProductVariants {
+	//	if product.ProductVariants[i].ProductPromoID != 0 {
+	//		switch product.ProductVariants[i].ProductPromo.PromoTypeId {
+	//		case 1:
+	//			product.ProductVariants[i].PromoPrice = product.ProductVariants[i].Price - product.ProductVariants[i].ProductPromo.DiscountAmount
+	//		case 2:
+	//			p := product.ProductVariants[i].Price
+	//			discountAmount := p * product.ProductVariants[i].ProductPromo.DiscountAmount / 100
+	//			product.ProductVariants[i].PromoPrice = p - discountAmount
+	//		}
+	//	}
+	//}
 
 	priceRange := helper.CountPriceRange(product.ProductVariants)
 	productResponse := &dto.ProductDetailResponse{
@@ -379,7 +379,6 @@ func (p productService) AddNewProduct(payload dto.AddProductReq, user model.User
 		CategoryId:              payload.CategoryId,
 		SubcategoryId:           payload.SubcategoryId,
 		ComplementaryCategoryId: payload.ComplementaryCategoryId,
-		MerchantID:              payload.MerchantId,
 		ProductVariants:         payload.ProductVariants,
 	}
 	err := p.productRepository.AddNewProduct(newProduct, user)
@@ -402,7 +401,6 @@ func (p productService) EditProduct(payload dto.EditProductReq, user model.User,
 		CategoryId:              payload.CategoryId,
 		SubcategoryId:           payload.SubcategoryId,
 		ComplementaryCategoryId: payload.ComplementaryCategoryId,
-		MerchantID:              payload.MerchantId,
 		ProductVariants:         payload.ProductVariants,
 	}
 	err := p.productRepository.EditProduct(newProduct, user)

@@ -311,6 +311,7 @@ func (p productRepository) AddNewProduct(product model.Product, user model.User)
 	}
 
 	product.MerchantID = merchant.Id
+
 	err = p.db.Table("products").Create(&product).Scan(&newProduct).Error
 	if err != nil {
 		return err
@@ -390,6 +391,7 @@ func (p productRepository) DeleteProduct(id int, user model.User) error {
 		Select("count(*) > 0").
 		Where("id = ?", id).
 		Where("merchant_id = ?", merchant.Id).
+		Where("deleted_at IS NULL").
 		Find(&exists).
 		Error
 
