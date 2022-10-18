@@ -22,15 +22,13 @@ func (h Handler) AddSealabsPayAccount(c *gin.Context) {
 		return
 	}
 
-	err = h.sealabsAccountService.CreateNewAccount(req, &user)
+	res, err := h.sealabsAccountService.VerifySeaLabsAccount(req, &user)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "success created new sealabs account",
-	})
+	c.JSON(http.StatusOK, res)
 }
 
 func (h Handler) SetDefaultSealabsAccount(c *gin.Context) {
@@ -71,6 +69,34 @@ func (h Handler) GetUserSealabsAccount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, accounts)
+}
+
+func (h *Handler) ValidateCreateSlpAccount(c *gin.Context) {
+	val := c.Query("s")
+
+	var req *dto.SealabsPayRes
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(httperror.BadRequestError(ErrFailedBindingValidation.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	res, err := h.sealabsAccountService.ValidateCreateAccount(val, req)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	message := "successfully add an account"
+	if res == nil {
+		message = "transaction cancelled"
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": message,
+		"data":    res,
+	})
 }
 
 func (h Handler) CheckSealabsOwner(c *gin.Context) {

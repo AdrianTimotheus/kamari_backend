@@ -19,6 +19,12 @@ type redisConfig struct {
 	Password string
 }
 
+type seaLabsPayConfig struct {
+	MerchantName string
+	MerchantCode string
+	ApiKey       string
+}
+
 type AppConfig struct {
 	BaseURL            string
 	Env                string
@@ -28,6 +34,7 @@ type AppConfig struct {
 	StoragePath        string
 	DBConfig           dbConfig
 	RedisConfig        redisConfig
+	SeaLabsPayConfig   seaLabsPayConfig
 }
 
 func getEnv(key, defaultVal string) string {
@@ -55,5 +62,10 @@ var Config = AppConfig{
 	RedisConfig: redisConfig{
 		Host:     getEnv("REDIS_HOST", "localhost:6379"),
 		Password: getEnv("REDIS_PASSWORD", ""),
+	},
+	SeaLabsPayConfig: seaLabsPayConfig{
+		MerchantName: getEnv("MERCHANT_NAME", ""),
+		MerchantCode: getEnv("MERCHANT_CODE", ""),
+		ApiKey:       getEnv("SEA_LABS_PAY_API_KEY", ""),
 	},
 }

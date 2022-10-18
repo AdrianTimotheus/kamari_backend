@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-redis/redis/v9"
 	"kamari.com/config"
 	"time"
@@ -15,6 +16,7 @@ type RedisHelper struct {
 instanceNumber 0 : OTP
 instanceNumber 1 : step up token
 instanceNumber 2 : refresh token
+instansceNumber 3: add bank account
 */
 func NewRedisClient(instanceNumber int) RedisHelper {
 	client := redis.NewClient(&redis.Options{
@@ -52,4 +54,14 @@ func (redis RedisHelper) GetData(key string) (string, error) {
 func (redis RedisHelper) Delete(key string) error {
 	op := redis.Client.Del(context.Background(), key)
 	return op.Err()
+}
+
+func (redis RedisHelper) GenerateKey(objectType string, uniqueKey string, field string) string {
+	return fmt.Sprintf("%s:%s:%s", objectType, uniqueKey, field)
+}
+
+func (redis RedisHelper) Set(key string, data interface{}) error {
+	ttl := time.Duration(5) * time.Minute
+	op3 := redis.Client.Set(context.Background(), key, data, ttl)
+	return op3.Err()
 }

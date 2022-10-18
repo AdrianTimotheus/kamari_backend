@@ -1,10 +1,15 @@
 package helper
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
 	"errors"
+	"fmt"
 	"kamari.com/httperror"
+	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"kamari.com/dto"
 	"kamari.com/model"
@@ -176,4 +181,34 @@ func GetUserContext(context *gin.Context) (model.User, error) {
 
 	user = u.(model.User)
 	return user, nil
+}
+
+var chars = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func RandomString(n int) string {
+	rand.Seed(time.Now().UnixNano())
+	str := make([]rune, n)
+	for i := range str {
+		str[i] = chars[rand.Intn(len(chars))]
+	}
+	referralCode := string(str)
+
+	return referralCode
+}
+
+func HMACHash(str string, key string) string {
+	mac := hmac.New(sha256.New, []byte(key))
+	mac.Write([]byte(str))
+	result := fmt.Sprintf("%x", mac.Sum(nil))
+	return result
+}
+
+func CreateSignature(apiKey string, slp *dto.SLPPayReq) {
+	str := fmt.Sprintf("%s:%d:%s", slp.CardNumber, slp.Amount, slp.MerchantCode)
+	slp.Signature = HMACHash(str, apiKey)
+}
+
+func Encode(slp *dto.SLPPayReq) string {
+	return fmt.Sprintf("card_number=%s&amount=%d&merchant_code=%s&redirect_url=%s&callback_url=%s&signature=%s",
+		slp.CardNumber, slp.Amount, slp.MerchantCode, slp.RedirectUrl, slp.CallbackUrl, slp.Signature)
 }

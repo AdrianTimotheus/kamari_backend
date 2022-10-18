@@ -1,18 +1,28 @@
 package service
 
 import (
+	"encoding/json"
+	"fmt"
+	"kamari.com/config"
 	"kamari.com/dto"
+	"kamari.com/helper"
 	"kamari.com/httperror"
 	"kamari.com/model"
 	"kamari.com/repository"
+	"net/http"
+	"strings"
 )
 
 type SealabsAccountService interface {
-	CreateNewAccount(*dto.SealabsAccountRequest, *model.User) error
+	CreateNewAccount(req *dto.SealabsAccountRequest, user *model.User) (*model.SealabsPayAccount, error)
 	GetUsesSealabsAccounts(userId uint64) ([]dto.SealabsPayAccountResponse, error)
 	SetDefaultSealabsAccount(userId, accountId uint64) error
 	IsValidAccountOwner(userId, accountId uint64) error
 	RemoveAccount(accountId uint64) error
+	VerifySeaLabsAccount(req *dto.SealabsAccountRequest, user *model.User) (*dto.SLPPayRes, error)
+	ValidateCreateAccount(sign string, req *dto.SealabsPayRes) (*dto.SealabsPayAccountResponse, error)
+	generateCallBackUrl(sign string) string
+	PostSeaLabsPay(req string) (*string, error)
 }
 
 type sealabsAccountService struct {
@@ -29,35 +39,29 @@ func NewSealabsAccountService(c SASConfig) SealabsAccountService {
 	}
 }
 
-func (s sealabsAccountService) CreateNewAccount(req *dto.SealabsAccountRequest, user *model.User) error {
+func (s sealabsAccountService) CreateNewAccount(req *dto.SealabsAccountRequest, user *model.User) (*model.SealabsPayAccount, error) {
+	accounts, err := s.sealabsAccountRepository.GetAccounts(user.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	val := req.IsDefault
+	if len(accounts) < 1 {
+		val = true
+	}
+
 	sealabsAccount := &model.SealabsPayAccount{
 		Title:      req.Title,
 		CardNumber: req.CardNumber,
 		UserId:     user.Id,
+		IsDefault:  val,
 	}
 
 	if s.sealabsAccountRepository.HasSameCard(sealabsAccount) {
-		return httperror.BadRequestError("Card with given data title already exist", "DUPLICATE_CARD_FOUND")
+		return nil, httperror.BadRequestError("Card with given data title already exist", "DUPLICATE_CARD_FOUND")
 	}
 
-	accounts, err := s.sealabsAccountRepository.GetAccounts(sealabsAccount.UserId)
-	if err != nil {
-		return err
-	}
-
-	accountId, err := s.sealabsAccountRepository.CreateAccount(sealabsAccount)
-	if err != nil {
-		return err
-	}
-
-	if req.IsDefault || len(accounts) < 1 {
-		err := s.sealabsAccountRepository.ChangeDefaultTransaction(sealabsAccount.UserId, accountId)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return sealabsAccount, nil
 }
 
 func (s sealabsAccountService) GetUsesSealabsAccounts(userId uint64) ([]dto.SealabsPayAccountResponse, error) {
@@ -105,4 +109,108 @@ func (s sealabsAccountService) RemoveAccount(accountId uint64) error {
 	}
 
 	return nil
+}
+
+func (s sealabsAccountService) VerifySeaLabsAccount(req *dto.SealabsAccountRequest, user *model.User) (*dto.SLPPayRes, error) {
+	slpAcc, err := s.CreateNewAccount(req, user)
+	if err != nil {
+		return nil, err
+	}
+	slpJson, _ := json.Marshal(slpAcc)
+
+	const signatureLen = 10
+	callBackSignature := helper.RandomString(signatureLen)
+	callBackUrl := s.generateCallBackUrl(callBackSignature)
+	redirectUrl := "http://"
+
+	postReq := dto.SLPPayReq{
+		CardNumber:   req.CardNumber,
+		Amount:       0,
+		MerchantCode: config.Config.SeaLabsPayConfig.MerchantCode,
+		RedirectUrl:  redirectUrl,
+		CallbackUrl:  callBackUrl,
+	}
+	helper.CreateSignature(config.Config.SeaLabsPayConfig.ApiKey, &postReq)
+
+	res, err := s.PostSeaLabsPay(helper.Encode(&postReq))
+
+	if err != nil {
+		return nil, err
+	}
+
+	r := new(dto.SLPPayRes)
+
+	redisHelper := helper.NewRedisClient(3)
+	key := redisHelper.GenerateKey("s", callBackSignature, "")
+
+	err = redisHelper.Set(key, slpJson)
+
+	r = r.Create(*res)
+
+	return r, err
+}
+
+func (s sealabsAccountService) ValidateCreateAccount(sign string, req *dto.SealabsPayRes) (*dto.SealabsPayAccountResponse, error) {
+	redisHelper := helper.NewRedisClient(3)
+	key := redisHelper.GenerateKey("s", sign, "")
+	payload, err := redisHelper.GetData(key)
+	if err != nil {
+		return nil, httperror.BadRequestError("Invalid Signature", "INVALID_SIGNATURE")
+	}
+
+	defer redisHelper.Delete(key)
+
+	if req.Status == "TXN_FAILED" {
+		return nil, err
+	}
+
+	slp := new(model.SealabsPayAccount)
+	json.Unmarshal([]byte(payload), slp)
+
+	accountId, err := s.sealabsAccountRepository.CreateAccount(slp)
+	if err != nil {
+		return nil, err
+	}
+
+	if slp.IsDefault {
+		fmt.Println(accountId)
+		err := s.sealabsAccountRepository.ChangeDefaultTransaction(slp.UserId, accountId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	res := new(dto.SealabsPayAccountResponse)
+	if err == nil {
+		res = res.CreateFromSeaLabsPay(slp)
+	}
+
+	return res, err
+}
+
+func (s sealabsAccountService) generateCallBackUrl(sign string) string {
+	//Change when deployed
+	const baseUrl = "https://e923-143-92-127-34.ap.ngrok.io/api/users/sealabspay/validate"
+	callBackUrl := fmt.Sprintf("%s?s=%s", baseUrl, sign)
+	return callBackUrl
+}
+
+func (s sealabsAccountService) PostSeaLabsPay(req string) (*string, error) {
+	client := &http.Client{CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}}
+
+	fmt.Println(strings.NewReader(req))
+	resp, err := client.Post("https://slp.air-sipp.com/api/v1/transaction/pay", "application/x-www-form-urlencoded", strings.NewReader(req))
+	if err != nil {
+		return nil, httperror.InternalServerError("Can't connect to SeaLabs Pay")
+	}
+
+	l, err := resp.Location()
+	redirectUrl := fmt.Sprintf("%v", l)
+	if err != nil {
+		return nil, httperror.BadRequestError("Invalid Account", "INVALID_ACCOUNT")
+	}
+
+	return &redirectUrl, err
 }
