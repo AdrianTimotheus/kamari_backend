@@ -11,12 +11,12 @@ import (
 type ProductRepository interface {
 	GetMerchantProduct(merchantId uint64) ([]model.Product, error)
 	GetAllProducts(keyword string, filters *helper.Filters) ([]model.ProductList, *helper.Metadata, error)
-	GetMerchantProducts(MerchantID uint64, pageOffset int, orderBy string, Limit int) ([]model.Product, error)
+	GetMerchantProducts(MerchantID uint64, pageOffset int, orderBy string, Limit int, sellerCategoryId int, marketplaceCategoryId int) ([]model.Product, error)
 	GetCountMerchantProduct(username string) (int64, error)
 	GetProductReviewScore(productID uint64) (count int, score int, err error)
 	GetProductReviewScoreDecimal(productId uint64) (int, float32, error)
 	GetProductFirstVariant(productID uint64) (*model.ProductVariant, error)
-	GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int) ([]model.Product, error)
+	GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int, sellerCategoryId int, marketplaceCategoryId int) ([]model.Product, error)
 	GetTopSellProduct() ([]model.Product, error)
 	GetProductDetails(productId uint64) (*model.Product, error)
 	GetSimilarProduct(keyword string, category uint64, currentProductId uint64) ([]model.Product, error)
@@ -159,15 +159,36 @@ from product_reviews where order_detail_id in (
 	return count, score, nil
 }
 
-func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int, orderBy string, Limit int) ([]model.Product, error) {
+func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int, orderBy string, Limit int, sellerCategoryId int, marketplaceCategoryId int) ([]model.Product, error) {
 	fmt.Println(pageOffset)
 	var products []model.Product
-	err := p.db.
-		Where("merchant_id=?", merchantID).
-		Offset(pageOffset).
-		Limit(Limit).
-		Order(orderBy).
-		Find(&products).Error
+	var err error
+	err = nil
+	if marketplaceCategoryId != 0 {
+		err = p.db.
+			Where("merchant_id=?", merchantID).
+			Where("category_id", marketplaceCategoryId).
+			Offset(pageOffset).
+			Limit(Limit).
+			Order(orderBy).
+			Find(&products).Error
+	} else if sellerCategoryId != 0 {
+		err = p.db.
+			Where("merchant_id=?", merchantID).
+			Where("seller_category_id=?", sellerCategoryId).
+			Offset(pageOffset).
+			Limit(Limit).
+			Order(orderBy).
+			Find(&products).Error
+	} else {
+		err = p.db.
+			Where("merchant_id=?", merchantID).
+			Offset(pageOffset).
+			Limit(Limit).
+			Order(orderBy).
+			Find(&products).Error
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -208,18 +229,43 @@ func (p productRepository) GetProductFirstVariant(productID uint64) (*model.Prod
 	return &pvModel, nil
 }
 
-func (p productRepository) GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int) ([]model.Product, error) {
+func (p productRepository) GetSearchProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int, sellerCategoryId int, marketplaceCategoryId int) ([]model.Product, error) {
 	fmt.Println(pageOffset)
 	var products []model.Product
 	ilikeStatement := fmt.Sprintf("products.name ilike '%%%v%%'", keyword)
-	err := p.db.
-		Where("merchant_id=?", merchantID).
-		Where(ilikeStatement).
-		Offset(pageOffset).
-		Limit(Limit).
-		Order(orderBy).
-		Order("unit_sold DESC").
-		Find(&products).Error
+	fmt.Println(ilikeStatement)
+	var err error
+	err = nil
+	if marketplaceCategoryId != 0 {
+		err = p.db.
+			Where("merchant_id=?", merchantID).
+			Where(ilikeStatement).
+			Where("category_id", marketplaceCategoryId).
+			Offset(pageOffset).
+			Limit(Limit).
+			Order(orderBy).
+			Order("unit_sold DESC").
+			Find(&products).Error
+	} else if sellerCategoryId != 0 {
+		err = p.db.
+			Where("merchant_id=?", merchantID).
+			Where(ilikeStatement).
+			Where("seller_category_id", sellerCategoryId).
+			Offset(pageOffset).
+			Limit(Limit).
+			Order(orderBy).
+			Order("unit_sold DESC").
+			Find(&products).Error
+	} else {
+		err = p.db.
+			Where("merchant_id=?", merchantID).
+			Where(ilikeStatement).
+			Offset(pageOffset).
+			Limit(Limit).
+			Order(orderBy).
+			Order("unit_sold DESC").
+			Find(&products).Error
+	}
 	if err != nil {
 		return nil, err
 	}

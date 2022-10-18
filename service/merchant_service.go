@@ -122,9 +122,9 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 	}
 	var models []model.Product
 	if payload.Search != "" {
-		models, err = m.productRepository.GetSearchProducts(merchantModel.Id, pageOffset, orderBy, payload.Search, payload.Limit)
+		models, err = m.productRepository.GetSearchProducts(merchantModel.Id, pageOffset, orderBy, payload.Search, payload.Limit, payload.SellerCategory, payload.MarketplaceCategory)
 	} else {
-		models, err = m.productRepository.GetMerchantProducts(merchantModel.Id, pageOffset, orderBy, payload.Limit)
+		models, err = m.productRepository.GetMerchantProducts(merchantModel.Id, pageOffset, orderBy, payload.Limit, payload.SellerCategory, payload.MarketplaceCategory)
 	}
 
 	if err != nil {
