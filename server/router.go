@@ -126,6 +126,9 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.DELETE("/address/:id", middleware.AuthorizeJWT, h.DeleteAddress, middleware.ErrorHandler)
 		api.GET("/address/default", middleware.AuthorizeJWT, h.GetDefaultAddress, middleware.ErrorHandler)
 		api.PATCH("/address/default/:id", middleware.AuthorizeJWT, h.SetDefaultAddress, middleware.ErrorHandler)
+		api.POST("/products", middleware.AuthorizeJWT, h.AddNewProduct, middleware.ErrorHandler)
+		api.PUT("/products/:id", middleware.AuthorizeJWT, h.EditProduct, middleware.ErrorHandler)
+		api.DELETE("/products/:id", middleware.AuthorizeJWT, h.DeleteProduct, middleware.ErrorHandler)
 	}
 
 	return router

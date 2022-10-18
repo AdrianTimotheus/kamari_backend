@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"kamari.com/model"
 	"sort"
 	"strings"
 
@@ -17,6 +18,9 @@ type ProductService interface {
 	GetTopSellerProduct() ([]dto.Product, error)
 	GetProductDetail(productId uint64) (*dto.ProductDetailResponse, error)
 	GetSimilarProduct(payload dto.GetSimilarProductRequest) ([]dto.Product, error)
+	AddNewProduct(payload dto.AddProductReq, user model.User) error
+	EditProduct(payload dto.EditProductReq, user model.User, id uint64) error
+	DeleteProduct(id int, user model.User) error
 }
 
 type productService struct {
@@ -360,4 +364,58 @@ func (p productService) GetSimilarProduct(payload dto.GetSimilarProductRequest) 
 	}
 
 	return dtoResponse, nil
+}
+
+func (p productService) AddNewProduct(payload dto.AddProductReq, user model.User) error {
+	newProduct := model.Product{
+		Name:                    payload.Name,
+		Description:             payload.Description,
+		MinimumOrder:            payload.MinimumOrder,
+		MaximumOrder:            payload.MaximumOrder,
+		ThumbnailUrl:            payload.ThumbnailUrl,
+		IsHazardous:             *payload.IsHazardous,
+		Weight:                  payload.Weight,
+		SellerCategoryId:        payload.SellerCategoryId,
+		CategoryId:              payload.CategoryId,
+		SubcategoryId:           payload.SubcategoryId,
+		ComplementaryCategoryId: payload.ComplementaryCategoryId,
+		MerchantID:              payload.MerchantId,
+		ProductVariants:         payload.ProductVariants,
+	}
+	err := p.productRepository.AddNewProduct(newProduct, user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p productService) EditProduct(payload dto.EditProductReq, user model.User, id uint64) error {
+	newProduct := model.Product{
+		Id:                      id,
+		Name:                    payload.Name,
+		Description:             payload.Description,
+		MinimumOrder:            payload.MinimumOrder,
+		MaximumOrder:            payload.MaximumOrder,
+		ThumbnailUrl:            payload.ThumbnailUrl,
+		IsHazardous:             payload.IsHazardous,
+		Weight:                  payload.Weight,
+		CategoryId:              payload.CategoryId,
+		SubcategoryId:           payload.SubcategoryId,
+		ComplementaryCategoryId: payload.ComplementaryCategoryId,
+		MerchantID:              payload.MerchantId,
+		ProductVariants:         payload.ProductVariants,
+	}
+	err := p.productRepository.EditProduct(newProduct, user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p productService) DeleteProduct(id int, user model.User) error {
+	err := p.productRepository.DeleteProduct(id, user)
+	if err != nil {
+		return err
+	}
+	return nil
 }

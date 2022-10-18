@@ -84,6 +84,11 @@ func (m merchantRepository) RegisterMerchant(userId uint64, req *dto.MerchantReg
 		UserAddressId: userAddress.Id,
 	}
 
+	err = m.db.Table("users").Where("id = ?", userId).Update("role_id = ?", model.RoleSeller).Error
+	if err != nil {
+		return httperror.InternalServerError("Error updating user role")
+	}
+
 	err = m.db.Create(&newMerchant).Error
 	if err != nil {
 		return httperror.InternalServerError("Error creating merchant")

@@ -12,7 +12,7 @@ type ProductVariant struct {
 	Stock           int          `json:"stock"`
 	ProductStatus   bool         `json:"product_status"`
 	Price           uint64       `json:"price"`
-	PromoPrice      uint64       `json:"promo_price"`
+	PromoPrice      uint64       `json:"promo_price" gorm:"-"`
 	PicUrl          string       `json:"pic_url"`
 	ProductPromoID  int          `json:"product_promo_id"`
 	ProductPromo    ProductPromo `json:"product_promo"`
