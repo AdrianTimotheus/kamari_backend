@@ -81,6 +81,8 @@ func Init() {
 		DB: db.Get(),
 	})
 
+	checkoutItemRepository := repository.NewCheckoutRepository(repository.CIRConfig{DB: db.Get()})
+
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository:    userRepository,
@@ -149,6 +151,8 @@ func Init() {
 
 	cityService := service.NewCityService(service.CiSConfig{CityRepository: cityRepository})
 
+	checkoutItemService := service.NewCheckoutItemService(service.CISConfig{CheckoutRepository: checkoutItemRepository})
+
 	r := NewRouter(RouterConfig{
 		UserService:              userService,
 		ProvinceService:          provinceService,
@@ -165,6 +169,7 @@ func Init() {
 		MerchantVoucherService:   merchantVoucherService,
 		AddressService:           addressService,
 		CityService:              cityService,
+		CheckoutItemService:      checkoutItemService,
 	})
 
 	log.Fatal(r.Run())
