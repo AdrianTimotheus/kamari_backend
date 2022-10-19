@@ -19,6 +19,7 @@ type MerchantVoucherRepository interface {
 	IsRemovable(voucher model.MerchantVoucher) (bool, error)
 	IsUpdatable(voucher model.MerchantVoucher) (bool, error)
 	IsVoucherCodeExist(voucherCode string, merchantId uint64) (bool, error)
+	GetAllActiveVoucher(merchantId uint64) ([]model.MerchantVoucher, error)
 }
 
 type merchantVoucherRepository struct {
@@ -166,4 +167,19 @@ func (m merchantVoucherRepository) IsVoucherCodeExist(voucherCode string, mercha
 	}
 
 	return res.RowsAffected > 0, nil
+}
+
+func (m merchantVoucherRepository) GetAllActiveVoucher(merchantId uint64) ([]model.MerchantVoucher, error) {
+	var models []model.MerchantVoucher
+	now := time.Now().Format("2006-01-02")
+	err := m.db.
+		Where("merchant_id=?", merchantId).
+		Where("start_date <= ?", now).
+		Where("end_date >= ?", now).
+		Where("stock_left>0").
+		Find(&models).Error
+	if err != nil {
+		return nil, err
+	}
+	return models, nil
 }

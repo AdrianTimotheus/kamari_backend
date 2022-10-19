@@ -140,3 +140,15 @@ func (h Handler) GetMerchantVoucherDetail(c *gin.Context) {
 
 	c.JSON(http.StatusOK, voucher)
 }
+
+func (h Handler) GetMerchantVoucherByMerchantId(c *gin.Context) {
+	v, _ := helper.GetParam(c, "id", "uint64")
+	merchantId := v.(uint64)
+	resp, err := h.merchantVoucherService.GetAllActiveVoucher(merchantId)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+	return
+}
