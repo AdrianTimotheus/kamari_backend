@@ -23,6 +23,7 @@ type ProductRepository interface {
 	AddNewProduct(payload model.Product, user model.User) error
 	EditProduct(payload model.Product, user model.User) error
 	DeleteProduct(id int, user model.User) error
+	GetProductPlainDetail(productId uint64) (*model.Product, error)
 }
 
 type productRepository struct {
@@ -296,6 +297,18 @@ func (p productRepository) GetProductDetails(productId uint64) (*model.Product, 
 		Preload("ProductVariants").
 		Preload("ProductVariants.ProductPromo", "stock_left > 0").
 		Preload("ProductVariants.ProductPromo.PromoType").
+		Where("id = ?", productId).
+		First(&product).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return product, err
+}
+
+func (p productRepository) GetProductPlainDetail(productId uint64) (*model.Product, error) {
+	var product *model.Product
+	err := p.db.
 		Where("id = ?", productId).
 		First(&product).Error
 	if err != nil {

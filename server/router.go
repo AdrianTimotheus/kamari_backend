@@ -138,6 +138,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.PUT("/products/:id", middleware.AuthorizeJWT, h.EditProduct, middleware.ErrorHandler)
 		api.DELETE("/products/:id", middleware.AuthorizeJWT, h.DeleteProduct, middleware.ErrorHandler)
 		api.POST("/checkout/items", middleware.AuthorizeJWT, h.AddCheckOutItems, middleware.ErrorHandler)
+		api.GET("/checkout/items", middleware.AuthorizeJWT, h.GetCheckOutItems, middleware.ErrorHandler)
 	}
 
 	return router

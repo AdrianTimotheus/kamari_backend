@@ -23,3 +23,14 @@ func (h Handler) AddCheckOutItems(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, resp)
 }
+
+func (h Handler) GetCheckOutItems(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	resp, err := h.checkoutItemService.GetCheckoutItemByUser(user)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
