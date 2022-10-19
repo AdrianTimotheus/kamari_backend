@@ -30,6 +30,7 @@ type RouterConfig struct {
 	AddressService           service.AddressService
 	CityService              service.CityService
 	CheckoutItemService      service.CheckoutItemService
+	CourierService           service.CourierService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -60,6 +61,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		AddressService:           c.AddressService,
 		CityService:              c.CityService,
 		CheckoutItemService:      c.CheckoutItemService,
+		CourierService:           c.CourierService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -95,6 +97,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/complementary", h.GetComplementaries, middleware.ErrorHandler)
 		api.GET("/complementary/:id", h.GetComplementary, middleware.ErrorHandler)
 		api.GET("/cities", h.GetCities, middleware.ErrorHandler)
+		api.GET("/couriers", h.GetAllCourier, middleware.ErrorHandler)
 
 		// need auth
 		api.GET("/carts/hover", middleware.AuthorizeJWT, h.GetCartHoverItems, middleware.ErrorHandler)
