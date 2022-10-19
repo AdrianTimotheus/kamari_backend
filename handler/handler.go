@@ -23,6 +23,7 @@ type Handler struct {
 	addressService           service.AddressService
 	cityService              service.CityService
 	checkoutItemService      service.CheckoutItemService
+	courierService           service.CourierService
 }
 
 type HConfig struct {
@@ -42,6 +43,7 @@ type HConfig struct {
 	AddressService           service.AddressService
 	CityService              service.CityService
 	CheckoutItemService      service.CheckoutItemService
+	CourierService           service.CourierService
 }
 
 func New(h HConfig) Handler {
@@ -62,6 +64,7 @@ func New(h HConfig) Handler {
 		addressService:           h.AddressService,
 		cityService:              h.CityService,
 		checkoutItemService:      h.CheckoutItemService,
+		courierService:           h.CourierService,
 	}
 }
 
