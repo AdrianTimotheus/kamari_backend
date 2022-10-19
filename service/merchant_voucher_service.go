@@ -24,6 +24,7 @@ type MerchantVoucherService interface {
 	CreateVoucher(payload *dto.MerchantVoucherRequest, username string) error
 	UpdateVoucher(voucherId uint64, payload *dto.MerchantVoucherUpdate) error
 	DeleteVoucher(voucherId uint64) error
+	GetAllActiveVoucher(merchantId uint64) ([]dto.MerchantVoucherResponse, error)
 }
 
 type merchantVoucherService struct {
@@ -207,4 +208,38 @@ func (m merchantVoucherService) GetVouchers(merchantId uint64, keyword string, f
 	}
 
 	return res, metadata, nil
+}
+
+func (m merchantVoucherService) GetAllActiveVoucher(merchantId uint64) ([]dto.MerchantVoucherResponse, error) {
+	models, err := m.merchantVoucherRepository.GetAllActiveVoucher(merchantId)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+		default:
+			return nil, httperror.InternalServerError(err.Error())
+		}
+	}
+	var dtoResponse []dto.MerchantVoucherResponse
+	for _, data := range models {
+		temp := dto.MerchantVoucherResponse{
+			Id:             data.Id,
+			Title:          data.Title,
+			Code:           data.Code,
+			StockLeft:      data.StockLeft,
+			DiscountAmount: data.DiscountAmount,
+			MinimumPayment: data.MinimumPayment,
+			StartDate:      data.StartDate,
+			EndDate:        data.EndDate,
+			MerchantId:     data.MerchantId,
+			PromoTypeId:    data.PromoTypeId,
+			PromoType: model.PromoType{
+				Id:   data.PromoType.Id,
+				Type: data.PromoType.Type,
+			},
+		}
+		dtoResponse = append(dtoResponse, temp)
+	}
+	return dtoResponse, nil
+
 }
