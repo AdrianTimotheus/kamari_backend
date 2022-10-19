@@ -151,7 +151,11 @@ func Init() {
 
 	cityService := service.NewCityService(service.CiSConfig{CityRepository: cityRepository})
 
-	checkoutItemService := service.NewCheckoutItemService(service.CISConfig{CheckoutRepository: checkoutItemRepository})
+	checkoutItemService := service.NewCheckoutItemService(
+		service.CISConfig{
+			CheckoutRepository: checkoutItemRepository,
+			ProductRepository:  productRepository,
+		})
 
 	r := NewRouter(RouterConfig{
 		UserService:              userService,
