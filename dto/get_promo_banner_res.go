@@ -1,6 +1,6 @@
 package dto
 
 type GetPromoBanner struct {
-	ID     int    `json:"id"`
+	ID     uint64 `json:"id"`
 	PicUrl string `json:"pic_url"`
 }

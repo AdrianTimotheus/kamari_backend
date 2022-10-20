@@ -30,8 +30,7 @@ func NewMarketplaceService(config MpSConfig) MarketplaceService {
 }
 
 func (m marketplaceService) GetPromoBanner() ([]dto.GetPromoBanner, error) {
-	dateNow := time.Now()
-	dateString := dateNow.Format(YYYYMMDD)
+	dateString := time.Now().Format(YYYYMMDD)
 	results, err := m.marketplaceRepository.GetPromoBanner(dateString)
 	if err != nil {
 		return nil, httperror.InternalServerError(err.Error())

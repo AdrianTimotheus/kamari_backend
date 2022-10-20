@@ -1,11 +1,10 @@
 package server
 
 import (
-	"log"
-
 	"kamari.com/db"
 	"kamari.com/repository"
 	"kamari.com/service"
+	"log"
 )
 
 func Init() {
@@ -85,6 +84,8 @@ func Init() {
 
 	courierRepository := repository.NewCourierRepository(repository.CConfig{DB: db.Get()})
 
+	marketplaceVoucherRepository := repository.NewMarketplaceVoucherRepository(repository.MVCRConfig{DB: db.Get()})
+
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository:    userRepository,
@@ -161,24 +162,27 @@ func Init() {
 
 	courierService := service.NewCourierService(service.CourierSConfig{CourierRepository: courierRepository})
 
+	marketplaceVoucherService := service.NewMarketplaceVoucherService(service.MpVSConfig{MarketplaceVoucherRepository: marketplaceVoucherRepository})
+
 	r := NewRouter(RouterConfig{
-		UserService:              userService,
-		ProvinceService:          provinceService,
-		MerchantService:          merchantService,
-		ProductService:           productService,
-		CartService:              cartService,
-		MarketplaceService:       marketplaceService,
-		WalletService:            walletService,
-		CategoryService:          categoryService,
-		ProductReviewService:     productReviewService,
-		WalletTransactionService: walletTransactionService,
-		WishlistService:          wishlistService,
-		SealabsAccountService:    sealabsAccountService,
-		MerchantVoucherService:   merchantVoucherService,
-		AddressService:           addressService,
-		CityService:              cityService,
-		CheckoutItemService:      checkoutItemService,
-		CourierService:           courierService,
+		UserService:               userService,
+		ProvinceService:           provinceService,
+		MerchantService:           merchantService,
+		ProductService:            productService,
+		CartService:               cartService,
+		MarketplaceService:        marketplaceService,
+		WalletService:             walletService,
+		CategoryService:           categoryService,
+		ProductReviewService:      productReviewService,
+		WalletTransactionService:  walletTransactionService,
+		WishlistService:           wishlistService,
+		SealabsAccountService:     sealabsAccountService,
+		MerchantVoucherService:    merchantVoucherService,
+		AddressService:            addressService,
+		CityService:               cityService,
+		CheckoutItemService:       checkoutItemService,
+		CourierService:            courierService,
+		MarketplaceVoucherService: marketplaceVoucherService,
 	})
 
 	log.Fatal(r.Run())
