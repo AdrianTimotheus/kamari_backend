@@ -86,6 +86,8 @@ func Init() {
 
 	marketplaceVoucherRepository := repository.NewMarketplaceVoucherRepository(repository.MVCRConfig{DB: db.Get()})
 
+	transactionRepository := repository.NewTransactionRepository(repository.TRConfig{DB: db.Get()})
+
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository:    userRepository,
@@ -164,6 +166,11 @@ func Init() {
 
 	marketplaceVoucherService := service.NewMarketplaceVoucherService(service.MpVSConfig{MarketplaceVoucherRepository: marketplaceVoucherRepository})
 
+	transactionService := service.NewTransactionService(service.TSConfig{
+		TransactionRepository: transactionRepository,
+		WalletRepository:      walletRepository,
+	})
+
 	r := NewRouter(RouterConfig{
 		UserService:               userService,
 		ProvinceService:           provinceService,
@@ -183,6 +190,7 @@ func Init() {
 		CheckoutItemService:       checkoutItemService,
 		CourierService:            courierService,
 		MarketplaceVoucherService: marketplaceVoucherService,
+		TransactionService:        transactionService,
 	})
 
 	log.Fatal(r.Run())

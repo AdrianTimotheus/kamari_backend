@@ -213,8 +213,7 @@ func generateStepUpToken(user *model.User) (*dto.TokenResponse, error) {
 
 func (w walletService) ValidateUserPinForPayment(user model.User, payload dto.ValidatePinRequest) (*dto.TokenResponse, error) {
 	hashedPin := fmt.Sprintf("%X", sha256.Sum256([]byte(payload.Pin)))
-	fmt.Println(user.Id)
-	fmt.Println(hashedPin)
+
 	if !w.walletRepository.ValidatePin(user.Id, hashedPin) {
 		return nil, httperror.ForbiddenError()
 	}
@@ -226,7 +225,6 @@ func (w walletService) ValidateUserPinForPayment(user model.User, payload dto.Va
 
 	redis := helper.NewRedisClient(1)
 	stepUpKey := "stepUp-" + user.Email
-
 	err = redis.SetData(stepUpKey, dtoResponse.IDToken)
 	if err != nil {
 		return nil, httperror.InternalServerError("Internal Server Error")

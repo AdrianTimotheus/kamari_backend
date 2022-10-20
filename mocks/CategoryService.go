@@ -71,6 +71,98 @@ func (_m *CategoryService) GetCategory(categoryId uint64) (*model.Category, erro
 	return r0, r1
 }
 
+// GetComplementaries provides a mock function with given fields:
+func (_m *CategoryService) GetComplementaries() ([]model.Complementary, error) {
+	ret := _m.Called()
+
+	var r0 []model.Complementary
+	if rf, ok := ret.Get(0).(func() []model.Complementary); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Complementary)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetComplementary provides a mock function with given fields: id
+func (_m *CategoryService) GetComplementary(id uint64) (*model.Complementary, error) {
+	ret := _m.Called(id)
+
+	var r0 *model.Complementary
+	if rf, ok := ret.Get(0).(func(uint64) *model.Complementary); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Complementary)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetSubcategories provides a mock function with given fields:
+func (_m *CategoryService) GetSubcategories() ([]model.Subcategory, error) {
+	ret := _m.Called()
+
+	var r0 []model.Subcategory
+	if rf, ok := ret.Get(0).(func() []model.Subcategory); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Subcategory)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetSubcategory provides a mock function with given fields: id
+func (_m *CategoryService) GetSubcategory(id uint64) (*model.Subcategory, error) {
+	ret := _m.Called(id)
+
+	var r0 *model.Subcategory
+	if rf, ok := ret.Get(0).(func(uint64) *model.Subcategory); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Subcategory)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewCategoryService interface {
 	mock.TestingT
 	Cleanup(func())

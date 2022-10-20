@@ -13,6 +13,27 @@ type UserService struct {
 	mock.Mock
 }
 
+// AuthOTP provides a mock function with given fields: user, OTPCode
+func (_m *UserService) AuthOTP(user model.User, OTPCode dto.AuthOTPRequest) (dto.StatusMessageResponse, error) {
+	ret := _m.Called(user, OTPCode)
+
+	var r0 dto.StatusMessageResponse
+	if rf, ok := ret.Get(0).(func(model.User, dto.AuthOTPRequest) dto.StatusMessageResponse); ok {
+		r0 = rf(user, OTPCode)
+	} else {
+		r0 = ret.Get(0).(dto.StatusMessageResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.User, dto.AuthOTPRequest) error); ok {
+		r1 = rf(user, OTPCode)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CheckAuthPassword provides a mock function with given fields: payload, userId
 func (_m *UserService) CheckAuthPassword(payload dto.CheckAuthPassword, userId uint64) (bool, error) {
 	ret := _m.Called(payload, userId)
@@ -48,6 +69,43 @@ func (_m *UserService) CreateNewUser(req *dto.RegisterRequest) error {
 	return r0
 }
 
+// DeleteLogin provides a mock function with given fields:
+func (_m *UserService) DeleteLogin() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// EditUserDetail provides a mock function with given fields: req, userId
+func (_m *UserService) EditUserDetail(req dto.EditUserDetailReq, userId uint64) (*model.User, error) {
+	ret := _m.Called(req, userId)
+
+	var r0 *model.User
+	if rf, ok := ret.Get(0).(func(dto.EditUserDetailReq, uint64) *model.User); ok {
+		r0 = rf(req, userId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(dto.EditUserDetailReq, uint64) error); ok {
+		r1 = rf(req, userId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GenerateOTPRedis provides a mock function with given fields: user
 func (_m *UserService) GenerateOTPRedis(user model.User) (dto.StatusMessageResponse, error) {
 	ret := _m.Called(user)
@@ -62,6 +120,29 @@ func (_m *UserService) GenerateOTPRedis(user model.User) (dto.StatusMessageRespo
 	var r1 error
 	if rf, ok := ret.Get(1).(func(model.User) error); ok {
 		r1 = rf(user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetUserDetail provides a mock function with given fields: userId
+func (_m *UserService) GetUserDetail(userId uint64) (*model.User, error) {
+	ret := _m.Called(userId)
+
+	var r0 *model.User
+	if rf, ok := ret.Get(0).(func(uint64) *model.User); ok {
+		r0 = rf(userId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(userId)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -113,6 +194,43 @@ func (_m *UserService) LoginWithGmail(req *dto.GoogleAuthTokenReq) (*dto.TokenRe
 	}
 
 	return r0, r1
+}
+
+// RefreshToken provides a mock function with given fields:
+func (_m *UserService) RefreshToken() (*dto.TokenResponse, error) {
+	ret := _m.Called()
+
+	var r0 *dto.TokenResponse
+	if rf, ok := ret.Get(0).(func() *dto.TokenResponse); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dto.TokenResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SetRefreshTokenRedis provides a mock function with given fields: user
+func (_m *UserService) SetRefreshTokenRedis(user *model.User) error {
+	ret := _m.Called(user)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*model.User) error); ok {
+		r0 = rf(user)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 type mockConstructorTestingTNewUserService interface {

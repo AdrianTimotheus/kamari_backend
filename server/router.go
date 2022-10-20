@@ -32,6 +32,7 @@ type RouterConfig struct {
 	CheckoutItemService       service.CheckoutItemService
 	CourierService            service.CourierService
 	MarketplaceVoucherService service.MarketplaceVoucherService
+	TransactionService        service.TransactionService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -64,6 +65,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		CheckoutItemService:       c.CheckoutItemService,
 		CourierService:            c.CourierService,
 		MarketplaceVoucherService: c.MarketplaceVoucherService,
+		TransactionService:        c.TransactionService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -146,6 +148,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.DELETE("/products/:id", middleware.AuthorizeJWT, h.DeleteProduct, middleware.ErrorHandler)
 		api.POST("/checkout/items", middleware.AuthorizeJWT, h.AddCheckOutItems, middleware.ErrorHandler)
 		api.GET("/checkout/items", middleware.AuthorizeJWT, h.GetCheckOutItems, middleware.ErrorHandler)
+		api.POST("/checkout/pay/wallet", middleware.AuthorizeStepUpJWT, h.PayCheckoutWithWallet, middleware.ErrorHandler)
 	}
 
 	return router

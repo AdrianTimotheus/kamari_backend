@@ -49,6 +49,29 @@ func (_m *UserRepository) CreateUser(user *model.User) error {
 	return r0
 }
 
+// EditUserDetail provides a mock function with given fields: user
+func (_m *UserRepository) EditUserDetail(user model.User) (*model.User, error) {
+	ret := _m.Called(user)
+
+	var r0 *model.User
+	if rf, ok := ret.Get(0).(func(model.User) *model.User); ok {
+		r0 = rf(user)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.User) error); ok {
+		r1 = rf(user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindUserByEmail provides a mock function with given fields: email
 func (_m *UserRepository) FindUserByEmail(email string) (*model.User, error) {
 	ret := _m.Called(email)
@@ -65,6 +88,29 @@ func (_m *UserRepository) FindUserByEmail(email string) (*model.User, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(email)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetUserDetail provides a mock function with given fields: userId
+func (_m *UserRepository) GetUserDetail(userId uint64) (*model.User, error) {
+	ret := _m.Called(userId)
+
+	var r0 *model.User
+	if rf, ok := ret.Get(0).(func(uint64) *model.User); ok {
+		r0 = rf(userId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(userId)
 	} else {
 		r1 = ret.Error(1)
 	}

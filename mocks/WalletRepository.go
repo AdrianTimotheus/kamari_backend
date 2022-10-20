@@ -123,6 +123,20 @@ func (_m *WalletRepository) GetMyWalletDetailByWalletID(WalletId uint64) (*model
 	return r0, r1
 }
 
+// ValidatePin provides a mock function with given fields: userId, HashedPIN
+func (_m *WalletRepository) ValidatePin(userId uint64, HashedPIN string) bool {
+	ret := _m.Called(userId, HashedPIN)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(uint64, string) bool); ok {
+		r0 = rf(userId, HashedPIN)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewWalletRepository interface {
 	mock.TestingT
 	Cleanup(func())
