@@ -27,8 +27,8 @@ func (m marketplaceRepository) GetPromoBanner(date string) ([]model.MarketplaceV
 	var marketplaceVoucherBanners []model.MarketplaceVoucher
 
 	err := m.db.
-		Where("start_date <=?", date).
-		Where("end_date >=?", date).
+		Where("start_date >=?", date).
+		Where("end_date <=?", date).
 		Order("start_date desc").
 		Find(&marketplaceVoucherBanners).Error
 

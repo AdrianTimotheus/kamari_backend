@@ -14,23 +14,24 @@ import (
 )
 
 type RouterConfig struct {
-	UserService              service.UserService
-	ProvinceService          service.ProvinceService
-	MerchantService          service.MerchantService
-	CartService              service.CartService
-	MarketplaceService       service.MarketplaceService
-	ProductService           service.ProductService
-	WalletService            service.WalletService
-	CategoryService          service.CategoryService
-	ProductReviewService     service.ProductReviewService
-	WalletTransactionService service.WalletTransactionService
-	WishlistService          service.WishlistService
-	SealabsAccountService    service.SealabsAccountService
-	MerchantVoucherService   service.MerchantVoucherService
-	AddressService           service.AddressService
-	CityService              service.CityService
-	CheckoutItemService      service.CheckoutItemService
-	CourierService           service.CourierService
+	UserService               service.UserService
+	ProvinceService           service.ProvinceService
+	MerchantService           service.MerchantService
+	CartService               service.CartService
+	MarketplaceService        service.MarketplaceService
+	ProductService            service.ProductService
+	WalletService             service.WalletService
+	CategoryService           service.CategoryService
+	ProductReviewService      service.ProductReviewService
+	WalletTransactionService  service.WalletTransactionService
+	WishlistService           service.WishlistService
+	SealabsAccountService     service.SealabsAccountService
+	MerchantVoucherService    service.MerchantVoucherService
+	AddressService            service.AddressService
+	CityService               service.CityService
+	CheckoutItemService       service.CheckoutItemService
+	CourierService            service.CourierService
+	MarketplaceVoucherService service.MarketplaceVoucherService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -45,23 +46,24 @@ func NewRouter(c RouterConfig) *gin.Engine {
 	}))
 
 	h := handler.New(handler.HConfig{
-		UserService:              c.UserService,
-		ProvinceService:          c.ProvinceService,
-		MerchantService:          c.MerchantService,
-		ProductService:           c.ProductService,
-		CartService:              c.CartService,
-		MarketplaceService:       c.MarketplaceService,
-		WalletService:            c.WalletService,
-		CategoryService:          c.CategoryService,
-		ProductReviewService:     c.ProductReviewService,
-		WalletTransactionService: c.WalletTransactionService,
-		WishlistService:          c.WishlistService,
-		SealabsAccountService:    c.SealabsAccountService,
-		MerchantVoucherService:   c.MerchantVoucherService,
-		AddressService:           c.AddressService,
-		CityService:              c.CityService,
-		CheckoutItemService:      c.CheckoutItemService,
-		CourierService:           c.CourierService,
+		UserService:               c.UserService,
+		ProvinceService:           c.ProvinceService,
+		MerchantService:           c.MerchantService,
+		ProductService:            c.ProductService,
+		CartService:               c.CartService,
+		MarketplaceService:        c.MarketplaceService,
+		WalletService:             c.WalletService,
+		CategoryService:           c.CategoryService,
+		ProductReviewService:      c.ProductReviewService,
+		WalletTransactionService:  c.WalletTransactionService,
+		WishlistService:           c.WishlistService,
+		SealabsAccountService:     c.SealabsAccountService,
+		MerchantVoucherService:    c.MerchantVoucherService,
+		AddressService:            c.AddressService,
+		CityService:               c.CityService,
+		CheckoutItemService:       c.CheckoutItemService,
+		CourierService:            c.CourierService,
+		MarketplaceVoucherService: c.MarketplaceVoucherService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -99,6 +101,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/cities", h.GetCities, middleware.ErrorHandler)
 		api.GET("/couriers", h.GetAllCourier, middleware.ErrorHandler)
 		api.GET("/vouchers/merchant/:id", h.GetMerchantVoucherByMerchantId, middleware.ErrorHandler)
+		api.GET("/vouchers/marketplace", h.GetAllMarketplaceActiveVoucher, middleware.ErrorHandler)
 
 		// need auth
 		api.GET("/carts/hover", middleware.AuthorizeJWT, h.GetCartHoverItems, middleware.ErrorHandler)

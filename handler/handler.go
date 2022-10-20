@@ -7,64 +7,67 @@ import (
 )
 
 type Handler struct {
-	userService              service.UserService
-	provinceService          service.ProvinceService
-	merchantService          service.MerchantService
-	cartService              service.CartService
-	marketplaceService       service.MarketplaceService
-	productService           service.ProductService
-	walletService            service.WalletService
-	categoryService          service.CategoryService
-	productReviewService     service.ProductReviewService
-	walletTransactionService service.WalletTransactionService
-	wishlistService          service.WishlistService
-	sealabsAccountService    service.SealabsAccountService
-	merchantVoucherService   service.MerchantVoucherService
-	addressService           service.AddressService
-	cityService              service.CityService
-	checkoutItemService      service.CheckoutItemService
-	courierService           service.CourierService
+	userService               service.UserService
+	provinceService           service.ProvinceService
+	merchantService           service.MerchantService
+	cartService               service.CartService
+	marketplaceService        service.MarketplaceService
+	productService            service.ProductService
+	walletService             service.WalletService
+	categoryService           service.CategoryService
+	productReviewService      service.ProductReviewService
+	walletTransactionService  service.WalletTransactionService
+	wishlistService           service.WishlistService
+	sealabsAccountService     service.SealabsAccountService
+	merchantVoucherService    service.MerchantVoucherService
+	addressService            service.AddressService
+	cityService               service.CityService
+	checkoutItemService       service.CheckoutItemService
+	courierService            service.CourierService
+	marketplaceVoucherService service.MarketplaceVoucherService
 }
 
 type HConfig struct {
-	UserService              service.UserService
-	ProvinceService          service.ProvinceService
-	MerchantService          service.MerchantService
-	CartService              service.CartService
-	MarketplaceService       service.MarketplaceService
-	ProductService           service.ProductService
-	WalletService            service.WalletService
-	CategoryService          service.CategoryService
-	ProductReviewService     service.ProductReviewService
-	WalletTransactionService service.WalletTransactionService
-	WishlistService          service.WishlistService
-	SealabsAccountService    service.SealabsAccountService
-	MerchantVoucherService   service.MerchantVoucherService
-	AddressService           service.AddressService
-	CityService              service.CityService
-	CheckoutItemService      service.CheckoutItemService
-	CourierService           service.CourierService
+	UserService               service.UserService
+	ProvinceService           service.ProvinceService
+	MerchantService           service.MerchantService
+	CartService               service.CartService
+	MarketplaceService        service.MarketplaceService
+	ProductService            service.ProductService
+	WalletService             service.WalletService
+	CategoryService           service.CategoryService
+	ProductReviewService      service.ProductReviewService
+	WalletTransactionService  service.WalletTransactionService
+	WishlistService           service.WishlistService
+	SealabsAccountService     service.SealabsAccountService
+	MerchantVoucherService    service.MerchantVoucherService
+	AddressService            service.AddressService
+	CityService               service.CityService
+	CheckoutItemService       service.CheckoutItemService
+	CourierService            service.CourierService
+	MarketplaceVoucherService service.MarketplaceVoucherService
 }
 
 func New(h HConfig) Handler {
 	return Handler{
-		userService:              h.UserService,
-		provinceService:          h.ProvinceService,
-		merchantService:          h.MerchantService,
-		cartService:              h.CartService,
-		marketplaceService:       h.MarketplaceService,
-		productService:           h.ProductService,
-		walletService:            h.WalletService,
-		categoryService:          h.CategoryService,
-		productReviewService:     h.ProductReviewService,
-		walletTransactionService: h.WalletTransactionService,
-		wishlistService:          h.WishlistService,
-		sealabsAccountService:    h.SealabsAccountService,
-		merchantVoucherService:   h.MerchantVoucherService,
-		addressService:           h.AddressService,
-		cityService:              h.CityService,
-		checkoutItemService:      h.CheckoutItemService,
-		courierService:           h.CourierService,
+		userService:               h.UserService,
+		provinceService:           h.ProvinceService,
+		merchantService:           h.MerchantService,
+		cartService:               h.CartService,
+		marketplaceService:        h.MarketplaceService,
+		productService:            h.ProductService,
+		walletService:             h.WalletService,
+		categoryService:           h.CategoryService,
+		productReviewService:      h.ProductReviewService,
+		walletTransactionService:  h.WalletTransactionService,
+		wishlistService:           h.WishlistService,
+		sealabsAccountService:     h.SealabsAccountService,
+		merchantVoucherService:    h.MerchantVoucherService,
+		addressService:            h.AddressService,
+		cityService:               h.CityService,
+		checkoutItemService:       h.CheckoutItemService,
+		courierService:            h.CourierService,
+		marketplaceVoucherService: h.MarketplaceVoucherService,
 	}
 }
 
