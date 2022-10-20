@@ -12,6 +12,20 @@ type WishlistRepository struct {
 	mock.Mock
 }
 
+// CheckFavorite provides a mock function with given fields: userId, productId
+func (_m *WishlistRepository) CheckFavorite(userId uint64, productId uint64) bool {
+	ret := _m.Called(userId, productId)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(uint64, uint64) bool); ok {
+		r0 = rf(userId, productId)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 // Favorite provides a mock function with given fields: userId, productId
 func (_m *WishlistRepository) Favorite(userId uint64, productId uint64) (*dto.StatusMessageResponse, error) {
 	ret := _m.Called(userId, productId)

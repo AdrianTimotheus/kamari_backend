@@ -36,6 +36,20 @@ func (_m *WishlistService) Favorite(user model.User, productId uint64) (*dto.Sta
 	return r0, r1
 }
 
+// IsThisProductInWishlist provides a mock function with given fields: user, productId
+func (_m *WishlistService) IsThisProductInWishlist(user model.User, productId uint64) bool {
+	ret := _m.Called(user, productId)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(model.User, uint64) bool); ok {
+		r0 = rf(user, productId)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewWishlistService interface {
 	mock.TestingT
 	Cleanup(func())

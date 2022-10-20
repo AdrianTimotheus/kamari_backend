@@ -13,18 +13,27 @@ type SealabsAccountService struct {
 	mock.Mock
 }
 
-// CreateNewAccount provides a mock function with given fields: _a0, _a1
-func (_m *SealabsAccountService) CreateNewAccount(_a0 *dto.SealabsAccountRequest, _a1 *model.User) error {
-	ret := _m.Called(_a0, _a1)
+// CreateNewAccount provides a mock function with given fields: req, user
+func (_m *SealabsAccountService) CreateNewAccount(req *dto.SealabsAccountRequest, user *model.User) (*model.SealabsPayAccount, error) {
+	ret := _m.Called(req, user)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*dto.SealabsAccountRequest, *model.User) error); ok {
-		r0 = rf(_a0, _a1)
+	var r0 *model.SealabsPayAccount
+	if rf, ok := ret.Get(0).(func(*dto.SealabsAccountRequest, *model.User) *model.SealabsPayAccount); ok {
+		r0 = rf(req, user)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.SealabsPayAccount)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*dto.SealabsAccountRequest, *model.User) error); ok {
+		r1 = rf(req, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetUsesSealabsAccounts provides a mock function with given fields: userId
@@ -50,6 +59,57 @@ func (_m *SealabsAccountService) GetUsesSealabsAccounts(userId uint64) ([]dto.Se
 	return r0, r1
 }
 
+// IsValidAccountOwner provides a mock function with given fields: userId, accountId
+func (_m *SealabsAccountService) IsValidAccountOwner(userId uint64, accountId uint64) error {
+	ret := _m.Called(userId, accountId)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(uint64, uint64) error); ok {
+		r0 = rf(userId, accountId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// PostSeaLabsPay provides a mock function with given fields: req
+func (_m *SealabsAccountService) PostSeaLabsPay(req string) (*string, error) {
+	ret := _m.Called(req)
+
+	var r0 *string
+	if rf, ok := ret.Get(0).(func(string) *string); ok {
+		r0 = rf(req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*string)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RemoveAccount provides a mock function with given fields: accountId
+func (_m *SealabsAccountService) RemoveAccount(accountId uint64) error {
+	ret := _m.Called(accountId)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(uint64) error); ok {
+		r0 = rf(accountId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SetDefaultSealabsAccount provides a mock function with given fields: userId, accountId
 func (_m *SealabsAccountService) SetDefaultSealabsAccount(userId uint64, accountId uint64) error {
 	ret := _m.Called(userId, accountId)
@@ -59,6 +119,66 @@ func (_m *SealabsAccountService) SetDefaultSealabsAccount(userId uint64, account
 		r0 = rf(userId, accountId)
 	} else {
 		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ValidateCreateAccount provides a mock function with given fields: sign, req
+func (_m *SealabsAccountService) ValidateCreateAccount(sign string, req *dto.SealabsPayRes) (*dto.SealabsPayAccountResponse, error) {
+	ret := _m.Called(sign, req)
+
+	var r0 *dto.SealabsPayAccountResponse
+	if rf, ok := ret.Get(0).(func(string, *dto.SealabsPayRes) *dto.SealabsPayAccountResponse); ok {
+		r0 = rf(sign, req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dto.SealabsPayAccountResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, *dto.SealabsPayRes) error); ok {
+		r1 = rf(sign, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// VerifySeaLabsAccount provides a mock function with given fields: req, user
+func (_m *SealabsAccountService) VerifySeaLabsAccount(req *dto.SealabsAccountRequest, user *model.User) (*dto.SLPPayRes, error) {
+	ret := _m.Called(req, user)
+
+	var r0 *dto.SLPPayRes
+	if rf, ok := ret.Get(0).(func(*dto.SealabsAccountRequest, *model.User) *dto.SLPPayRes); ok {
+		r0 = rf(req, user)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dto.SLPPayRes)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*dto.SealabsAccountRequest, *model.User) error); ok {
+		r1 = rf(req, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// generateCallBackUrl provides a mock function with given fields: sign
+func (_m *SealabsAccountService) generateCallBackUrl(sign string) string {
+	ret := _m.Called(sign)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string) string); ok {
+		r0 = rf(sign)
+	} else {
+		r0 = ret.Get(0).(string)
 	}
 
 	return r0

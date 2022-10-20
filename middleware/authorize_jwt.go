@@ -67,42 +67,6 @@ func AuthorizeJWT(c *gin.Context) {
 	c.Set("user", user)
 }
 
-func AuthorizeStepUpJWT(c *gin.Context) {
-	authHeader := c.GetHeader("Authorization")
-	fmt.Println("auth header", authHeader)
-
-	s := strings.Split(authHeader, "Bearer ")
-	unauthorizedErr := httperror.UnauthorizedError()
-	if len(s) < 2 {
-		c.AbortWithStatusJSON(unauthorizedErr.StatusCode, unauthorizedErr)
-		return
-	}
-	encodedToken := s[1]
-	token, err := validateToken(encodedToken)
-	if err != nil || !token.Valid {
-		c.AbortWithStatusJSON(unauthorizedErr.StatusCode, unauthorizedErr)
-		return
-	}
-	claims, ok := token.Claims.(jwt.MapClaims)
-	fmt.Println(claims)
-	if !ok {
-		c.AbortWithStatusJSON(unauthorizedErr.StatusCode, unauthorizedErr)
-		return
-	}
-
-	userJson, err := json.Marshal(claims["user"])
-	var user model.User
-	err = json.Unmarshal(userJson, &user)
-	if err != nil {
-		c.AbortWithStatusJSON(unauthorizedErr.StatusCode, unauthorizedErr)
-		return
-	}
-	scopeJson, err := json.Marshal(claims["Scope"])
-	scope := string(scopeJson[:])
-	c.Set("user", user)
-	c.Set("Scope", scope)
-}
-
 func GetUserFromToken(encodedToken string) (*model.User, error) {
 	unauthorizedErr := httperror.UnauthorizedError()
 	token, err := validateToken(encodedToken)

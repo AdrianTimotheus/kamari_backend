@@ -40,7 +40,6 @@ func TestMarketplaceService_GetPromoBanner(t *testing.T) {
 				EndDate:        time.Now(),
 				StockLeft:      10,
 				PicUrl:         "test",
-				CreatedAt:      time.Now(),
 			},
 			model.MarketplaceVoucher{
 				ID:             2,
@@ -52,7 +51,6 @@ func TestMarketplaceService_GetPromoBanner(t *testing.T) {
 				EndDate:        time.Now(),
 				StockLeft:      10,
 				PicUrl:         "test",
-				CreatedAt:      time.Now(),
 			},
 		}
 

@@ -84,6 +84,41 @@ func (_m *SealabsAccountRepository) HasSameCard(sealabsAccount *model.SealabsPay
 	return r0
 }
 
+// IsValidOwner provides a mock function with given fields: userId, accountId
+func (_m *SealabsAccountRepository) IsValidOwner(userId uint64, accountId uint64) (bool, error) {
+	ret := _m.Called(userId, accountId)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(uint64, uint64) bool); ok {
+		r0 = rf(userId, accountId)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint64, uint64) error); ok {
+		r1 = rf(userId, accountId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RemoveAccount provides a mock function with given fields: account
+func (_m *SealabsAccountRepository) RemoveAccount(account *model.SealabsPayAccount) error {
+	ret := _m.Called(account)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*model.SealabsPayAccount) error); ok {
+		r0 = rf(account)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewSealabsAccountRepository interface {
 	mock.TestingT
 	Cleanup(func())
