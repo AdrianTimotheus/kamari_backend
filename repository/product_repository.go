@@ -25,6 +25,7 @@ type ProductRepository interface {
 	EditProduct(payload model.Product, user model.User) error
 	DeleteProduct(id int, user model.User) error
 	GetProductPlainDetail(productId uint64) (*model.Product, error)
+	GetProductPromotion(productId uint64) (*model.ProductPromoItem, error)
 }
 
 type productRepository struct {
@@ -309,8 +310,6 @@ func (p productRepository) GetProductDetails(productId uint64) (*model.Product, 
 		Preload("Subcategory").
 		Preload("ProductPhotos").
 		Preload("ProductVariants").
-		Preload("ProductVariants.ProductPromo", "stock_left > 0").
-		Preload("ProductVariants.ProductPromo.PromoType").
 		Where("id = ?", productId).
 		First(&product).Error
 	if err != nil {
@@ -485,4 +484,16 @@ func (p productRepository) DeleteProduct(id int, user model.User) error {
 	}
 
 	return nil
+}
+
+func (p productRepository) GetProductPromotion(productId uint64) (*model.ProductPromoItem, error) {
+	var productPromo model.ProductPromoItem
+	err := p.db.
+		Where("product_id = ?", productId).
+		First(&productPromo).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &productPromo, nil
 }
