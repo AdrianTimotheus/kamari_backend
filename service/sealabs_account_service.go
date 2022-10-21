@@ -103,7 +103,7 @@ func (s sealabsAccountService) IsValidAccountOwner(userId, accountId uint64) err
 
 func (s sealabsAccountService) RemoveAccount(accountId uint64) error {
 	account := model.SealabsPayAccount{Id: accountId}
-	err := s.sealabsAccountRepository.RemoveAccount(&account)
+	err := s.sealabsAccountRepository.RemoveAccountTransaction(&account)
 	if err != nil {
 		return err
 	}
