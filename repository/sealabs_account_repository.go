@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"gorm.io/gorm"
 	"kamari.com/model"
 )
@@ -11,7 +12,7 @@ type SealabsAccountRepository interface {
 	HasSameCard(sealabsAccount *model.SealabsPayAccount) bool
 	GetAccounts(userId uint64) ([]model.SealabsPayAccount, error)
 	IsValidOwner(userId, accountId uint64) (bool, error)
-	RemoveAccount(account *model.SealabsPayAccount) error
+	RemoveAccountTransaction(account *model.SealabsPayAccount) error
 }
 
 type sealabsAccountRepository struct {
@@ -118,8 +119,35 @@ func (s sealabsAccountRepository) IsValidOwner(userId, accountId uint64) (bool, 
 	return res.RowsAffected > 0, nil
 }
 
-func (s sealabsAccountRepository) RemoveAccount(account *model.SealabsPayAccount) error {
+func (s sealabsAccountRepository) RemoveAccountTransaction(account *model.SealabsPayAccount) error {
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		err := s.deleteSealabsAccount(tx, account)
+		if err != nil {
+			return err
+		}
+
+		var randomAccount model.SealabsPayAccount
+		err = s.db.First(&randomAccount).Error
+		if err != nil {
+			switch {
+			case errors.Is(err, gorm.ErrRecordNotFound):
+				return nil
+			default:
+				return err
+			}
+		}
+
+		if err := s.setAccountToDefault(randomAccount.Id, tx); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
 	return s.db.Delete(&account).Error
 }
 
-//TODO: abis apus default sealabs account, set default to random account
+func (sealabsAccountRepository) deleteSealabsAccount(tx *gorm.DB, account *model.SealabsPayAccount) error {
+	return tx.Delete(&account).Error
+}
