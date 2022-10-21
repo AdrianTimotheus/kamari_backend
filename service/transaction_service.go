@@ -59,9 +59,13 @@ func (t transactionService) CreateTransactionPayWithWallet(userModel model.User,
 		Description:       "Checkout Kamari trancation " + trcCode,
 		TransactionTypeId: 2,
 	}
-	newTrcModel, err := t.transactionRepository.CreateTransactionPayWithWallet(&trcModel, walletModel, &walletTransactionModel)
+
+	marketplaceVoucherModel := model.MarketplaceVoucher{ID: payload.MarketplaceVoucherID}
+	merchantVoucherModel := model.MerchantVoucher{Id: payload.MerchantVoucherId}
+
+	newTrcModel, err := t.transactionRepository.CreateTransactionPayWithWallet(&trcModel, walletModel, &marketplaceVoucherModel, &merchantVoucherModel, &walletTransactionModel)
 	if err != nil {
-		return nil, httperror.InternalServerError("Internal Server Error")
+		return nil, err
 	}
 	redis := helper.NewRedisClient(1)
 	_ = redis.Delete("stepUp-" + userModel.Email)
