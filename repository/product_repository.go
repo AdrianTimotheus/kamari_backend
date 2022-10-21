@@ -9,6 +9,7 @@ import (
 )
 
 type ProductRepository interface {
+	IsMerchantProduct(merchantId, productId uint64) (bool, error)
 	GetMerchantProduct(merchantId uint64) ([]model.Product, error)
 	GetAllProducts(keyword string, filters *helper.Filters) ([]model.ProductList, *helper.Metadata, error)
 	GetMerchantProducts(MerchantID uint64, pageOffset int, orderBy string, Limit int, sellerCategoryId int, marketplaceCategoryId int) ([]model.Product, error)
@@ -38,6 +39,19 @@ func NewProductRepository(c ProdConfig) ProductRepository {
 	return productRepository{
 		db: c.DB,
 	}
+}
+
+func (p productRepository) IsMerchantProduct(merchantId, productId uint64) (bool, error) {
+	res := p.db.
+		Where("merchant_id = ?", merchantId).
+		Where("id = ?", productId).
+		Limit(1).
+		Find(&model.Product{})
+	if res.Error != nil {
+		return false, res.Error
+	}
+
+	return res.RowsAffected > 0, nil
 }
 
 func (p productRepository) GetMerchantProduct(merchantId uint64) ([]model.Product, error) {

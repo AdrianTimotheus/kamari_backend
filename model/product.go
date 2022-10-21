@@ -9,7 +9,7 @@ type Product struct {
 	Description             string `json:"description"`
 	MinimumOrder            uint64 `json:"minimum_order"`
 	MaximumOrder            uint64 `json:"maximum_order"`
-	ThumbnailUrl            string
+	ThumbnailUrl            string `json:"thumbnail_url"`
 	IsHazardous             bool
 	Weight                  uint64
 	ViewCount               uint64

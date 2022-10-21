@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
@@ -52,8 +51,6 @@ func (m merchantService) GetMerchantDetail(username string) (*dto.MerchantDetail
 		}
 	}
 
-	pp, _ := json.MarshalIndent(md, "", "\t")
-	fmt.Println("HE", string(pp))
 	ml, err := m.cityRepository.GetCity(md.UserAddress.CityId)
 	if err != nil {
 		return nil, httperror.InternalServerError(err.Error())

@@ -124,10 +124,8 @@ func (m merchantVoucherRepository) GetMerchantVouchers(merchantId uint64, keywor
 		case "willCome":
 			res = res.
 				Where("start_date > ?", now)
-			//Where("end_date > ?", now)
 		case "hasEnded":
 			res = res.
-				//Where("start_date < ?", now).
 				Where("end_date < ?", now)
 		}
 	}

@@ -121,3 +121,5 @@ func (s sealabsAccountRepository) IsValidOwner(userId, accountId uint64) (bool, 
 func (s sealabsAccountRepository) RemoveAccount(account *model.SealabsPayAccount) error {
 	return s.db.Delete(&account).Error
 }
+
+//TODO: abis apus default sealabs account, set default to random account

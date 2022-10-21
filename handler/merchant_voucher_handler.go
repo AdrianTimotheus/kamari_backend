@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (h Handler) ValidateCurrentSeller(c *gin.Context) {
+func (h Handler) ValidateCurrentSellerVoucher(c *gin.Context) {
 	user, err := helper.GetUserContext(c)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, httperror.UnauthorizedError())
