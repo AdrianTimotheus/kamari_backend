@@ -395,6 +395,7 @@ func (p productService) AddNewProduct(payload dto.AddProductReq, user model.User
 		ComplementaryCategoryId: payload.ComplementaryCategoryId,
 		ProductVariants:         payload.ProductVariants,
 	}
+
 	err := p.productRepository.AddNewProduct(newProduct, user)
 	if err != nil {
 		return err
@@ -413,6 +414,7 @@ func (p productService) EditProduct(payload dto.EditProductReq, user model.User,
 		IsHazardous:             payload.IsHazardous,
 		Weight:                  payload.Weight,
 		CategoryId:              payload.CategoryId,
+		SellerCategoryId:        payload.SellerCategoryId,
 		SubcategoryId:           payload.SubcategoryId,
 		ComplementaryCategoryId: payload.ComplementaryCategoryId,
 		ProductVariants:         payload.ProductVariants,

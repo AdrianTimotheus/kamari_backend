@@ -68,8 +68,21 @@ func (a addressRepository) EditAddress(userId uint64, address model.Address) (*m
 
 func (a addressRepository) AddNewAddress(address model.Address) (*model.Address, error) {
 	var userAddress model.Address
+	var exists bool
 
-	err := a.db.Table("user_addresses").Create(&address).Scan(&userAddress).Error
+	//set default address if first address
+	err := a.db.Table("user_addresses").
+		Select("count(*) > 0").
+		Where("user_id = ?", address.UserId).
+		Find(&exists).Error
+
+	if !exists {
+		address.IsDefault = true
+	} else {
+		address.IsDefault = false
+	}
+
+	err = a.db.Table("user_addresses").Create(&address).Scan(&userAddress).Error
 
 	if err != nil {
 		return nil, httperror.InternalServerError("Failed to add new user address")

@@ -155,6 +155,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/products", middleware.AuthorizeJWT, h.AddNewProduct, middleware.ErrorHandler)
 		api.PUT("/products/:id", middleware.AuthorizeJWT, h.EditProduct, middleware.ErrorHandler)
 		api.DELETE("/products/:id", middleware.AuthorizeJWT, h.DeleteProduct, middleware.ErrorHandler)
+		api.POST("/orders/:id/reviews", middleware.AuthorizeJWT, h.CreateReview, middleware.ErrorHandler)
 		api.POST("/checkout/items", middleware.AuthorizeJWT, h.AddCheckOutItems, middleware.ErrorHandler)
 		api.GET("/checkout/items", middleware.AuthorizeJWT, h.GetCheckOutItems, middleware.ErrorHandler)
 		api.POST("/checkout/pay/wallet", middleware.AuthorizeStepUpJWT, h.PayCheckoutWithWallet, middleware.ErrorHandler)

@@ -352,12 +352,13 @@ func (p productRepository) AddNewProduct(product model.Product, user model.User)
 	var exists bool
 	var err error
 	var merchant model.Merchant
+	var insertedProductId uint64
 
 	if product.ComplementaryCategoryId == 0 {
 		err = p.db.Table("categories").
 			Joins("join subcategories on categories.id = subcategories.category_id").
 			Select("count(*) > 0").
-			Where("subcategories.category_id = ?", product.SubcategoryId).
+			Where("subcategories.id = ?", product.SubcategoryId).
 			Where("categories.id = ?", product.CategoryId).
 			Find(&exists).
 			Error
@@ -384,7 +385,35 @@ func (p productRepository) AddNewProduct(product model.Product, user model.User)
 
 	product.MerchantID = merchant.Id
 
-	err = p.db.Table("products").Create(&product).Scan(&newProduct).Error
+	if product.ComplementaryCategoryId == 0 {
+		res := p.db.Raw("INSERT INTO products (name, description, minimum_order, maximum_order, is_hazardous, weight, view_count, unit_sold, favourite_count, availability, seller_category_id, category_id, subcategory_id, merchant_id, thumbnail_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id",
+			product.Name,
+			product.Description,
+			product.MinimumOrder,
+			product.MaximumOrder,
+			product.IsHazardous,
+			product.Weight,
+			0,
+			0,
+			0,
+			true,
+			product.SellerCategoryId,
+			product.CategoryId,
+			product.SubcategoryId,
+			product.MerchantID,
+			product.ThumbnailUrl).First(&insertedProductId)
+		if res.Error != nil {
+			return res.Error
+		}
+		for i, _ := range product.ProductVariants {
+			product.ProductVariants[i].ProductID = insertedProductId
+		}
+
+		err = p.db.Table("product_variants").Create(&product.ProductVariants).Error
+	} else {
+		err = p.db.Table("products").Create(&product).Scan(&newProduct).Error
+	}
+
 	if err != nil {
 		return err
 	}
@@ -417,7 +446,7 @@ func (p productRepository) EditProduct(product model.Product, user model.User) e
 		err = p.db.Table("categories").
 			Joins("join subcategories on categories.id = subcategories.category_id").
 			Select("count(*) > 0").
-			Where("subcategories.category_id = ?", product.SubcategoryId).
+			Where("subcategories.id = ?", product.SubcategoryId).
 			Where("categories.id = ?", product.CategoryId).
 			Find(&exists).
 			Error
@@ -438,16 +467,52 @@ func (p productRepository) EditProduct(product model.Product, user model.User) e
 	}
 
 	var variant model.ProductVariant
-	err = p.db.Table("product_variants").Where("product_id = ?", product.Id).Delete(&variant).Error
-	if err != nil {
-		return err
+
+	if product.ComplementaryCategoryId != 0 {
+		err = p.db.Table("product_variants").Where("product_id = ?", product.Id).Delete(&variant).Error
+		if err != nil {
+			return err
+		}
+
+		err = p.db.Table("products").Where("id = ?", product.Id).Updates(&product).Error
+		if err != nil {
+			return err
+		}
+	} else {
+		fmt.Println(product.SellerCategoryId)
+		res := p.db.Exec("UPDATE products set name = ?, description = ?, minimum_order = ?, maximum_order = ?, is_hazardous = ?, weight = ?, seller_category_id = ?, category_id = ?, subcategory_id = ?, thumbnail_url = ? WHERE id = ?",
+			product.Name,
+			product.Description,
+			product.MinimumOrder,
+			product.MaximumOrder,
+			product.IsHazardous,
+			product.Weight,
+			product.SellerCategoryId,
+			product.CategoryId,
+			product.SubcategoryId,
+			product.ThumbnailUrl,
+			product.Id)
+
+		if res.Error != nil {
+			return res.Error
+		}
+
+		for i, _ := range product.ProductVariants {
+			product.ProductVariants[i].ProductID = product.Id
+		}
+
+		err = p.db.Table("product_variants").Where("product_id = ?", product.Id).Delete(&variant).Error
+		if err != nil {
+			return err
+		}
+
+		err = p.db.Table("product_variants").Create(&product.ProductVariants).Error
+		if err != nil {
+			return err
+		}
 	}
 
-	err = p.db.Table("products").Where("id = ?", product.Id).Updates(&product).Error
-	if err != nil {
-		return err
-	}
-	return err
+	return nil
 }
 func (p productRepository) DeleteProduct(id int, user model.User) error {
 	var exists bool

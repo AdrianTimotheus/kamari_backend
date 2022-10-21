@@ -2,12 +2,14 @@ package repository
 
 import (
 	"gorm.io/gorm"
+	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/model"
 )
 
 type ProductReviewRepository interface {
 	GetProductReview(productId uint64, filters *helper.Filters) ([]model.ProductReview, *helper.Metadata, error)
+	CreateReview(orderDetailId uint64, userId uint64, req dto.CreateReviewRequest) error
 }
 
 type productReviewRepository struct {
@@ -83,4 +85,27 @@ func (p productReviewRepository) GetProductReview(productId uint64, filters *hel
 
 	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
 	return reviews, &metadata, nil
+}
+
+func (p productReviewRepository) CreateReview(orderDetailId uint64, userId uint64, req dto.CreateReviewRequest) error {
+	var photos []model.ReviewPhoto
+
+	for _, url := range req.Photos {
+		photos = append(photos, model.ReviewPhoto{
+			PicUrl: url,
+		})
+	}
+
+	review := model.ProductReview{
+		OrderDetailId: orderDetailId,
+		Score:         req.Score,
+		Feedback:      req.Feedback,
+		ReviewPhotos:  photos,
+	}
+
+	err := p.db.Create(&review).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
