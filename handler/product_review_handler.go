@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"kamari.com/dto"
+	"kamari.com/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -37,5 +39,34 @@ func (h Handler) GetProductReviews(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"__metadata": metadata,
 		"reviews":    reviews,
+	})
+}
+
+func (h Handler) CreateReview(c *gin.Context) {
+	id, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(helper.ErrInvalidReturnType.Error(), "BAD_PARAMS"))
+		return
+	}
+
+	var req dto.CreateReviewRequest
+
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(httperror.BadRequestError(ErrFailedBindingValidation.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	err = h.productReviewService.CreateReview(id.(uint64), user.Id, req)
+
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(helper.ErrInvalidReturnType.Error(), "BAD_PARAMS"))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Product review successfully submitted",
 	})
 }

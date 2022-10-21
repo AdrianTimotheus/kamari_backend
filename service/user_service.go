@@ -309,9 +309,6 @@ func (u userService) EditUserDetail(req dto.EditUserDetailReq, userId uint64) (*
 	user := model.User{
 		Id:          userId,
 		Name:        req.Name,
-		Username:    req.Username,
-		Email:       req.Email,
-		Phone:       req.Phone,
 		DateOfBirth: req.DateOfBirth,
 		PicUrl:      req.PicUrl,
 		GenderId:    req.GenderId,

@@ -8,6 +8,7 @@ import (
 
 type ProductReviewService interface {
 	GetProductReviews(productId uint64, filters *helper.Filters) ([]dto.ProductReviewResponse, *helper.Metadata, error)
+	CreateReview(orderDetailId uint64, userId uint64, req dto.CreateReviewRequest) error
 }
 
 type productReviewService struct {
@@ -82,4 +83,12 @@ func (p productReviewService) GetProductReviews(productId uint64, filters *helpe
 	}
 
 	return productReviews, metadata, nil
+}
+
+func (p productReviewService) CreateReview(orderDetailId uint64, userId uint64, req dto.CreateReviewRequest) error {
+	err := p.productReviewRepository.CreateReview(orderDetailId, userId, req)
+	if err != nil {
+		return err
+	}
+	return nil
 }
