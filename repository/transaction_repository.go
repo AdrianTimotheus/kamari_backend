@@ -7,7 +7,7 @@ import (
 )
 
 type TransactionRepository interface {
-	CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher *model.MerchantVoucher, walletTransaction *model.WalletTransaction) (*model.Transaction, error)
+	CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, walletTransaction *model.WalletTransaction) (*model.Transaction, error)
 }
 
 type transactionRepository struct {
@@ -22,7 +22,7 @@ func NewTransactionRepository(c TRConfig) TransactionRepository {
 	return &transactionRepository{db: c.DB}
 }
 
-func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher *model.MerchantVoucher, walletTransaction *model.WalletTransaction) (*model.Transaction, error) {
+func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, walletTransaction *model.WalletTransaction) (*model.Transaction, error) {
 	err := t.db.Transaction(func(tx *gorm.DB) error {
 
 		if err := tx.Create(&transaction).Error; err != nil {
@@ -43,15 +43,18 @@ func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model
 			}
 		}
 
-		if merchantVoucher.Id != 0 {
-			if err := tx.Model(&merchantVoucher).Update("stock_left", gorm.Expr("stock_left-1")).First(&merchantVoucher).Error; err != nil {
-				return httperror.BadRequestError("Out of Merchant Voucher", "OUT_OF_MERCHANT_VOUCHER")
-				//return err
-			}
-			if merchantVoucher.StockLeft < 0 {
-				return httperror.BadRequestError("Out of Merchant Voucher", "OUT_OF_MERCHANT_VOUCHER")
+		for _, data := range merchantVoucher {
+			if data.Id != 0 {
+				if err := tx.Model(&data).Update("stock_left", gorm.Expr("stock_left-1")).First(&data).Error; err != nil {
+					return httperror.BadRequestError("Out of Merchant Voucher", "OUT_OF_MERCHANT_VOUCHER")
+					//return err
+				}
+				if data.StockLeft < 0 {
+					return httperror.BadRequestError("Out of Merchant Voucher", "OUT_OF_MERCHANT_VOUCHER")
+				}
 			}
 		}
+
 		if err := tx.Model(&wallet).Update("balance", gorm.Expr("balance-?", walletTransaction.Amount)).Error; err != nil {
 			return httperror.InternalServerError("Internal Server Error")
 		}
