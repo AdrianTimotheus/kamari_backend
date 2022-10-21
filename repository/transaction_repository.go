@@ -1,12 +1,13 @@
 package repository
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 	"kamari.com/model"
 )
 
 type TransactionRepository interface {
-	CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, walletTransaction *model.WalletTransaction) error
+	CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, walletTransaction *model.WalletTransaction) (*model.Transaction, error)
 }
 
 type transactionRepository struct {
@@ -21,13 +22,16 @@ func NewTransactionRepository(c TRConfig) TransactionRepository {
 	return &transactionRepository{db: c.DB}
 }
 
-func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, walletTransaction *model.WalletTransaction) error {
-	err := t.db.Transaction(func(tx *gorm.DB) error {
-		var updatedTrcModel model.Transaction
+func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, walletTransaction *model.WalletTransaction) (*model.Transaction, error) {
+	//var updatedTrcModel model.Transaction
 
-		if err := tx.Create(&transaction).First(&updatedTrcModel).Error; err != nil {
+	err := t.db.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Create(&transaction).Error; err != nil {
 			return err
 		}
+
+		fmt.Println("Hello TRC:")
 
 		if err := tx.Model(&wallet).Update("balance", gorm.Expr("balance-?", walletTransaction.Amount)).Error; err != nil {
 			return err
@@ -40,7 +44,7 @@ func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model
 
 		walletPayModel := model.WalletPayment{
 			WalletId:      wallet.Id,
-			TransactionId: updatedTrcModel.Id,
+			TransactionId: transaction.Id,
 		}
 
 		if err := tx.Model(&walletPayModel).Create(&walletPayModel).Error; err != nil {
@@ -48,5 +52,6 @@ func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model
 		}
 		return nil
 	})
-	return err
+
+	return transaction, err
 }
