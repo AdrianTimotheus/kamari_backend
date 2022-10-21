@@ -250,6 +250,19 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 	//	}
 	//}
 
+	// product promo
+	var promo *dto.PromoItems
+	promotion, err := p.productRepository.GetProductPromotion(productId)
+	if err == nil {
+		promo = &dto.PromoItems{
+			Id:             promotion.Id,
+			ProductId:      promotion.ProductId,
+			PromoTypeId:    promotion.PromoTypeId,
+			MaximumItem:    promotion.MaximumItem,
+			DiscountAmount: promotion.DiscountAmount,
+		}
+	}
+
 	priceRange := helper.CountPriceRange(product.ProductVariants)
 	productResponse := &dto.ProductDetailResponse{
 		Id:                      product.Id,
@@ -277,6 +290,7 @@ func (p productService) GetProductDetail(productId uint64) (*dto.ProductDetailRe
 		ReviewCount:             count,
 		ReviewScore:             rating,
 		PriceRange:              priceRange,
+		Promo:                   promo,
 	}
 
 	return productResponse, nil
