@@ -61,9 +61,13 @@ func (t transactionService) CreateTransactionPayWithWallet(userModel model.User,
 	}
 
 	marketplaceVoucherModel := model.MarketplaceVoucher{ID: payload.MarketplaceVoucherID}
-	merchantVoucherModel := model.MerchantVoucher{Id: payload.MerchantVoucherId}
+	var merchantVoucherModel []model.MerchantVoucher
+	for _, data := range payload.MerchantVoucherIds {
+		temp := model.MerchantVoucher{Id: data}
+		merchantVoucherModel = append(merchantVoucherModel, temp)
+	}
 
-	newTrcModel, err := t.transactionRepository.CreateTransactionPayWithWallet(&trcModel, walletModel, &marketplaceVoucherModel, &merchantVoucherModel, &walletTransactionModel)
+	newTrcModel, err := t.transactionRepository.CreateTransactionPayWithWallet(&trcModel, walletModel, &marketplaceVoucherModel, merchantVoucherModel, &walletTransactionModel)
 	if err != nil {
 		return nil, err
 	}
