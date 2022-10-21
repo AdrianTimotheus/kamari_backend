@@ -1,10 +1,11 @@
 package server
 
 import (
+	"log"
+
 	"kamari.com/db"
 	"kamari.com/repository"
 	"kamari.com/service"
-	"log"
 )
 
 func Init() {
@@ -77,6 +78,10 @@ func Init() {
 	})
 
 	merchantVoucherRepository := repository.NewMerchantVoucherRepository(repository.MVRConfig{
+		DB: db.Get(),
+	})
+
+	productPromo := repository.NewProductPromoRepository(repository.PPRConfig{
 		DB: db.Get(),
 	})
 
@@ -154,6 +159,12 @@ func Init() {
 		AddressRepository: addressRepository,
 	})
 
+	productPromoService := service.NewProductPromoService(service.PPSConfig{
+		ProductPromoRepository: productPromo,
+		MerchantRepository:     merchantRepository,
+		ProductRepository:      productRepository,
+	})
+
 	cityService := service.NewCityService(service.CiSConfig{CityRepository: cityRepository})
 
 	checkoutItemService := service.NewCheckoutItemService(
@@ -190,6 +201,7 @@ func Init() {
 		CheckoutItemService:       checkoutItemService,
 		CourierService:            courierService,
 		MarketplaceVoucherService: marketplaceVoucherService,
+		ProductPromoService:       productPromoService,
 		TransactionService:        transactionService,
 	})
 

@@ -33,6 +33,7 @@ type RouterConfig struct {
 	CourierService            service.CourierService
 	MarketplaceVoucherService service.MarketplaceVoucherService
 	TransactionService        service.TransactionService
+	ProductPromoService       service.ProductPromoService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -66,6 +67,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		CourierService:            c.CourierService,
 		MarketplaceVoucherService: c.MarketplaceVoucherService,
 		TransactionService:        c.TransactionService,
+		ProductPromoService:       c.ProductPromoService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -128,13 +130,20 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/users/sealabspay", middleware.AuthorizeJWT, h.AddSealabsPayAccount, middleware.ErrorHandler)
 		api.PATCH("/users/sealabspay/:id", middleware.AuthorizeJWT, h.CheckSealabsOwner, h.SetDefaultSealabsAccount, middleware.ErrorHandler)
 		api.DELETE("/users/sealabspay/:id", middleware.AuthorizeJWT, h.CheckSealabsOwner, h.DeleteSealabsAccount, middleware.ErrorHandler)
-		api.GET("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSeller, h.GetMerchantVoucherDetail, middleware.ErrorHandler)
+		api.GET("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSellerVoucher, h.GetMerchantVoucherDetail, middleware.ErrorHandler)
 		api.GET("/sellers/vouchers", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetMerchantVouchers, middleware.ErrorHandler)
 		api.POST("/sellers/vouchers", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.CreateMerchantVoucher, middleware.ErrorHandler)
 		api.POST("/users/sealabspay/validate", h.ValidateCreateSlpAccount, middleware.ErrorHandler)
 		api.PATCH("/users/sealabspay", middleware.AuthorizeJWT, h.SetDefaultSealabsAccount, middleware.ErrorHandler)
-		api.DELETE("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSeller, h.DeleteMerchantVoucher, middleware.ErrorHandler)
-		api.PATCH("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSeller, h.UpdateMerchantVoucher, middleware.ErrorHandler)
+		api.DELETE("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSellerVoucher, h.DeleteMerchantVoucher, middleware.ErrorHandler)
+		api.PATCH("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSellerVoucher, h.UpdateMerchantVoucher, middleware.ErrorHandler)
+		api.GET("/sellers/promos", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetProductPromos, middleware.ErrorHandler)
+		api.GET("/sellers/promos/available-products", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetAvailableMerchantProductForPromo, middleware.ErrorHandler)
+		api.POST("/sellers/promos", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.CreateProductPromotion, middleware.ErrorHandler)
+		api.GET("/sellers/promos/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetProductPromoDetail, middleware.ErrorHandler)
+		api.PUT("/sellers/promos/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.EditProductPromo, middleware.ErrorHandler)
+		api.DELETE("/sellers/promos/:id/promo-items", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.DeletePromoItems, middleware.ErrorHandler)
+		api.POST("/sellers/promos/:id/promo-items", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.InsertPromoItems, middleware.ErrorHandler)
 		api.POST("/otp/auth", middleware.AuthorizeJWT, h.AuthOTP, middleware.ErrorHandler)
 		api.POST("/step-up/pin", middleware.AuthorizeJWT, h.ValidatePin, middleware.ErrorHandler)
 		api.GET("/address", middleware.AuthorizeJWT, h.GetAddress, middleware.ErrorHandler)
