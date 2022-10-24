@@ -1,8 +1,9 @@
 package dto
 
 type CheckoutItemResponse struct {
-	Merchant MerchantDetailResponse
-	Products []CheckoutProduct
+	Merchant MerchantDetailResponse `json:"merchant"`
+	Products []CheckoutProduct      `json:"products"`
+	Couriers []SupportedCourier     `json:"couriers,omitempty"`
 }
 
 type CheckoutProduct struct {
@@ -28,4 +29,9 @@ type MainVariant struct {
 type SubVariant struct {
 	Name string `json:"name,omitempty"`
 	Item string `json:"item,omitempty"`
+}
+
+type SupportedCourier struct {
+	Id   uint64 `json:"id"`
+	Name string `json:"name"`
 }
