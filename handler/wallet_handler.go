@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"kamari.com/dto"
+	"kamari.com/helper"
 	"kamari.com/httperror"
 	"kamari.com/model"
 	"net/http"
@@ -116,4 +117,53 @@ func (h Handler) ValidatePin(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, stepUpToken)
+}
+
+func (h Handler) TopUpWithSLP(c *gin.Context) {
+	user, err := helper.GetUserContext(c)
+	if err != nil {
+		_ = c.Error(httperror.UnauthorizedError())
+		return
+	}
+
+	var req *dto.PayWithSLPReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	err = h.sealabsAccountService.IsValidAccountOwner(user.Id, req.CardID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusForbidden, httperror.ForbiddenError())
+		return
+	}
+
+	res, err := h.sealabsAccountService.TopUpWallet(req, user)
+
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) ValidateTopUpWithSLP(c *gin.Context) {
+	val := c.Query("s")
+
+	var req *dto.SealabsPayRes
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(httperror.BadRequestError(ErrFailedBindingValidation.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	res, err := h.walletService.ValidateTopUpWallet(val, req)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	message := "top up transaction success"
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": message,
+		"data":    res,
+	})
 }

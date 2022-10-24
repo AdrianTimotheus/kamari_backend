@@ -115,7 +115,6 @@ func (s sealabsAccountRepository) IsValidOwner(userId, accountId uint64) (bool, 
 	if res.Error != nil {
 		return false, res.Error
 	}
-
 	return res.RowsAffected > 0, nil
 }
 
