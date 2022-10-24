@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"kamari.com/dto"
 	"kamari.com/httperror"
@@ -15,19 +16,22 @@ type CheckoutItemService interface {
 }
 
 type checkoutItemService struct {
-	checkoutRepository repository.CheckoutItemRepository
-	productRepository  repository.ProductRepository
+	checkoutRepository         repository.CheckoutItemRepository
+	productRepository          repository.ProductRepository
+	productPromoItemRepository repository.ProductPromoItemRepository
 }
 
 type CISConfig struct {
-	CheckoutRepository repository.CheckoutItemRepository
-	ProductRepository  repository.ProductRepository
+	CheckoutRepository         repository.CheckoutItemRepository
+	ProductRepository          repository.ProductRepository
+	ProductPromoItemRepository repository.ProductPromoItemRepository
 }
 
 func NewCheckoutItemService(c CISConfig) CheckoutItemService {
 	return &checkoutItemService{
-		checkoutRepository: c.CheckoutRepository,
-		productRepository:  c.ProductRepository,
+		checkoutRepository:         c.CheckoutRepository,
+		productRepository:          c.ProductRepository,
+		productPromoItemRepository: c.ProductPromoItemRepository,
 	}
 }
 
@@ -94,7 +98,9 @@ func (c checkoutItemService) GetCheckoutItemByUser(user model.User) ([]dto.Check
 			ProductId:    data.ProductVariant.ProductID,
 			VariantID:    data.ProductVariantId,
 			ProductName:  productData[data.ProductVariant.ProductID].Name,
+			RealPrice:    data.ProductVariant.Price,
 			Price:        data.ProductVariant.Price,
+			TotalPrice:   data.ProductVariant.Price * uint64(data.Quantity),
 			ThumbnailURL: data.ProductVariant.PicUrl,
 			MainVariant: dto.MainVariant{
 				Name: data.ProductVariant.MainVariant,
@@ -104,9 +110,43 @@ func (c checkoutItemService) GetCheckoutItemByUser(user model.User) ([]dto.Check
 				Name: data.ProductVariant.SubVariant,
 				Item: data.ProductVariant.SubVariantItem,
 			},
-			Quantity: data.Quantity,
+			Quantity:    data.Quantity,
+			ItemWeight:  productData[data.ProductVariant.ProductID].Weight,
+			TotalWeight: uint64(data.Quantity) * productData[data.ProductVariant.ProductID].Weight,
 		}
 		dtoResponse[sliceIndex].Products = append(dtoResponse[sliceIndex].Products, tempProduct)
+	}
+	for i, merchant := range dtoResponse {
+		for j, product := range merchant.Products {
+			promoItemModel, err := c.productPromoItemRepository.GetProductPromoItemByProductId(product.ProductId)
+			if err != nil {
+				return nil, err
+			}
+			if promoItemModel != nil {
+				if promoItemModel.MaximumItem >= uint64(product.Quantity) {
+					switch promoItemModel.PromoTypeId {
+					case 1:
+						if dtoResponse[i].Products[j].Price = product.Price - promoItemModel.DiscountAmount; dtoResponse[i].Products[j].Price < 0 {
+							dtoResponse[i].Products[j].Price = 0
+							dtoResponse[i].Products[j].TotalPrice = 0
+						} else {
+							fmt.Println(dtoResponse[i].Products[j].Price)
+							fmt.Println(dtoResponse[i].Products[j].TotalPrice)
+							dtoResponse[i].Products[j].TotalPrice = uint64(product.Quantity) * dtoResponse[i].Products[j].Price
+							fmt.Println(dtoResponse[i].Products[j].TotalPrice)
+						}
+					case 2:
+						if promoItemModel.DiscountAmount == 100 {
+							dtoResponse[i].Products[j].Price = 0
+							dtoResponse[i].Products[j].TotalPrice = 0
+						} else {
+							dtoResponse[i].Products[j].Price = product.Price - ((product.Price * promoItemModel.DiscountAmount) / 100)
+							dtoResponse[i].Products[j].TotalPrice = dtoResponse[i].Products[j].Price * uint64(product.Quantity)
+						}
+					}
+				}
+			}
+		}
 	}
 	return dtoResponse, nil
 }

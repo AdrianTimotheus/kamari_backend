@@ -93,6 +93,8 @@ func Init() {
 
 	transactionRepository := repository.NewTransactionRepository(repository.TRConfig{DB: db.Get()})
 
+	productPromoItemRepository := repository.NewProductPromoItemRepository(repository.PPIRConfig{DB: db.Get()})
+
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository:    userRepository,
@@ -169,8 +171,9 @@ func Init() {
 
 	checkoutItemService := service.NewCheckoutItemService(
 		service.CISConfig{
-			CheckoutRepository: checkoutItemRepository,
-			ProductRepository:  productRepository,
+			CheckoutRepository:         checkoutItemRepository,
+			ProductRepository:          productRepository,
+			ProductPromoItemRepository: productPromoItemRepository,
 		})
 
 	courierService := service.NewCourierService(service.CourierSConfig{CourierRepository: courierRepository})
