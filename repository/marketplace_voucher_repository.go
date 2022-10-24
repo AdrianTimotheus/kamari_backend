@@ -27,8 +27,8 @@ func (m marketplaceVoucherRepository) GetAllActiveVoucher() ([]model.Marketplace
 	var models []model.MarketplaceVoucher
 	err := m.db.
 		//Joins("PromoType").
-		Where("start_date >= ?", now).
-		Where("end_date <= ?", now).
+		Where("start_date <= ?", now).
+		Where("end_date >= ?", now).
 		Where("stock_left > 0").
 		Find(&models).Error
 	if err != nil {
