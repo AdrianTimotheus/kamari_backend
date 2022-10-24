@@ -122,7 +122,7 @@ func (s sealabsAccountService) VerifySeaLabsAccount(req *dto.SealabsAccountReque
 	const signatureLen = 10
 	callBackSignature := helper.RandomString(signatureLen)
 	callBackUrl := s.generateCallBackUrl(callBackSignature, "users/sealabspay/validate")
-	redirectUrl := "http://"
+	redirectUrl := "http://localhost:3000/payment"
 
 	postReq := dto.SLPPayReq{
 		CardNumber:   req.CardNumber,
