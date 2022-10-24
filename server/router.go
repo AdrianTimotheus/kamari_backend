@@ -83,6 +83,9 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/login", h.Login, middleware.ErrorHandler)
 		api.POST("/login-with-google", h.LoginWithGoogle, middleware.ErrorHandler)
 		api.GET("/refresh-token", h.GetNewTokenFromRefresh, middleware.ErrorHandler)
+		api.GET("/users", middleware.AuthorizeJWT, h.GetUserDetail, middleware.ErrorHandler)
+		api.GET("/users/seller", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetUserDetail, middleware.ErrorHandler)
+		api.GET("/users/admin", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.GetUserDetail, middleware.ErrorHandler)
 		api.GET("/logout", h.Logout)
 
 		// guest
@@ -98,10 +101,10 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/products/:id", h.GetProductDetail, middleware.ErrorHandler)
 		api.GET("/categories", h.GetCategories, middleware.ErrorHandler)
 		api.GET("/categories/:id", h.GetCategory, middleware.ErrorHandler)
-		api.GET("/subcategories", h.GetSubcategories, middleware.ErrorHandler)
-		api.GET("/subcategories/:id", h.GetSubcategory, middleware.ErrorHandler)
-		api.GET("/complementary", h.GetComplementaries, middleware.ErrorHandler)
-		api.GET("/complementary/:id", h.GetComplementary, middleware.ErrorHandler)
+		api.GET("/sub-categories", h.GetSubCategories, middleware.ErrorHandler)
+		api.GET("/sub-categories/:id", h.GetSubcategory, middleware.ErrorHandler)
+		api.GET("/complementary-categories", h.GetComplementaryCategories, middleware.ErrorHandler)
+		api.GET("/complementary-categories/:id", h.GetComplementaryCategory, middleware.ErrorHandler)
 		api.GET("/cities", h.GetCities, middleware.ErrorHandler)
 		api.GET("/couriers", h.GetAllCourier, middleware.ErrorHandler)
 		api.GET("/vouchers/merchant/:id", h.GetMerchantVoucherByMerchantId, middleware.ErrorHandler)
@@ -114,7 +117,6 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/carts", middleware.AuthorizeJWT, h.CreateCartItem, middleware.ErrorHandler)
 		api.PATCH("/carts/:id", middleware.AuthorizeJWT, h.UpdateCartItem, middleware.ErrorHandler)
 		api.DELETE("/carts/:id", middleware.AuthorizeJWT, h.DeleteCartItem, middleware.ErrorHandler)
-		api.GET("/users", middleware.AuthorizeJWT, h.GetUserDetail, middleware.ErrorHandler)
 		api.PATCH("/users", middleware.AuthorizeJWT, h.EditUserDetail, middleware.ErrorHandler)
 		api.GET("/wallets", middleware.AuthorizeJWT, h.GetWalletDetail, middleware.ErrorHandler)
 		api.GET("/wallets/histories", middleware.AuthorizeJWT, h.GetWalletTransactionHistories, middleware.ErrorHandler)
@@ -162,6 +164,17 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/checkout/items", middleware.AuthorizeJWT, h.AddCheckOutItems, middleware.ErrorHandler)
 		api.GET("/checkout/items", middleware.AuthorizeJWT, h.GetCheckOutItems, middleware.ErrorHandler)
 		api.POST("/checkout/pay/wallet", middleware.AuthorizeStepUpJWT, h.PayCheckoutWithWallet, middleware.ErrorHandler)
+
+		// system admin
+		api.POST("/categories", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.CreateCategory, middleware.ErrorHandler)
+		api.POST("/sub-categories", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.CreateSubCategory, middleware.ErrorHandler)
+		api.POST("/complementary-categories", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.CreateComplementaryCategory, middleware.ErrorHandler)
+		api.PATCH("/categories/:id", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.UpdateCategory, middleware.ErrorHandler)
+		api.PATCH("/sub-categories/:id", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.UpdateSubCategory, middleware.ErrorHandler)
+		api.PATCH("/complementary-categories/:id", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.UpdateComplementaryCategory, middleware.ErrorHandler)
+		api.DELETE("/categories/:id", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.DeleteCategory, middleware.ErrorHandler)
+		api.DELETE("/sub-categories/:id", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.DeleteSubCategory, middleware.ErrorHandler)
+		api.DELETE("/complementary-categories/:id", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.DeleteComplementaryCategory, middleware.ErrorHandler)
 	}
 
 	return router

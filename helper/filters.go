@@ -16,6 +16,7 @@ type Filters struct {
 	MinPrice      *uint64 `form:"minPrice"`
 	Rating        *int    `form:"rating"`
 	CategoryId    *uint64 `form:"categoryId"`
+	SubCategoryId *uint64 `form:"subCategoryId"`
 	VoucherStatus *string `form:"voucherStatus"`
 	PromoStatus   *string `form:"promoStatus"`
 }
