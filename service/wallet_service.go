@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
@@ -22,6 +23,7 @@ type WalletService interface {
 	IsUserHasWallet(userId uint64) (bool, error)
 	CreateNewWallet(userId uint64, hashedPassword string) (*dto.DetailWalletResponse, error)
 	ValidateUserPinForPayment(user model.User, payload dto.ValidatePinRequest) (*dto.TokenResponse, error)
+	ValidateTopUpWallet(sign string, req *dto.SealabsPayRes) (*dto.WalletTopUpRes, error)
 }
 
 type walletService struct {
@@ -231,4 +233,42 @@ func (w walletService) ValidateUserPinForPayment(user model.User, payload dto.Va
 	}
 
 	return dtoResponse, nil
+}
+
+func (w walletService) ValidateTopUpWallet(sign string, req *dto.SealabsPayRes) (*dto.WalletTopUpRes, error) {
+	redisHelper := helper.NewRedisClient(4)
+	key := redisHelper.GenerateKey("s", sign, "")
+	payload, err := redisHelper.GetData(key)
+	if err != nil {
+		return nil, httperror.BadRequestError("Invalid Signature", "INVALID_SIGNATURE")
+	}
+
+	defer redisHelper.Delete(key)
+
+	if req.Status == "TXN_FAILED" {
+		return nil, err
+	}
+
+	topUpReq := new(dto.PayWithSLPReq)
+	json.Unmarshal([]byte(payload), topUpReq)
+
+	wModel, _ := w.walletRepository.GetMyWalletDetail(topUpReq.UserID)
+
+	transaction := model.WalletTransaction{
+		DstWalletId:       wModel.Id,
+		Amount:            uint64(topUpReq.Amount),
+		Description:       "Top Up From Sea Labs Pay",
+		TransactionTypeId: 1,
+		TransactionType:   model.TransactionType{},
+	}
+
+	err = w.walletRepository.TopUpWallet(&transaction, wModel)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res := dto.WalletTopUpRes{NewBalance: wModel.Balance + transaction.Amount}
+
+	return &res, nil
 }

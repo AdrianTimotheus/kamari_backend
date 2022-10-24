@@ -21,8 +21,9 @@ type SealabsAccountService interface {
 	RemoveAccount(accountId uint64) error
 	VerifySeaLabsAccount(req *dto.SealabsAccountRequest, user *model.User) (*dto.SLPPayRes, error)
 	ValidateCreateAccount(sign string, req *dto.SealabsPayRes) (*dto.SealabsPayAccountResponse, error)
-	generateCallBackUrl(sign string) string
 	PostSeaLabsPay(req string) (*string, error)
+	TopUpWallet(payload *dto.PayWithSLPReq, user model.User) (*dto.SLPPayRes, error)
+	generateCallBackUrl(sign string, endPoint string) string
 }
 
 type sealabsAccountService struct {
@@ -120,7 +121,7 @@ func (s sealabsAccountService) VerifySeaLabsAccount(req *dto.SealabsAccountReque
 
 	const signatureLen = 10
 	callBackSignature := helper.RandomString(signatureLen)
-	callBackUrl := s.generateCallBackUrl(callBackSignature)
+	callBackUrl := s.generateCallBackUrl(callBackSignature, "users/sealabspay/validate")
 	redirectUrl := "http://"
 
 	postReq := dto.SLPPayReq{
@@ -173,7 +174,6 @@ func (s sealabsAccountService) ValidateCreateAccount(sign string, req *dto.Seala
 	}
 
 	if slp.IsDefault {
-		fmt.Println(accountId)
 		err := s.sealabsAccountRepository.ChangeDefaultTransaction(slp.UserId, accountId)
 		if err != nil {
 			return nil, err
@@ -188,9 +188,50 @@ func (s sealabsAccountService) ValidateCreateAccount(sign string, req *dto.Seala
 	return res, err
 }
 
-func (s sealabsAccountService) generateCallBackUrl(sign string) string {
+func (s sealabsAccountService) TopUpWallet(payload *dto.PayWithSLPReq, user model.User) (*dto.SLPPayRes, error) {
+	topUpReq := dto.PayWithSLPReq{
+		UserID:     user.Id,
+		CardNumber: payload.CardNumber,
+		Amount:     payload.Amount,
+	}
+
+	reqJson, _ := json.Marshal(topUpReq)
+
+	const signatureLen = 10
+	callBackSignature := helper.RandomString(signatureLen)
+	callBackUrl := s.generateCallBackUrl(callBackSignature, "wallets/topup")
+	redirectUrl := "http://localhost:3000/wallet"
+
+	postReq := dto.SLPPayReq{
+		CardNumber:   payload.CardNumber,
+		Amount:       payload.Amount,
+		MerchantCode: config.Config.SeaLabsPayConfig.MerchantCode,
+		RedirectUrl:  redirectUrl,
+		CallbackUrl:  callBackUrl,
+	}
+	helper.CreateSignature(config.Config.SeaLabsPayConfig.ApiKey, &postReq)
+
+	res, err := s.PostSeaLabsPay(helper.Encode(&postReq))
+
+	if err != nil {
+		return nil, err
+	}
+
+	r := new(dto.SLPPayRes)
+
+	redisHelper := helper.NewRedisClient(4)
+	key := redisHelper.GenerateKey("s", callBackSignature, "")
+
+	err = redisHelper.Set(key, reqJson)
+
+	r = r.Create(*res)
+
+	return r, err
+}
+
+func (s sealabsAccountService) generateCallBackUrl(sign string, endPoint string) string {
 	//Change when deployed
-	const baseUrl = "https://e923-143-92-127-34.ap.ngrok.io/api/users/sealabspay/validate"
+	baseUrl := "https://1718-2404-8000-1004-f072-f8b5-a50e-8c1e-ac5d.ap.ngrok.io/api/" + endPoint
 	callBackUrl := fmt.Sprintf("%s?s=%s", baseUrl, sign)
 	return callBackUrl
 }
@@ -200,7 +241,6 @@ func (s sealabsAccountService) PostSeaLabsPay(req string) (*string, error) {
 		return http.ErrUseLastResponse
 	}}
 
-	fmt.Println(strings.NewReader(req))
 	resp, err := client.Post("https://slp.air-sipp.com/api/v1/transaction/pay", "application/x-www-form-urlencoded", strings.NewReader(req))
 	if err != nil {
 		return nil, httperror.InternalServerError("Can't connect to SeaLabs Pay")

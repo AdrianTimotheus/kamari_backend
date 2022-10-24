@@ -14,6 +14,7 @@ type WalletRepository interface {
 	CountUserWallet(userId uint64) (int64, error)
 	CreateWallet(model model.Wallet) (*model.Wallet, error)
 	ValidatePin(userId uint64, HashedPIN string) bool
+	TopUpWallet(transaction *model.WalletTransaction, wModel *model.Wallet) error
 }
 
 type walletRepository struct {
@@ -97,4 +98,22 @@ func (w walletRepository) ValidatePin(userId uint64, HashedPIN string) bool {
 		return false
 	}
 	return true
+}
+
+func (w walletRepository) TopUpWallet(transaction *model.WalletTransaction, wModel *model.Wallet) error {
+	err := w.db.Create(&transaction).Error
+	if err != nil {
+		return err
+	}
+
+	db := w.db.Model(&wModel).
+		Where("user_id=?", wModel.UserId).
+		Update("balance", gorm.Expr("balance + ?", transaction.Amount))
+	if db.Error != nil {
+		return db.Error
+	}
+	if db.RowsAffected < 1 {
+		return errors.New("no data change")
+	}
+	return nil
 }
