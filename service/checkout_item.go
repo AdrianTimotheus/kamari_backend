@@ -117,7 +117,9 @@ func (c checkoutItemService) GetCheckoutItemByUser(user model.User) ([]dto.Check
 		dtoResponse[sliceIndex].Products = append(dtoResponse[sliceIndex].Products, tempProduct)
 	}
 	for i, merchant := range dtoResponse {
+		var listOfProductId []uint64
 		for j, product := range merchant.Products {
+			listOfProductId = append(listOfProductId, product.ProductId)
 			promoItemModel, err := c.productPromoItemRepository.GetProductPromoItemByProductId(product.ProductId)
 			if err != nil {
 				return nil, err
@@ -146,6 +148,22 @@ func (c checkoutItemService) GetCheckoutItemByUser(user model.User) ([]dto.Check
 					}
 				}
 			}
+		}
+		courierModels, err := c.checkoutRepository.GetSupportedCourierForMerchant(merchant.Merchant.Id, listOfProductId)
+		if err != nil {
+			switch {
+			case errors.Is(err, gorm.ErrRecordNotFound):
+
+			default:
+				return nil, httperror.InternalServerError(err.Error())
+			}
+		}
+		for _, courier := range courierModels {
+			temp := dto.SupportedCourier{
+				Id:   courier.Id,
+				Name: courier.Name,
+			}
+			dtoResponse[i].Couriers = append(dtoResponse[i].Couriers, temp)
 		}
 	}
 	return dtoResponse, nil
