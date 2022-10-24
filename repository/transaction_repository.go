@@ -1,13 +1,16 @@
 package repository
 
 import (
+	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"kamari.com/httperror"
 	"kamari.com/model"
+	"time"
 )
 
 type TransactionRepository interface {
-	CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, walletTransaction *model.WalletTransaction) (*model.Transaction, error)
+	CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, walletTransaction *model.WalletTransaction, promoItems []model.ProductPromoItem) (*model.Transaction, error)
 }
 
 type transactionRepository struct {
@@ -22,7 +25,7 @@ func NewTransactionRepository(c TRConfig) TransactionRepository {
 	return &transactionRepository{db: c.DB}
 }
 
-func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, walletTransaction *model.WalletTransaction) (*model.Transaction, error) {
+func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, walletTransaction *model.WalletTransaction, productPromoItems []model.ProductPromoItem) (*model.Transaction, error) {
 	err := t.db.Transaction(func(tx *gorm.DB) error {
 
 		if err := tx.Create(&transaction).Error; err != nil {
@@ -53,6 +56,39 @@ func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model
 					return httperror.BadRequestError("Out of Merchant Voucher", "OUT_OF_MERCHANT_VOUCHER")
 				}
 			}
+		}
+
+		for _, data := range productPromoItems {
+			var resp model.ProductPromoItem
+			now := time.Now().Format("2006-01-02")
+			err := tx.Model(&resp).
+				Joins("ProductPromo").
+				Where("product_id=?", data.ProductId).
+				Where("start_date <= ?", now).
+				Where("end_date >= ?", now).
+				First(&resp).Error
+			if err != nil {
+				fmt.Println(err)
+				if !errors.Is(err, gorm.ErrRecordNotFound) {
+					return httperror.InternalServerError("Internal Server Error")
+				}
+			} else {
+				fmt.Println("MAX: ", resp.MaximumItem)
+				fmt.Println("taken: ", data.StockLeft)
+
+				if resp.MaximumItem >= data.StockLeft {
+					fmt.Println("MAX: ", resp.MaximumItem)
+					fmt.Println("taken: ", data.StockLeft)
+					err := tx.Model(&resp).
+						Where("id=?", resp.Id).
+						Update("stock_left", gorm.Expr("stock_left - ?", data.StockLeft)).
+						First(&resp).Error
+					if err != nil {
+						return httperror.BadRequestError("Out of product promotion. Recalculate Total Payment", "BAD_REQUEST_OUT_OF_PRODUCT_PROMOTION")
+					}
+				}
+			}
+
 		}
 
 		if err := tx.Model(&wallet).Update("balance", gorm.Expr("balance-?", walletTransaction.Amount)).Error; err != nil {
