@@ -25,6 +25,11 @@ type seaLabsPayConfig struct {
 	ApiKey       string
 }
 
+type courierService struct {
+	Url string
+	Key string
+}
+
 type AppConfig struct {
 	BaseURL            string
 	Env                string
@@ -35,6 +40,7 @@ type AppConfig struct {
 	DBConfig           dbConfig
 	RedisConfig        redisConfig
 	SeaLabsPayConfig   seaLabsPayConfig
+	CourierService     courierService
 }
 
 func getEnv(key, defaultVal string) string {
@@ -67,5 +73,9 @@ var Config = AppConfig{
 		MerchantName: getEnv("MERCHANT_NAME", ""),
 		MerchantCode: getEnv("MERCHANT_CODE", ""),
 		ApiKey:       getEnv("SEA_LABS_PAY_API_KEY", ""),
+	},
+	CourierService: courierService{
+		Url: getEnv("COURIER_SERVICE_URL", ""),
+		Key: getEnv("COURIER_SERVICE_KEY", ""),
 	},
 }
