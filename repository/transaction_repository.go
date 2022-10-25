@@ -10,7 +10,7 @@ import (
 )
 
 type TransactionRepository interface {
-	CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, walletTransaction *model.WalletTransaction, promoItems []model.ProductPromoItem) (*model.Transaction, error)
+	CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, walletTransaction *model.WalletTransaction, promoItems []model.ProductPromoItem, productVariantModels []model.ProductVariant) (*model.Transaction, error)
 }
 
 type transactionRepository struct {
@@ -25,7 +25,7 @@ func NewTransactionRepository(c TRConfig) TransactionRepository {
 	return &transactionRepository{db: c.DB}
 }
 
-func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, walletTransaction *model.WalletTransaction, productPromoItems []model.ProductPromoItem) (*model.Transaction, error) {
+func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, walletTransaction *model.WalletTransaction, productPromoItems []model.ProductPromoItem, productVariantModels []model.ProductVariant) (*model.Transaction, error) {
 	err := t.db.Transaction(func(tx *gorm.DB) error {
 
 		if err := tx.Create(&transaction).Error; err != nil {
@@ -55,6 +55,17 @@ func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model
 				if data.StockLeft < 0 {
 					return httperror.BadRequestError("Out of Merchant Voucher", "OUT_OF_MERCHANT_VOUCHER")
 				}
+			}
+		}
+
+		for _, data := range productVariantModels {
+			err := tx.Model(&data).Where("product_variants.id=?", data.ID).
+				Update("stock", gorm.Expr("stock - ?", data.Stock)).Scan(&data).Error
+			if err != nil {
+				return httperror.InternalServerError("Internal Server Error")
+			}
+			if data.Stock < 0 {
+				return httperror.BadRequestError("Insufficient Product Stock", "INSUFFICIENT_PRODUCT_STOCK")
 			}
 		}
 

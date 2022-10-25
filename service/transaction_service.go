@@ -67,6 +67,7 @@ func (t transactionService) CreateTransactionPayWithWallet(userModel model.User,
 		merchantVoucherModel = append(merchantVoucherModel, temp)
 	}
 
+	var productVariantModel []model.ProductVariant
 	var productPromoItems []model.ProductPromoItem
 	for _, product := range payload.Products {
 		temp := model.ProductPromoItem{
@@ -74,9 +75,15 @@ func (t transactionService) CreateTransactionPayWithWallet(userModel model.User,
 			ProductId: product.ProductId,
 		}
 		productPromoItems = append(productPromoItems, temp)
+
+		pVTempModel := model.ProductVariant{
+			ID:    product.VariantId,
+			Stock: int(product.Quantity),
+		}
+		productVariantModel = append(productVariantModel, pVTempModel)
 	}
 
-	newTrcModel, err := t.transactionRepository.CreateTransactionPayWithWallet(&trcModel, walletModel, &marketplaceVoucherModel, merchantVoucherModel, &walletTransactionModel, productPromoItems)
+	newTrcModel, err := t.transactionRepository.CreateTransactionPayWithWallet(&trcModel, walletModel, &marketplaceVoucherModel, merchantVoucherModel, &walletTransactionModel, productPromoItems, productVariantModel)
 	if err != nil {
 		return nil, err
 	}
