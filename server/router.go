@@ -140,6 +140,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/users/sealabspay/validate", h.ValidateCreateSlpAccount, middleware.ErrorHandler)
 		api.POST("/users/sealabspay/topup", middleware.AuthorizeJWT, h.TopUpWithSLP, middleware.ErrorHandler)
 		api.PATCH("/users/sealabspay", middleware.AuthorizeJWT, h.SetDefaultSealabsAccount, middleware.ErrorHandler)
+		api.GET("/sellers/products", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetProductsSellerAdmin, middleware.ErrorHandler)
 		api.DELETE("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSellerVoucher, h.DeleteMerchantVoucher, middleware.ErrorHandler)
 		api.PATCH("/sellers/vouchers/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.ValidateCurrentSellerVoucher, h.UpdateMerchantVoucher, middleware.ErrorHandler)
 		api.GET("/sellers/promos", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetProductPromos, middleware.ErrorHandler)

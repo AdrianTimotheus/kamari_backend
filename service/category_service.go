@@ -99,8 +99,9 @@ func (c categoryService) GetSubCategories(keyword string, filters *helper.Filter
 	subcategoryResponse := make([]dto.SubCategoryResponse, len(subcategories))
 	for i, subcategory := range subcategories {
 		c := dto.SubCategoryResponse{
-			Id:   subcategory.Id,
-			Name: subcategory.Name,
+			Id:         subcategory.Id,
+			Name:       subcategory.Name,
+			CategoryId: subcategory.CategoryId,
 		}
 		subcategoryResponse[i] = c
 	}
@@ -123,8 +124,9 @@ func (c categoryService) GetComplementaryCategories(keyword string, filters *hel
 	complementaryResponse := make([]dto.ComplementaryCategoryResponse, len(complementaries))
 	for i, complementary := range complementaries {
 		c := dto.ComplementaryCategoryResponse{
-			Id:   complementary.Id,
-			Name: complementary.Name,
+			Id:            complementary.Id,
+			Name:          complementary.Name,
+			SubCategoryId: complementary.SubcategoryId,
 		}
 		complementaryResponse[i] = c
 	}
