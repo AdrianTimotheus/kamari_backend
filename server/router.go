@@ -147,6 +147,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/sellers/promos", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.CreateProductPromotion, middleware.ErrorHandler)
 		api.GET("/sellers/promos/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetProductPromoDetail, middleware.ErrorHandler)
 		api.PUT("/sellers/promos/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.EditProductPromo, middleware.ErrorHandler)
+		api.DELETE("/sellers/promos/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.EndMerchantPromo, middleware.ErrorHandler)
 		api.DELETE("/sellers/promos/:id/promo-items", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.DeletePromoItems, middleware.ErrorHandler)
 		api.POST("/sellers/promos/:id/promo-items", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.InsertPromoItems, middleware.ErrorHandler)
 		api.POST("/otp/auth", middleware.AuthorizeJWT, h.AuthOTP, middleware.ErrorHandler)

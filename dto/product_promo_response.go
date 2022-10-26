@@ -10,5 +10,6 @@ type ProductPromoResponse struct {
 	StartDate         time.Time                   `json:"start_date"`
 	EndDate           time.Time                   `json:"end_date"`
 	MerchantId        uint64                      `json:"merchant_id"`
+	HasEnded          bool                        `json:"has_ended"`
 	ProductPromoItems []ProductPromoItemsResponse `json:"product_promo_items"`
 }
