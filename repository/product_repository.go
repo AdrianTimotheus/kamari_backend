@@ -505,7 +505,7 @@ func (p productRepository) AddNewProduct(product model.Product, user model.User)
 	}
 	return err
 }
-func (p productRepository) DeleteProduct(id int, user model.User) error {
+func (p productRepository) DeleteProduct(id uint64, user model.User) error {
 	var exists bool
 	var err error
 	var merchant model.Merchant
