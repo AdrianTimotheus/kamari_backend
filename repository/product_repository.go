@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+
 	"gorm.io/gorm"
 	"kamari.com/helper"
 	"kamari.com/httperror"
@@ -23,8 +24,7 @@ type ProductRepository interface {
 	GetProductDetails(productId uint64) (*model.Product, error)
 	GetSimilarProduct(keyword string, category uint64, currentProductId uint64) ([]model.Product, error)
 	AddNewProduct(payload model.Product, user model.User) error
-	EditProduct(payload model.Product, user model.User) error
-	DeleteProduct(id int, user model.User) error
+	DeleteProduct(id uint64, user model.User) error
 	GetProductPlainDetail(productId uint64) (*model.Product, error)
 	GetProductPromotion(productId uint64) (*model.ProductPromoItem, error)
 }
@@ -407,7 +407,7 @@ func (p productRepository) GetSimilarProduct(keyword string, categoryId uint64, 
 }
 
 func (p productRepository) AddNewProduct(product model.Product, user model.User) error {
-	var newProduct model.Product
+	//var newProduct model.Product
 	var exists bool
 	var err error
 	var merchant model.Merchant
@@ -445,7 +445,7 @@ func (p productRepository) AddNewProduct(product model.Product, user model.User)
 	product.MerchantID = merchant.Id
 
 	if product.ComplementaryCategoryId == 0 {
-		res := p.db.Raw("INSERT INTO products (name, description, minimum_order, maximum_order, is_hazardous, weight, view_count, unit_sold, favourite_count, availability, seller_category_id, category_id, subcategory_id, merchant_id, thumbnail_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id",
+		res := p.db.Raw("INSERT INTO products (name, description, minimum_order, maximum_order, is_hazardous, weight, view_count, unit_sold, favourite_count, availability, category_id, subcategory_id, merchant_id, thumbnail_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id",
 			product.Name,
 			product.Description,
 			product.MinimumOrder,
@@ -456,7 +456,6 @@ func (p productRepository) AddNewProduct(product model.Product, user model.User)
 			0,
 			0,
 			true,
-			product.SellerCategoryId,
 			product.CategoryId,
 			product.SubcategoryId,
 			product.MerchantID,
@@ -470,108 +469,41 @@ func (p productRepository) AddNewProduct(product model.Product, user model.User)
 
 		err = p.db.Table("product_variants").Create(&product.ProductVariants).Error
 	} else {
-		err = p.db.Table("products").Create(&product).Scan(&newProduct).Error
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-func (p productRepository) EditProduct(product model.Product, user model.User) error {
-	//var newProduct model.Product
-	var exists bool
-	var err error
-	var merchant model.Merchant
-
-	err = p.db.Table("merchants").Where("user_id = ?", user.Id).First(&merchant).Error
-	if err != nil {
-		return httperror.BadRequestError("User has not registered as a merchant", "USER_NOT_MERCHANT")
-	}
-
-	err = p.db.Table("products").
-		Select("count(*) > 0").
-		Where("id = ?", product.Id).
-		Where("merchant_id = ?", merchant.Id).
-		Find(&exists).
-		Error
-
-	if !exists {
-		return httperror.BadRequestError("Product not found", "PRODUCT_NOT_FOUND")
-	}
-
-	if product.ComplementaryCategoryId == 0 {
-		err = p.db.Table("categories").
-			Joins("join subcategories on categories.id = subcategories.category_id").
-			Select("count(*) > 0").
-			Where("subcategories.id = ?", product.SubcategoryId).
-			Where("categories.id = ?", product.CategoryId).
-			Find(&exists).
-			Error
-	} else {
-		err = p.db.Table("categories").
-			Joins("join subcategories on categories.id = subcategories.category_id").
-			Joins("join complementary_categories on subcategories.id = complementary_categories.subcategory_id").
-			Select("count(*) > 0").
-			Where("complementary_categories.id = ?", product.ComplementaryCategoryId).
-			Where("subcategories.id = ?", product.SubcategoryId).
-			Where("categories.id = ?", product.CategoryId).
-			Find(&exists).
-			Error
-	}
-
-	if !exists {
-		return httperror.BadRequestError("Categories, subcategories, and complementary categories don't match", "CATEGORIES_NOT_MATCH")
-	}
-
-	var variant model.ProductVariant
-
-	if product.ComplementaryCategoryId != 0 {
-		err = p.db.Table("product_variants").Where("product_id = ?", product.Id).Delete(&variant).Error
-		if err != nil {
-			return err
-		}
-
-		err = p.db.Table("products").Where("id = ?", product.Id).Updates(&product).Error
-		if err != nil {
-			return err
-		}
-	} else {
-		fmt.Println(product.SellerCategoryId)
-		res := p.db.Exec("UPDATE products set name = ?, description = ?, minimum_order = ?, maximum_order = ?, is_hazardous = ?, weight = ?, seller_category_id = ?, category_id = ?, subcategory_id = ?, thumbnail_url = ? WHERE id = ?",
+		res := p.db.Raw("INSERT INTO products (name, description, minimum_order, maximum_order, is_hazardous, weight, view_count, unit_sold, favourite_count, availability, category_id, subcategory_id, complementary_category_id, merchant_id, thumbnail_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id",
 			product.Name,
 			product.Description,
 			product.MinimumOrder,
 			product.MaximumOrder,
 			product.IsHazardous,
 			product.Weight,
-			product.SellerCategoryId,
+			0,
+			0,
+			0,
+			true,
 			product.CategoryId,
 			product.SubcategoryId,
-			product.ThumbnailUrl,
-			product.Id)
-
+			product.ComplementaryCategoryId,
+			product.MerchantID,
+			product.ThumbnailUrl).First(&insertedProductId)
 		if res.Error != nil {
 			return res.Error
 		}
-
 		for i, _ := range product.ProductVariants {
-			product.ProductVariants[i].ProductID = product.Id
-		}
-
-		err = p.db.Table("product_variants").Where("product_id = ?", product.Id).Delete(&variant).Error
-		if err != nil {
-			return err
+			product.ProductVariants[i].ProductID = insertedProductId
 		}
 
 		err = p.db.Table("product_variants").Create(&product.ProductVariants).Error
-		if err != nil {
-			return err
-		}
 	}
 
-	return nil
+	if err != nil {
+		return err
+	}
+
+	err = p.db.Table("products").Where("id = ?", product.Id).Updates(&product).Error
+	if err != nil {
+		return err
+	}
+	return err
 }
 func (p productRepository) DeleteProduct(id int, user model.User) error {
 	var exists bool

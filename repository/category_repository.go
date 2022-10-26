@@ -2,7 +2,11 @@ package repository
 
 import (
 	"fmt"
+	"net/url"
+	"strconv"
+
 	"gorm.io/gorm"
+	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
 	"kamari.com/model"
@@ -24,6 +28,14 @@ type CategoryRepository interface {
 	DeleteCategory(category *model.Category) error
 	DeleteSubCategory(subCategory *model.Subcategory) error
 	DeleteComplementaryCategory(complementary *model.Complementary) error
+	GetSellerCategories(userId uint64, params url.Values) ([]dto.GetSellerCategoriesRes, uint64, error)
+	GetSellerCategory(userId uint64, sellerCategoryId uint64) (string, []dto.SellerCategoriesItemsRes, error)
+	UpdateSellerCategory(userId uint64, category model.SellerCategory) error
+	CreateSellerCategory(userId uint64, category model.SellerCategory) error
+	DeleteSellerCategory(userId uint64, sellerCategoryId uint64) error
+	GetAvailableProducts(userId uint64, params url.Values) ([]dto.SellerCategoriesAvailableItemsRes, uint64, error)
+	AddProductToSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory, sellerCategoryId uint64) error
+	DeleteProductFromSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory) error
 }
 
 type categoryRepository struct {
@@ -299,4 +311,296 @@ func (c categoryRepository) DeleteComplementaryCategory(complementary *model.Com
 		return httperror.BadRequestError("Complementary category is used", "COMPLEMENTARY_CATEGORY_USED")
 	}
 	return c.db.Table("complementary_categories").Delete(&complementary).Error
+}
+
+func (c categoryRepository) GetSellerCategories(userId uint64, params url.Values) ([]dto.GetSellerCategoriesRes, uint64, error) {
+	var productsCountBySellerCategories []dto.GetSellerCategoriesRes
+	var merchant model.Merchant
+
+	keywordParams := params["keyword"]
+	keyword := ""
+	if keywordParams != nil {
+		keyword = "%" + keywordParams[0] + "%"
+	}
+
+	limit, _ := strconv.Atoi(params["limit"][0])
+	page, _ := strconv.Atoi(params["page"][0])
+	offset := limit * (page - 1)
+
+	err := c.db.Where("user_id = ?", userId).First(&merchant).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if keyword == "" {
+		err = c.db.Table("seller_categories").
+			Select("seller_categories.id,seller_categories.name, count(seller_categories.name)").
+			Joins("join products on seller_categories.id = products.seller_category_id").
+			Where("products.merchant_id = ?", merchant.Id).
+			Group("seller_category_id, seller_categories.name, seller_categories.id").
+			Limit(limit).
+			Offset(offset).
+			Find(&productsCountBySellerCategories).
+			Error
+	} else {
+		//SELECT seller_categories.name, seller_category_id, count(seller_categories.name) from seller_categories join products on seller_categories.id = products.seller_category_id group by seller_category_id, seller_categories.name;
+
+		err = c.db.Table("seller_categories").
+			Select("seller_categories.id, seller_categories.name, count(seller_categories.name)").
+			Joins("join products on seller_categories.id = products.seller_category_id").
+			Where("products.merchant_id = ?", merchant.Id).
+			Where("seller_categories.name ILIKE ?", keyword).
+			Group("seller_category_id, seller_categories.name, seller_categories.id").
+			Limit(limit).
+			Offset(offset).
+			Find(&productsCountBySellerCategories).
+			Error
+	}
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return productsCountBySellerCategories, uint64((len(productsCountBySellerCategories))/limit) + 1, nil
+}
+
+func (c categoryRepository) GetSellerCategory(userId uint64, sellerCategoryId uint64) (string, []dto.SellerCategoriesItemsRes, error) {
+	var products []dto.SellerCategoriesItemsRes
+	var sellerCategory model.SellerCategory
+	var merchant model.Merchant
+	var exists bool
+
+	err := c.db.Where("user_id = ?", userId).First(&merchant).Error
+	if err != nil {
+		return "", nil, err
+	}
+
+	err = c.db.Table("seller_categories").
+		Select("count(*) > 0").
+		Where("merchant_id = ?", merchant.Id).
+		Where("id = ?", sellerCategoryId).
+		Find(&exists).Error
+
+	if !exists {
+		return "", nil, httperror.BadRequestError("Category not found", "CATEGORY_NOT_FOUND")
+	}
+
+	err = c.db.Table("products").
+		//Select("products.id, name, description, thumbnail_url, seller_category_id").
+		//Joins("JOIN product_variants ON product_variants.product_id = products.id ").
+		Preload("Variants").
+		Where("seller_category_id = ?", sellerCategoryId).
+		Where("merchant_id = ?", merchant.Id).
+		Find(&products).
+		Error
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	err = c.db.Table("seller_categories").Where("id = ?", sellerCategoryId).First(&sellerCategory).Error
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	return sellerCategory.Name, products, nil
+}
+
+func (c categoryRepository) UpdateSellerCategory(userId uint64, sellerCategory model.SellerCategory) error {
+	var exists bool
+	var merchant model.Merchant
+
+	err := c.db.Where("user_id = ?", userId).First(&merchant).Error
+	if err != nil {
+		return err
+	}
+
+	err = c.db.Table("seller_categories").
+		Select("count(*) > 0").
+		Where("merchant_id = ?", merchant.Id).
+		Where("id = ?", sellerCategory.Id).
+		Find(&exists).Error
+
+	if !exists {
+		return httperror.BadRequestError("Category not found", "CATEGORY_NOT_FOUND")
+	}
+
+	err = c.db.Table("seller_categories").Where("id = ?", sellerCategory.Id).Update("name", sellerCategory.Name).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c categoryRepository) CreateSellerCategory(userId uint64, category model.SellerCategory) error {
+	var merchant model.Merchant
+
+	err := c.db.Table("merchants").Where("user_id = ?", userId).First(&merchant).Error
+	if err != nil {
+		return err
+	}
+
+	category.MerchantId = merchant.Id
+
+	err = c.db.Table("seller_categories").
+		Create(&category).
+		Error
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c categoryRepository) DeleteSellerCategory(userId uint64, sellerCategoryId uint64) error {
+	//if category contains product prevent delete
+	var exists bool
+	var merchant model.Merchant
+	var sellerCategory model.SellerCategory
+
+	err := c.db.Where("user_id = ?", userId).First(&merchant).Error
+	if err != nil {
+		return err
+	}
+
+	err = c.db.Table("seller_categories").
+		Select("count(*) > 0").
+		Where("merchant_id = ?", merchant.Id).
+		Where("id = ?", sellerCategoryId).
+		Find(&exists).Error
+
+	if !exists {
+		return httperror.BadRequestError("Category not found", "CATEGORY_NOT_FOUND")
+	}
+
+	err = c.db.Table("products").
+		Select("count(*) > 0").
+		Where("seller_category_id = ?", sellerCategoryId).
+		Find(&exists).Error
+
+	if exists {
+		return httperror.BadRequestError("Cannot delete used category", "CATEGORY_USED_ERROR")
+	}
+
+	sellerCategory.Id = sellerCategoryId
+	err = c.db.Table("seller_categories").Where("id = ?", sellerCategoryId).Delete(&sellerCategory).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c categoryRepository) GetAvailableProducts(userId uint64, params url.Values) ([]dto.SellerCategoriesAvailableItemsRes, uint64, error) {
+	var products []dto.SellerCategoriesAvailableItemsRes
+	var merchant model.Merchant
+
+	keywordParams := params["keyword"]
+	keyword := ""
+	if keywordParams != nil {
+		keyword = "%" + keywordParams[0] + "%"
+	}
+
+	limit, _ := strconv.Atoi(params["limit"][0])
+	page, _ := strconv.Atoi(params["page"][0])
+	offset := limit * (page - 1)
+
+	err := c.db.Where("user_id = ?", userId).First(&merchant).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if keyword == "" {
+		err = c.db.Table("products").
+			Preload("Variants").
+			Where("merchant_id = ?", merchant.Id).
+			Where("seller_category_id IS NULL").
+			Limit(limit).
+			Offset(offset).
+			Find(&products).
+			Error
+	} else {
+		//SELECT seller_categories.name, seller_category_id, count(seller_categories.name) from seller_categories join products on seller_categories.id = products.seller_category_id group by seller_category_id, seller_categories.name;
+		err = c.db.Table("products").
+			Preload("Variants").
+			Where("merchant_id = ?", merchant.Id).
+			Where("seller_category_id IS NULL").
+			Where("name ILIKE ?", keyword).
+			Limit(limit).
+			Offset(offset).
+			Find(&products).
+			Error
+	}
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return products, uint64((len(products))/limit) + 1, nil
+}
+
+func (c categoryRepository) AddProductToSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory, sellerCategoryId uint64) error {
+	var merchant model.Merchant
+	var exists bool
+	var filteredId []uint64
+
+	err := c.db.Where("user_id = ?", userId).First(&merchant).Error
+
+	err = c.db.Table("seller_categories").
+		Select("count(*) > 0").
+		Where("merchant_id = ?", merchant.Id).
+		Where("id = ?", sellerCategoryId).
+		Find(&exists).Error
+
+	if !exists {
+		return httperror.BadRequestError("Seller category not found", "SELLER_CATEGORY_NOT_FOUND")
+	}
+
+	for _, id := range req.ItemsId {
+		err = c.db.Table("products").
+			Select("count(*) > 0").
+			Where("merchant_id = ?", merchant.Id).
+			Where("id = ?", id).
+			Find(&exists).Error
+
+		if exists {
+			filteredId = append(filteredId, id)
+		}
+	}
+
+	if len(filteredId) == 0 {
+		return httperror.BadRequestError("No product belongs to current seller", "NO_VALID_PRODUCTS")
+	}
+
+	err = c.db.Table("products").Where("id IN ?", filteredId).Update("seller_category_id", sellerCategoryId).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c categoryRepository) DeleteProductFromSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory) error {
+	var merchant model.Merchant
+	var exists bool
+	var filteredId []uint64
+
+	err := c.db.Where("user_id = ?", userId).First(&merchant).Error
+
+	for _, id := range req.ItemsId {
+		err = c.db.Table("products").
+			Select("count(*) > 0").
+			Where("merchant_id = ?", merchant.Id).
+			Where("id = ?", id).
+			Find(&exists).Error
+
+		if exists {
+			filteredId = append(filteredId, id)
+		}
+	}
+
+	err = c.db.Table("products").Where("id IN ?", filteredId).Update("seller_category_id", gorm.Expr("NULL")).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

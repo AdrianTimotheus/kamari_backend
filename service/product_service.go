@@ -20,7 +20,7 @@ type ProductService interface {
 	GetSimilarProduct(payload dto.GetSimilarProductRequest) ([]dto.Product, error)
 	AddNewProduct(payload dto.AddProductReq, user model.User) error
 	EditProduct(payload dto.EditProductReq, user model.User, id uint64) error
-	DeleteProduct(id int, user model.User) error
+	DeleteProduct(id uint64, user model.User) error
 }
 
 type productService struct {
@@ -389,7 +389,6 @@ func (p productService) AddNewProduct(payload dto.AddProductReq, user model.User
 		ThumbnailUrl:            payload.ThumbnailUrl,
 		IsHazardous:             *payload.IsHazardous,
 		Weight:                  payload.Weight,
-		SellerCategoryId:        payload.SellerCategoryId,
 		CategoryId:              payload.CategoryId,
 		SubcategoryId:           payload.SubcategoryId,
 		ComplementaryCategoryId: payload.ComplementaryCategoryId,
@@ -405,7 +404,6 @@ func (p productService) AddNewProduct(payload dto.AddProductReq, user model.User
 
 func (p productService) EditProduct(payload dto.EditProductReq, user model.User, id uint64) error {
 	newProduct := model.Product{
-		Id:                      id,
 		Name:                    payload.Name,
 		Description:             payload.Description,
 		MinimumOrder:            payload.MinimumOrder,
@@ -419,14 +417,18 @@ func (p productService) EditProduct(payload dto.EditProductReq, user model.User,
 		ComplementaryCategoryId: payload.ComplementaryCategoryId,
 		ProductVariants:         payload.ProductVariants,
 	}
-	err := p.productRepository.EditProduct(newProduct, user)
+	err := p.productRepository.DeleteProduct(id, user)
+	if err != nil {
+		return err
+	}
+	err = p.productRepository.AddNewProduct(newProduct, user)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p productService) DeleteProduct(id int, user model.User) error {
+func (p productService) DeleteProduct(id uint64, user model.User) error {
 	err := p.productRepository.DeleteProduct(id, user)
 	if err != nil {
 		return err

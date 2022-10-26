@@ -130,7 +130,7 @@ func (h Handler) DeleteProduct(c *gin.Context) {
 		return
 	}
 
-	err = h.productService.DeleteProduct(id.(int), user)
+	err = h.productService.DeleteProduct(id.(uint64), user)
 	if err != nil {
 		_ = c.Error(err)
 		return

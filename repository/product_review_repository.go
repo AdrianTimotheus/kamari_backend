@@ -4,6 +4,7 @@ import (
 	"gorm.io/gorm"
 	"kamari.com/dto"
 	"kamari.com/helper"
+	"kamari.com/httperror"
 	"kamari.com/model"
 )
 
@@ -89,6 +90,16 @@ func (p productReviewRepository) GetProductReview(productId uint64, filters *hel
 
 func (p productReviewRepository) CreateReview(orderDetailId uint64, userId uint64, req dto.CreateReviewRequest) error {
 	var photos []model.ReviewPhoto
+	var exists bool
+
+	err := p.db.Table("product_review").
+		Select("count(*) > 0").
+		Where("order_detail_id = ?", userId).
+		Find(&exists).Error
+
+	if exists {
+		return httperror.BadRequestError("User has submitted review", "SUBMITTED")
+	}
 
 	for _, url := range req.Photos {
 		photos = append(photos, model.ReviewPhoto{
@@ -103,7 +114,7 @@ func (p productReviewRepository) CreateReview(orderDetailId uint64, userId uint6
 		ReviewPhotos:  photos,
 	}
 
-	err := p.db.Create(&review).Error
+	err = p.db.Create(&review).Error
 	if err != nil {
 		return err
 	}
