@@ -13,6 +13,6 @@ type AddProductReq struct {
 	SubcategoryId           uint64                 `json:"subcategory_id" binding:"required"`
 	ComplementaryCategoryId uint64                 `json:"complementary_category_id"`
 	ThumbnailUrl            string                 `json:"thumbnail_url" binding:"required"`
-	Photos                  []string               `json:"photos" binding:"required"`
+	Photos                  []string               `json:"product_photos" binding:"required"`
 	ProductVariants         []model.ProductVariant `json:"product_variants" binding:"required"`
 }

@@ -2,9 +2,10 @@ package service
 
 import (
 	"errors"
-	"kamari.com/model"
 	"sort"
 	"strings"
+
+	"kamari.com/model"
 
 	"gorm.io/gorm"
 	"kamari.com/dto"
@@ -381,6 +382,14 @@ func (p productService) GetSimilarProduct(payload dto.GetSimilarProductRequest) 
 }
 
 func (p productService) AddNewProduct(payload dto.AddProductReq, user model.User) error {
+	var photos []model.ProductPhoto
+
+	for _, url := range payload.Photos {
+		photos = append(photos, model.ProductPhoto{
+			PicUrl: url,
+		})
+	}
+
 	newProduct := model.Product{
 		Name:                    payload.Name,
 		Description:             payload.Description,
@@ -393,6 +402,7 @@ func (p productService) AddNewProduct(payload dto.AddProductReq, user model.User
 		SubcategoryId:           payload.SubcategoryId,
 		ComplementaryCategoryId: payload.ComplementaryCategoryId,
 		ProductVariants:         payload.ProductVariants,
+		ProductPhotos:           photos,
 	}
 
 	err := p.productRepository.AddNewProduct(newProduct, user)
@@ -403,6 +413,13 @@ func (p productService) AddNewProduct(payload dto.AddProductReq, user model.User
 }
 
 func (p productService) EditProduct(payload dto.EditProductReq, user model.User, id uint64) error {
+	var photos []model.ProductPhoto
+
+	for _, url := range payload.Photos {
+		photos = append(photos, model.ProductPhoto{
+			PicUrl: url,
+		})
+	}
 	newProduct := model.Product{
 		Name:                    payload.Name,
 		Description:             payload.Description,
@@ -415,6 +432,7 @@ func (p productService) EditProduct(payload dto.EditProductReq, user model.User,
 		SubcategoryId:           payload.SubcategoryId,
 		ComplementaryCategoryId: payload.ComplementaryCategoryId,
 		ProductVariants:         payload.ProductVariants,
+		ProductPhotos:           photos,
 	}
 	err := p.productRepository.DeleteProduct(id, user)
 	if err != nil {
