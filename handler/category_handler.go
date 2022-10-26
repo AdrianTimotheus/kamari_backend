@@ -1,9 +1,11 @@
 package handler
 
 import (
-	"kamari.com/dto"
 	"net/http"
 	"strconv"
+
+	"kamari.com/dto"
+	"kamari.com/model"
 
 	"github.com/gin-gonic/gin"
 	"kamari.com/helper"
@@ -176,6 +178,192 @@ func (h Handler) GetComplementaryCategory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h Handler) GetSellerCategories(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	params := c.Request.URL.Query()
+
+	response, totalPage, err := h.categoryService.GetSellerCategories(user.Id, params)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"seller_categories": response,
+		"total_page":        totalPage,
+	})
+}
+
+func (h Handler) UpdateSellerCategory(c *gin.Context) {
+	var req dto.SellerCategoryRequest
+
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(httperror.BadRequestError(ErrFailedBindingValidation.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	id, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(helper.ErrInvalidReturnType.Error(), "BAD_PARAMS"))
+		return
+	}
+
+	err = h.categoryService.UpdateSellerCategory(id.(uint64), user.Id, req)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Seller category updated",
+	})
+}
+
+func (h Handler) CreateSellerCategory(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	var req dto.SellerCategoryRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(httperror.BadRequestError(ErrFailedBindingValidation.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	err := h.categoryService.CreateSellerCategory(user.Id, req)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Seller category created",
+	})
+}
+
+func (h Handler) DeleteSellerCategory(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	id, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(helper.ErrInvalidReturnType.Error(), "BAD_PARAMS"))
+		return
+	}
+
+	err = h.categoryService.DeleteSellerCategory(user.Id, id.(uint64))
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Seller category deleted",
+	})
+}
+
+func (h Handler) GetSellerCategory(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	id, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(helper.ErrInvalidReturnType.Error(), "BAD_PARAMS"))
+		return
+	}
+
+	title, response, err := h.categoryService.GetSellerCategory(user.Id, id.(uint64))
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":    id,
+		"title": title,
+		"items": response,
+	})
+}
+
+func (h Handler) GetAvailableProducts(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	params := c.Request.URL.Query()
+
+	response, totalPage, err := h.categoryService.GetAvailableProducts(user.Id, params)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"items":      response,
+		"total_page": totalPage,
+	})
+}
+
+func (h Handler) AddProductsToSellerCategory(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	var req dto.AddRemoveProductFromCategory
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(httperror.BadRequestError(ErrFailedBindingValidation.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	id, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(helper.ErrInvalidReturnType.Error(), "BAD_PARAMS"))
+		return
+	}
+
+	err = h.categoryService.AddProductToSellerCategory(user.Id, req, id.(uint64))
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Item added to seller category",
+	})
+}
+
+func (h Handler) RemoveProductFromSellerCategory(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	var req dto.AddRemoveProductFromCategory
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(httperror.BadRequestError(ErrFailedBindingValidation.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	err := h.categoryService.DeleteProductFromSellerCategory(user.Id, req)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Item removed from seller category",
+	})
 }
 
 func (h Handler) UpdateCategory(c *gin.Context) {

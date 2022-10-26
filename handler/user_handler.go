@@ -157,7 +157,7 @@ func (h Handler) EditUserDetail(c *gin.Context) {
 	user := userVal.(model.User)
 
 	if err = c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(ErrFailedBindingValidation)
+		_ = c.Error(httperror.BadRequestError("Failed binding validation", "BINDING_FAILED"))
 		return
 	}
 

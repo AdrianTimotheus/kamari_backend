@@ -1,6 +1,8 @@
 package service
 
 import (
+	"net/url"
+
 	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
@@ -18,6 +20,14 @@ type CategoryService interface {
 	GetSubcategory(id uint64) (*model.Subcategory, error)
 	GetComplementaryCategories(keyword string, filters *helper.Filters) ([]dto.ComplementaryCategoryResponse, *helper.Metadata, error)
 	GetComplementaryCategory(id uint64) (*model.Complementary, error)
+	GetSellerCategories(userId uint64, params url.Values) ([]dto.GetSellerCategoriesRes, uint64, error)
+	GetSellerCategory(userId uint64, sellerCategoryId uint64) (string, []dto.SellerCategoriesItemsRes, error)
+	GetAvailableProducts(userId uint64, params url.Values) ([]dto.SellerCategoriesAvailableItemsRes, uint64, error)
+	UpdateSellerCategory(sellerCategoryId uint64, userId uint64, req dto.SellerCategoryRequest) error
+	CreateSellerCategory(userId uint64, req dto.SellerCategoryRequest) error
+	DeleteSellerCategory(userId uint64, sellerCategoryId uint64) error
+	AddProductToSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory, sellerCategoryId uint64) error
+	DeleteProductFromSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory) error
 	UpdateCategory(categoryId uint64, req *dto.CategoryRequest) error
 	UpdateSubCategory(subCategoryId uint64, req *dto.EditSubCategoryRequest) error
 	UpdateComplementaryCategory(complementaryId uint64, req *dto.EditComplementaryCategoryRequest) error
@@ -175,4 +185,64 @@ func (c categoryService) DeleteComplementaryCategory(complementaryId uint64) err
 	return c.categoryRepository.DeleteComplementaryCategory(&model.Complementary{
 		Id: complementaryId,
 	})
+}
+
+func (c categoryService) GetSellerCategories(userId uint64, params url.Values) ([]dto.GetSellerCategoriesRes, uint64, error) {
+	result, totalPage, err := c.categoryRepository.GetSellerCategories(userId, params)
+	return result, totalPage, err
+}
+
+func (c categoryService) GetSellerCategory(userId uint64, sellerCategoryId uint64) (string, []dto.SellerCategoriesItemsRes, error) {
+	title, items, err := c.categoryRepository.GetSellerCategory(userId, sellerCategoryId)
+	return title, items, err
+}
+
+func (c categoryService) UpdateSellerCategory(sellerCategoryId uint64, userId uint64, req dto.SellerCategoryRequest) error {
+	sellerCategory := model.SellerCategory{
+		Id:   sellerCategoryId,
+		Name: req.Name,
+	}
+
+	err := c.categoryRepository.UpdateSellerCategory(userId, sellerCategory)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c categoryService) CreateSellerCategory(userId uint64, req dto.SellerCategoryRequest) error {
+	sellerCategory := model.SellerCategory{
+		Name: req.Name,
+	}
+
+	err := c.categoryRepository.CreateSellerCategory(userId, sellerCategory)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c categoryService) DeleteSellerCategory(userId uint64, sellerCategoryId uint64) error {
+	err := c.categoryRepository.DeleteSellerCategory(userId, sellerCategoryId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c categoryService) GetAvailableProducts(userId uint64, params url.Values) ([]dto.SellerCategoriesAvailableItemsRes, uint64, error) {
+	result, totalPage, err := c.categoryRepository.GetAvailableProducts(userId, params)
+	return result, totalPage, err
+}
+
+func (c categoryService) AddProductToSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory, sellerCategoryId uint64) error {
+	err := c.categoryRepository.AddProductToSellerCategory(userId, req, sellerCategoryId)
+	return err
+}
+
+func (c categoryService) DeleteProductFromSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory) error {
+	err := c.categoryRepository.DeleteProductFromSellerCategory(userId, req)
+	return err
 }

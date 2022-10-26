@@ -14,6 +14,6 @@ type EditProductReq struct {
 	ComplementaryCategoryId uint64                 `json:"complementary_category_id"`
 	MerchantId              uint64                 `json:"merchant_id"`
 	ThumbnailUrl            string                 `json:"thumbnail_url"`
-	SellerCategoryId        uint64                 `json:"seller_category_id"`
+	Photos                  []string               `json:"photos"`
 	ProductVariants         []model.ProductVariant `json:"product_variants"`
 }
