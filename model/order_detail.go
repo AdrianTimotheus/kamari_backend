@@ -9,6 +9,7 @@ type OrderDetail struct {
 	OrderId          uint64
 	Order            Order
 	ProductVariantId uint64
-	CourierRouteId   uint64
-	ProductReview    ProductReview
+	ProductVariant   ProductVariant
+	RealPrice        uint64
+	DiscountedPrice  uint64
 }

@@ -34,6 +34,7 @@ type RouterConfig struct {
 	MarketplaceVoucherService service.MarketplaceVoucherService
 	TransactionService        service.TransactionService
 	ProductPromoService       service.ProductPromoService
+	OrderService              service.OrderService
 }
 
 func NewRouter(c RouterConfig) *gin.Engine {
@@ -68,6 +69,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		MarketplaceVoucherService: c.MarketplaceVoucherService,
 		TransactionService:        c.TransactionService,
 		ProductPromoService:       c.ProductPromoService,
+		OrderService:              c.OrderService,
 	})
 
 	router.NoRoute(func(c *gin.Context) {
@@ -166,6 +168,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/checkout/items", middleware.AuthorizeJWT, h.AddCheckOutItems, middleware.ErrorHandler)
 		api.GET("/checkout/items", middleware.AuthorizeJWT, h.GetCheckOutItems, middleware.ErrorHandler)
 		api.POST("/checkout/pay/wallet", middleware.AuthorizeStepUpJWT, h.PayCheckoutWithWallet, middleware.ErrorHandler)
+		api.POST("/checkout/proceed", middleware.AuthorizeJWT, h.ProceedOrder, middleware.ErrorHandler)
 
 		// system admin
 		api.POST("/categories", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.CreateCategory, middleware.ErrorHandler)

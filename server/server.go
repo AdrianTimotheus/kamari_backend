@@ -95,6 +95,8 @@ func Init() {
 
 	productPromoItemRepository := repository.NewProductPromoItemRepository(repository.PPIRConfig{DB: db.Get()})
 
+	OrderRepository := repository.NewOrderRepository(repository.ORConfig{DB: db.Get()})
+
 	//SERVICE
 	userService := service.NewUserService(service.USConfig{
 		UserRepository:    userRepository,
@@ -185,6 +187,8 @@ func Init() {
 		WalletRepository:      walletRepository,
 	})
 
+	orderService := service.NewOrderService(service.OSConfig{OrderRepository: OrderRepository})
+
 	r := NewRouter(RouterConfig{
 		UserService:               userService,
 		ProvinceService:           provinceService,
@@ -206,6 +210,7 @@ func Init() {
 		MarketplaceVoucherService: marketplaceVoucherService,
 		ProductPromoService:       productPromoService,
 		TransactionService:        transactionService,
+		OrderService:              orderService,
 	})
 
 	log.Fatal(r.Run())
