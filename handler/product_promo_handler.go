@@ -158,6 +158,7 @@ func (h Handler) EditProductPromo(c *gin.Context) {
 
 func (h Handler) InsertPromoItems(c *gin.Context) {
 	p, err := helper.GetParam(c, "id", "uint64")
+
 	if err != nil {
 		_ = httperror.BadRequestError(err.Error(), "BAD_PARAMS")
 		return
@@ -165,13 +166,20 @@ func (h Handler) InsertPromoItems(c *gin.Context) {
 
 	promoId := p.(uint64)
 
-	var payload []dto.PromoItems
+	type promoItems struct {
+		PromotionItems []dto.PromoItems `json:"promotionItems" binding:"required"`
+	}
+
+	var payload promoItems
+
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		_ = c.Error(httperror.BadRequestError(err.Error(), "INVALID_PAYLOAD"))
 		return
+
 	}
 
-	err = h.productPromoService.InsertPromoItems(payload, promoId)
+	err = h.productPromoService.InsertPromoItems(payload.PromotionItems, promoId)
+
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -180,6 +188,7 @@ func (h Handler) InsertPromoItems(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "successfully insert new product promo",
 	})
+
 }
 
 func (h Handler) GetAvailableMerchantProductForPromo(c *gin.Context) {
@@ -215,5 +224,24 @@ func (h Handler) GetAvailableMerchantProductForPromo(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"__metadata": metadata,
 		"products":   availProducts,
+	})
+}
+
+func (h Handler) EndMerchantPromo(c *gin.Context) {
+	p, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = httperror.BadRequestError(err.Error(), "BAD_PARAMS")
+		return
+	}
+
+	promoId := p.(uint64)
+	err = h.productPromoService.EndProductPromo(promoId)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "successfully ended a promo",
 	})
 }

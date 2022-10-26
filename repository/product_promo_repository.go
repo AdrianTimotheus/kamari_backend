@@ -10,8 +10,9 @@ import (
 
 type ProductPromoRepository interface {
 	CreateMerchantPromoTransaction(productPromo *model.ProductPromo, promoItems []model.ProductPromoItem) error
-	InsertPromoItems(promoItem []model.ProductPromoItem) error
 	UpdatePromoTransaction(promo *model.ProductPromo, promoItems []model.ProductPromoItem) error
+	EndPromoTransaction(promoId uint64) error
+	InsertPromoItems(promoItem []model.ProductPromoItem) error
 	GetProductPromos(merchantId uint64, keyword string, filters *helper.Filters) ([]model.ProductPromo, *helper.Metadata, error)
 	GetProductPromoDetail(promoId uint64) (*model.ProductPromo, error)
 	GetAvailableMerchantProductPromo(merchantId uint64, keyword string, filters *helper.Filters) ([]model.Product, *helper.Metadata, error)
@@ -73,6 +74,7 @@ func (p productPromoRepository) GetProductPromos(merchantId uint64, keyword stri
 		Preload("ProductPromoItems").
 		Preload("ProductPromoItems.PromoType").
 		Preload("ProductPromoItems.Product").
+		Unscoped().
 		Where("merchant_id = ?", merchantId).
 		Where("title ILIKE ?", k)
 
@@ -137,6 +139,7 @@ func (p productPromoRepository) GetProductPromoDetail(promoId uint64) (*model.Pr
 		Preload("ProductPromoItems.PromoType").
 		Preload("ProductPromoItems.Product").
 		Preload("ProductPromoItems.Product.ProductVariants").
+		Unscoped().
 		Where("id = ?", promoId).
 		First(&promo).Error
 	if err != nil {
@@ -226,6 +229,7 @@ func (p productPromoRepository) GetAvailableMerchantProductPromo(merchantId uint
 		Table("product_promo_items").
 		Select("product_id").
 		Where("product_id IN ?", productIds).
+		Where("deleted_at IS NULL").
 		Scan(&promoIds).
 		Error; err != nil {
 		return nil, nil, err
@@ -235,13 +239,12 @@ func (p productPromoRepository) GetAvailableMerchantProductPromo(merchantId uint
 
 	var res *gorm.DB
 	if len(promoIds) < 1 {
-		if res := c.Where("id in ?", productIds).
+		if res = c.Where("id in ?", productIds).
 			Find(&products).Count(&count); res.Error != nil {
 			return nil, nil, res.Error
 		}
 	} else {
-		if res = p.db.
-			Preload("ProductVariants").
+		if res = c.
 			Where("id NOT IN ?", promoIds).
 			Where("merchant_id = ?", merchantId).
 			Where("name ILIKE ?", k).
@@ -262,6 +265,48 @@ func (p productPromoRepository) GetAvailableMerchantProductPromo(merchantId uint
 	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
 
 	return products, &metadata, nil
+}
+
+func (p productPromoRepository) EndPromoTransaction(promoId uint64) error {
+	err := p.db.Transaction(func(tx *gorm.DB) error {
+		promoItems, err := p.getPromoItems(promoId)
+		if err != nil {
+			return err
+		}
+
+		for _, item := range promoItems {
+			if err = p.deletePromoItem(tx, item.Id); err != nil {
+				return err
+			}
+		}
+
+		if err = tx.Delete(&model.ProductPromo{Id: promoId}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+func (productPromoRepository) deletePromoItem(tx *gorm.DB, itemId uint64) error {
+	return tx.
+		Where("id = ?", itemId).
+		Delete(&model.ProductPromoItem{}).Error
+}
+
+func (p productPromoRepository) getPromoItems(promoId uint64) ([]model.ProductPromoItem, error) {
+	var promoItems []model.ProductPromoItem
+
+	err := p.db.
+		Where("promo_id = ?", promoId).
+		Find(&promoItems).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return promoItems, nil
 }
 
 func (productPromoRepository) updateMerchantPromo(promo *model.ProductPromo, tx *gorm.DB) error {

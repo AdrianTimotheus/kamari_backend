@@ -17,4 +17,7 @@ type Order struct {
 	Transaction          Transaction
 	OrderStatusId        uint64
 	WithdrawStatus       bool
+	MerchantId           uint64
+	CourierId            uint64
+	UserId               uint64
 }

@@ -14,10 +14,11 @@ import (
 type ProductPromoService interface {
 	CreateProductPromo(payload *dto.ProductPromoRequest, username string) error
 	InsertPromoItems(payload []dto.PromoItems, promoId uint64) error
-	GetProductPromos(merchantId uint64, keyword string, filters *helper.Filters) ([]model.ProductPromo, *helper.Metadata, error)
+	GetProductPromos(merchantId uint64, keyword string, filters *helper.Filters) ([]dto.ProductPromoListResponse, *helper.Metadata, error)
 	GetProductPromoDetail(promoId uint64) (*dto.ProductPromoResponse, error)
 	UpdateProductPromo(payload *dto.ProductPromoUpdate, username string, promoId uint64) error
 	DeletePromoItem(merchantId, promoId uint64, itemId []uint64) error
+	EndProductPromo(promoId uint64) error
 	GetAvailableProductForPromo(merchantId uint64, keyword string, filters *helper.Filters) ([]dto.ProductResponse, *helper.Metadata, error)
 }
 
@@ -94,6 +95,7 @@ func (p productPromoService) InsertPromoItems(payload []dto.PromoItems, promoId 
 	promoItems := make([]model.ProductPromoItem, len(payload))
 	for i, item := range payload {
 		promoItems[i] = model.ProductPromoItem{
+			Id:             item.Id,
 			ProductId:      item.ProductId,
 			ProductPromoId: promoId,
 			PromoTypeId:    item.PromoTypeId,
@@ -108,7 +110,7 @@ func (p productPromoService) InsertPromoItems(payload []dto.PromoItems, promoId 
 	return nil
 }
 
-func (p productPromoService) GetProductPromos(merchantId uint64, keyword string, filters *helper.Filters) ([]model.ProductPromo, *helper.Metadata, error) {
+func (p productPromoService) GetProductPromos(merchantId uint64, keyword string, filters *helper.Filters) ([]dto.ProductPromoListResponse, *helper.Metadata, error) {
 	filters.Limit = helper.ReadInt(filters.Limit, 10)
 	filters.Page = helper.ReadInt(filters.Page, 1)
 
@@ -122,7 +124,22 @@ func (p productPromoService) GetProductPromos(merchantId uint64, keyword string,
 		}
 	}
 
-	return promos, metadata, nil
+	promoResponse := make([]dto.ProductPromoListResponse, len(promos))
+	for i, promo := range promos {
+		promoResponse[i] = dto.ProductPromoListResponse{
+			Id:                promo.Id,
+			Title:             promo.Title,
+			StartDate:         promo.StartDate,
+			EndDate:           promo.EndDate,
+			MerchantId:        promo.MerchantId,
+			ProductPromoItems: promo.ProductPromoItems,
+		}
+
+		if promo.DeletedAt.Valid {
+			promoResponse[i].HasEnded = true
+		}
+	}
+	return promoResponse, metadata, nil
 }
 
 func (p productPromoService) GetProductPromoDetail(promoId uint64) (*dto.ProductPromoResponse, error) {
@@ -137,6 +154,7 @@ func (p productPromoService) GetProductPromoDetail(promoId uint64) (*dto.Product
 		StartDate:  promo.StartDate,
 		EndDate:    promo.EndDate,
 		MerchantId: promo.MerchantId,
+		HasEnded:   promo.DeletedAt.Valid,
 	}
 
 	promoItemResponse := make([]dto.ProductPromoItemsResponse, len(promo.ProductPromoItems))
@@ -166,10 +184,6 @@ func (p productPromoService) DeletePromoItem(merchantId, promoId uint64, itemId 
 		valid, err := p.productPromoRepository.IsValidPromoItem(merchantId, promoId, id)
 		if err != nil || !valid {
 			return httperror.ForbiddenError()
-		}
-
-		if removable, err := p.productPromoRepository.IsRemovable(promoId); err != nil || !removable {
-			return err
 		}
 	}
 
@@ -208,8 +222,10 @@ func (p productPromoService) UpdateProductPromo(payload *dto.ProductPromoUpdate,
 		}
 
 		promoItems[i] = model.ProductPromoItem{
+			Id:             item.Id,
 			DiscountAmount: item.DiscountAmount,
 			MaximumItem:    item.MaximumItem,
+			StockLeft:      item.StockLeft,
 			PromoTypeId:    item.PromoTypeId,
 		}
 	}
@@ -243,4 +259,8 @@ func (p productPromoService) GetAvailableProductForPromo(merchantId uint64, keyw
 	}
 
 	return res, metadata, nil
+}
+
+func (p productPromoService) EndProductPromo(promoId uint64) error {
+	return p.productPromoRepository.EndPromoTransaction(promoId)
 }

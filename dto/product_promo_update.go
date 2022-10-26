@@ -5,6 +5,7 @@ type promoItemsUpdate struct {
 	ProductId      uint64 `json:"product_id"`
 	PromoTypeId    uint8  `json:"promo_type_id"`
 	MaximumItem    uint64 `json:"maximum_item"`
+	StockLeft      uint64 `json:"stock_left"`
 	DiscountAmount uint64 `json:"discount_amount"`
 }
 
