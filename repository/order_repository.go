@@ -7,7 +7,7 @@ import (
 )
 
 type OrderRepository interface {
-	CreateOrder(user model.User, order []model.Order, item []dto.ItemToProceed) error
+	CreateOrder(user model.User, order []model.Order, item []dto.ItemToProceed, listOfProductVariant []uint64) error
 	GetOrderItemToProcess(userId uint64) ([]model.CheckoutItem, error)
 	CountUserCheckoutItem(listOfProductVariant []uint64, userId uint64) int64
 }
@@ -26,7 +26,7 @@ func NewOrderRepository(c ORConfig) OrderRepository {
 	}
 }
 
-func (o orderRepository) CreateOrder(user model.User, order []model.Order, item []dto.ItemToProceed) error {
+func (o orderRepository) CreateOrder(user model.User, order []model.Order, item []dto.ItemToProceed, listOfProductVariant []uint64) error {
 	err := o.db.Transaction(func(tx *gorm.DB) error {
 		err := tx.Create(&order).Error
 		if err != nil {
@@ -58,6 +58,12 @@ func (o orderRepository) CreateOrder(user model.User, order []model.Order, item 
 		if err != nil {
 			return err
 		}
+
+		err = tx.Exec("DELETE FROM carts where user_id=? AND variant_id IN ?", user.Id, listOfProductVariant).Error
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 	return err

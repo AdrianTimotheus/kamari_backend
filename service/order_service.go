@@ -72,7 +72,7 @@ func (o orderService) CreateOrder(user model.User, payload dto.CreateOrderReques
 		orderModels = append(orderModels, temp)
 	}
 
-	err := o.orderRepository.CreateOrder(user, orderModels, payload.Products)
+	err := o.orderRepository.CreateOrder(user, orderModels, payload.Products, listOfProductVariant)
 	if err != nil {
 		return nil, err
 	}
