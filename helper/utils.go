@@ -64,18 +64,18 @@ func GetMinProductVarPrice(s []model.ProductVariant) uint64 {
 	return min
 }
 
-func CalcProductRating(pv []model.OrderDetail) float32 {
-	if len(pv) < 1 {
-		return 0
-	}
-
-	var sum float32
-	for _, o := range pv {
-		sum += o.ProductReview.Score
-	}
-
-	return sum / float32(len(pv))
-}
+//func CalcProductRating(pv []model.OrderDetail) float32 {
+//	if len(pv) < 1 {
+//		return 0
+//	}
+//
+//	var sum float32
+//	for _, o := range pv {
+//		sum += o.ProductReview.Score
+//	}
+//
+//	return sum / float32(len(pv))
+//}
 
 func readCSV(s string) []string {
 	parts := strings.Split(s, ",")

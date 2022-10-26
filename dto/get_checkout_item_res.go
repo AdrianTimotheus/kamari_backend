@@ -9,16 +9,16 @@ type CheckoutItemResponse struct {
 type CheckoutProduct struct {
 	ProductId    uint64      `json:"product_id"`
 	VariantID    uint64      `json:"variant_id"`
-	ProductName  string      `json:"product_name"`
+	ProductName  string      `json:"product_name,omitempty"`
 	RealPrice    uint64      `json:"real_price"`
 	Price        uint64      `json:"price"`
 	TotalPrice   uint64      `json:"total-price"`
-	ThumbnailURL string      `json:"thumbnail_url"`
+	ThumbnailURL string      `json:"thumbnail_url,omitempty"`
 	MainVariant  MainVariant `json:"main_variant,omitempty"`
 	SubVariant   SubVariant  `json:"sub_variant,omitempty"`
 	Quantity     int         `json:"quantity"`
-	ItemWeight   uint64      `json:"item_weight"`
-	TotalWeight  uint64      `json:"total_weight"`
+	ItemWeight   uint64      `json:"item_weight,omitempty"`
+	TotalWeight  uint64      `json:"total_weight,omitempty"`
 }
 
 type MainVariant struct {
