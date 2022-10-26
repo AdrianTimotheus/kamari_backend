@@ -54,6 +54,25 @@ func (h Handler) GetSellerProduct(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, dtoResponse)
 }
+func (h Handler) GetProductsSellerAdmin(c *gin.Context) {
+	var payload dto.GetMerchantProductRequest
+	if err := c.ShouldBindQuery(&payload); err != nil {
+		fmt.Println(err)
+		_ = c.Error(httperror.BadRequestError("missing required field", "MISSING_REQUIRED_FIELD"))
+		return
+	}
+	user, err := helper.GetUserContext(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, httperror.UnauthorizedError())
+		return
+	}
+	dtoResponse, err := h.merchantService.GetSellerAdminProducts(user.Username, payload)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, dtoResponse)
+}
 
 func (h Handler) RegisterMerchant(c *gin.Context) {
 	var (

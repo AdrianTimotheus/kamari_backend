@@ -13,6 +13,7 @@ type ProductRepository interface {
 	GetMerchantProduct(merchantId uint64) ([]model.Product, error)
 	GetAllProducts(keyword string, filters *helper.Filters) ([]model.ProductList, *helper.Metadata, error)
 	GetMerchantProducts(MerchantID uint64, pageOffset int, orderBy string, Limit int, sellerCategoryId int, marketplaceCategoryId int) ([]model.Product, error)
+	GetSellerAdminProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int, sellerCategoryId int, marketplaceCategoryId int) ([]model.Product, error)
 	GetCountMerchantProduct(username string) (int64, error)
 	GetProductReviewScore(productID uint64) (count int, score int, err error)
 	GetProductReviewScoreDecimal(productId uint64) (int, float32, error)
@@ -199,6 +200,64 @@ func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int
 	} else {
 		err = p.db.
 			Where("merchant_id=?", merchantID).
+			Offset(pageOffset).
+			Limit(Limit).
+			Order(orderBy).
+			Find(&products).Error
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return products, nil
+}
+
+func (p productRepository) GetSellerAdminProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int, sellerCategoryId int, marketplaceCategoryId int) ([]model.Product, error) {
+	fmt.Println(pageOffset)
+	var products []model.Product
+	k := fmt.Sprintf("%%%s%%", keyword)
+	var err error
+	err = nil
+	if marketplaceCategoryId != 0 {
+		err = p.db.
+			Preload("Merchant").
+			Preload("Merchant.User").
+			Preload("Category").
+			Preload("Subcategory").
+			Preload("ProductPhotos").
+			Preload("ProductVariants").
+			Where("merchant_id=?", merchantID).
+			Where("category_id", marketplaceCategoryId).
+			Where("name ILIKE ?", k).
+			Offset(pageOffset).
+			Limit(Limit).
+			Order(orderBy).
+			Find(&products).Error
+	} else if sellerCategoryId != 0 {
+		err = p.db.
+			Preload("Merchant").
+			Preload("Merchant.User").
+			Preload("Category").
+			Preload("Subcategory").
+			Preload("ProductPhotos").
+			Preload("ProductVariants").
+			Where("merchant_id=?", merchantID).
+			Where("seller_category_id=?", sellerCategoryId).
+			Where("name ILIKE ?", k).
+			Offset(pageOffset).
+			Limit(Limit).
+			Order(orderBy).
+			Find(&products).Error
+	} else {
+		err = p.db.
+			Preload("Merchant").
+			Preload("Merchant.User").
+			Preload("Category").
+			Preload("Subcategory").
+			Preload("ProductPhotos").
+			Preload("ProductVariants").
+			Where("merchant_id=?", merchantID).
+			Where("name ILIKE ?", k).
 			Offset(pageOffset).
 			Limit(Limit).
 			Order(orderBy).
