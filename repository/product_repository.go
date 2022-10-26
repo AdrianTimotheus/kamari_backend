@@ -407,7 +407,6 @@ func (p productRepository) GetSimilarProduct(keyword string, categoryId uint64, 
 }
 
 func (p productRepository) AddNewProduct(product model.Product, user model.User) error {
-	//var newProduct model.Product
 	var exists bool
 	var err error
 	var merchant model.Merchant
@@ -466,8 +465,12 @@ func (p productRepository) AddNewProduct(product model.Product, user model.User)
 		for i, _ := range product.ProductVariants {
 			product.ProductVariants[i].ProductID = insertedProductId
 		}
-
+		for i, _ := range product.ProductPhotos {
+			product.ProductPhotos[i].ProductId = insertedProductId
+		}
+		fmt.Println(product.ProductPhotos)
 		err = p.db.Table("product_variants").Create(&product.ProductVariants).Error
+		err = p.db.Table("product_photos").Create(&product.ProductPhotos).Error
 	} else {
 		res := p.db.Raw("INSERT INTO products (name, description, minimum_order, maximum_order, is_hazardous, weight, view_count, unit_sold, favourite_count, availability, category_id, subcategory_id, complementary_category_id, merchant_id, thumbnail_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id",
 			product.Name,
@@ -491,19 +494,17 @@ func (p productRepository) AddNewProduct(product model.Product, user model.User)
 		for i, _ := range product.ProductVariants {
 			product.ProductVariants[i].ProductID = insertedProductId
 		}
-
+		for i, _ := range product.ProductPhotos {
+			product.ProductPhotos[i].ProductId = insertedProductId
+		}
 		err = p.db.Table("product_variants").Create(&product.ProductVariants).Error
+		err = p.db.Table("product_photos").Create(&product.ProductPhotos).Error
 	}
 
 	if err != nil {
 		return err
 	}
-
-	err = p.db.Table("products").Where("id = ?", product.Id).Updates(&product).Error
-	if err != nil {
-		return err
-	}
-	return err
+	return nil
 }
 func (p productRepository) DeleteProduct(id uint64, user model.User) error {
 	var exists bool
@@ -539,6 +540,11 @@ func (p productRepository) DeleteProduct(id uint64, user model.User) error {
 		return err
 	}
 
+	var photos model.ProductPhoto
+	err = p.db.Table("product_photos").Where("product_id = ?", id).Delete(&photos).Error
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
