@@ -176,6 +176,7 @@ func Init() {
 			CheckoutRepository:         checkoutItemRepository,
 			ProductRepository:          productRepository,
 			ProductPromoItemRepository: productPromoItemRepository,
+			MerchantRepository:         merchantRepository,
 		})
 
 	courierService := service.NewCourierService(service.CourierSConfig{CourierRepository: courierRepository})

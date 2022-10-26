@@ -16,6 +16,7 @@ type CheckoutItemService interface {
 }
 
 type checkoutItemService struct {
+	merchantRepository         repository.MerchantRepository
 	checkoutRepository         repository.CheckoutItemRepository
 	productRepository          repository.ProductRepository
 	productPromoItemRepository repository.ProductPromoItemRepository
@@ -25,6 +26,7 @@ type CISConfig struct {
 	CheckoutRepository         repository.CheckoutItemRepository
 	ProductRepository          repository.ProductRepository
 	ProductPromoItemRepository repository.ProductPromoItemRepository
+	MerchantRepository         repository.MerchantRepository
 }
 
 func NewCheckoutItemService(c CISConfig) CheckoutItemService {
@@ -32,6 +34,7 @@ func NewCheckoutItemService(c CISConfig) CheckoutItemService {
 		checkoutRepository:         c.CheckoutRepository,
 		productRepository:          c.ProductRepository,
 		productPromoItemRepository: c.ProductPromoItemRepository,
+		merchantRepository:         c.MerchantRepository,
 	}
 }
 
@@ -81,6 +84,15 @@ func (c checkoutItemService) GetCheckoutItemByUser(user model.User) ([]dto.Check
 					ProfilePicture: data.Merchant.PicUrl,
 				},
 			}
+			merchantModel, err := c.merchantRepository.GetMerchantDetailById(temp.Merchant.Id)
+			if err != nil {
+				switch {
+				case errors.Is(err, gorm.ErrRecordNotFound):
+				default:
+					return nil, httperror.InternalServerError(err.Error())
+				}
+			}
+			temp.Merchant.CityId = merchantModel.UserAddress.CityId
 			dtoResponse = append(dtoResponse, temp)
 		}
 		//productData
