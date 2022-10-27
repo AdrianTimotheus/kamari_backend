@@ -1,11 +1,13 @@
 package service
 
 import (
+	"fmt"
 	"kamari.com/config"
 	"kamari.com/dto"
 	"kamari.com/httperror"
 	"kamari.com/model"
 	"kamari.com/repository"
+	"time"
 )
 
 type CartService interface {
@@ -43,6 +45,7 @@ func (c cartService) GetCartHoverItems(user model.User) (*dto.CartHoverRes, erro
 
 func (c cartService) GetCartItems(user model.User) ([]dto.CartItemsResponse, error) {
 	result, err := c.cartRepository.GetCartItems(user.Id)
+	var discountedPrice uint64
 
 	var response []dto.CartItemsResponse
 	m := make(map[string][]dto.CartItemRaw)
@@ -50,6 +53,7 @@ func (c cartService) GetCartItems(user model.User) ([]dto.CartItemsResponse, err
 	for _, item := range result {
 		cartItem := dto.CartItemRaw{
 			Id:              item.Id,
+			VariantId:       item.VariantId,
 			Name:            item.Name,
 			MainVariant:     item.MainVariant,
 			MainVariantItem: item.MainVariantItem,
@@ -59,15 +63,37 @@ func (c cartService) GetCartItems(user model.User) ([]dto.CartItemsResponse, err
 			Price:           item.Price,
 			Quantity:        item.Quantity,
 			MerchantId:      item.MerchantId,
+			PromoTypeId:     item.PromoTypeId,
+			DiscountAmount:  item.DiscountAmount,
+			StartDate:       item.StartDate,
+			EndDate:         item.EndDate,
+			StockLeft:       item.StockLeft,
+			MaximumItem:     item.MaximumItem,
 		}
 		m[item.MerchantName] = append(m[item.MerchantName], cartItem)
 	}
+	fmt.Println(m)
 
 	for k, v := range m {
 		var tempData []dto.CartItem
 		for _, tempCartItem := range v {
+			isValid := time.Now().Before(tempCartItem.EndDate) &&
+				time.Now().After(tempCartItem.StartDate) &&
+				tempCartItem.Quantity < tempCartItem.StockLeft &&
+				tempCartItem.Quantity < tempCartItem.MaximumItem
+			if !isValid {
+				discountedPrice = tempCartItem.Price
+			} else {
+				if tempCartItem.PromoTypeId == 1 {
+					discountedPrice = tempCartItem.Price - tempCartItem.DiscountAmount
+				}
+				if tempCartItem.PromoTypeId == 2 {
+					discountedPrice = tempCartItem.DiscountAmount * (1 - tempCartItem.DiscountAmount)
+				}
+			}
 			temp := dto.CartItem{
 				Id:              tempCartItem.Id,
+				VariantId:       tempCartItem.VariantId,
 				Name:            tempCartItem.Name,
 				MainVariant:     tempCartItem.MainVariant,
 				MainVariantItem: tempCartItem.MainVariantItem,
@@ -75,6 +101,7 @@ func (c cartService) GetCartItems(user model.User) ([]dto.CartItemsResponse, err
 				SubVariantItem:  tempCartItem.SubVariantItem,
 				PicUrl:          tempCartItem.PicUrl,
 				Price:           tempCartItem.Price,
+				DiscountedPrice: discountedPrice,
 				Quantity:        tempCartItem.Quantity,
 			}
 			tempData = append(tempData, temp)
