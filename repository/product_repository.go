@@ -468,9 +468,12 @@ func (p productRepository) AddNewProduct(product model.Product, user model.User)
 		for i, _ := range product.ProductPhotos {
 			product.ProductPhotos[i].ProductId = insertedProductId
 		}
-		fmt.Println(product.ProductPhotos)
+
 		err = p.db.Table("product_variants").Create(&product.ProductVariants).Error
-		err = p.db.Table("product_photos").Create(&product.ProductPhotos).Error
+		if len(product.ProductPhotos) > 0 {
+			err = p.db.Table("product_photos").Create(&product.ProductPhotos).Error
+		}
+
 	} else {
 		res := p.db.Raw("INSERT INTO products (name, description, minimum_order, maximum_order, is_hazardous, weight, view_count, unit_sold, favourite_count, availability, category_id, subcategory_id, complementary_category_id, merchant_id, thumbnail_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id",
 			product.Name,
@@ -498,11 +501,9 @@ func (p productRepository) AddNewProduct(product model.Product, user model.User)
 			product.ProductPhotos[i].ProductId = insertedProductId
 		}
 		err = p.db.Table("product_variants").Create(&product.ProductVariants).Error
-		err = p.db.Table("product_photos").Create(&product.ProductPhotos).Error
-	}
-
-	if err != nil {
-		return err
+		if len(product.ProductPhotos) > 0 {
+			err = p.db.Table("product_photos").Create(&product.ProductPhotos).Error
+		}
 	}
 	return nil
 }

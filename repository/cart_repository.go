@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"gorm.io/gorm"
 	"kamari.com/dto"
 	"kamari.com/httperror"
@@ -75,19 +76,37 @@ func (c cartRepository) GetCartItems(userId uint64) ([]dto.CartItemRaw, error) {
 		"product_variants.sub_variant_item as sub_variant_item,\n"+
 		"carts.quantity ,\n"+
 		"products.name as name,\n"+
-		"merchants.pic_url as pic_url ,\n"+
+		"product_variants.pic_url as pic_url ,\n"+
 		"product_variants.price as price,\n"+
 		"merchants.id as merchant_id, \n"+
 		"merchants.name as merchant_name, \n"+
-		"product_variants.id as id, \n"+
-		"merchants.pic_url as merchant_pic_url \n"+
+		"product_variants.id as variant_id, \n"+
+		"carts.id as id, \n"+
+		"merchants.pic_url as merchant_pic_url, \n"+
+		"product_promos.start_date as start_date, \n"+
+		"product_promos.end_date as end_date, \n"+
+		"product_promo_items.stock_left as stock_left, \n"+
+		"product_promo_items.maximum_item as maximum_item, \n"+
+		"product_promo_items.promo_type_id as promo_type_id, \n"+
+		"product_promo_items.discount_amount as discount_amount	 \n"+
 		"from carts inner join product_variants on carts.variant_id = product_variants.id \n"+
 		"inner join products on products.id = product_variants.product_id  \n"+
 		"inner join merchants on merchants.id = products.merchant_id \n"+
+		"left join product_promo_items on product_promo_items.product_id = products.id \n"+
+		"left join product_promos on product_promo_items.product_promo_id = product_promos.id \n"+
 		"where carts.user_id = ?", userId).Scan(&rawItems).Error
 
+	//var promo model.ProductPromoItem
+	//
+	//err := c.db.Table("product_promos").Where("")
+
 	if err != nil {
-		return nil, httperror.InternalServerError("There was a problem getting cart items")
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+		default:
+			return nil, httperror.InternalServerError(err.Error())
+		}
+		//return nil, httperror.InternalServerError("There was a problem getting cart items")
 	}
 
 	return rawItems, nil

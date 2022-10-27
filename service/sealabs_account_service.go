@@ -231,7 +231,7 @@ func (s sealabsAccountService) TopUpWallet(payload *dto.PayWithSLPReq, user mode
 
 func (s sealabsAccountService) generateCallBackUrl(sign string, endPoint string) string {
 	//Change when deployed
-	baseUrl := "https://1718-2404-8000-1004-f072-f8b5-a50e-8c1e-ac5d.ap.ngrok.io/api/" + endPoint
+	baseUrl := "https://f88c-2404-8000-1000-4633-56a6-59a2-1518-d987.ap.ngrok.io/api/" + endPoint
 	callBackUrl := fmt.Sprintf("%s?s=%s", baseUrl, sign)
 	return callBackUrl
 }
