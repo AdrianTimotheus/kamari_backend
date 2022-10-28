@@ -126,6 +126,8 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.POST("/wallets/topup", h.ValidateTopUpWithSLP, middleware.ErrorHandler)
 		api.POST("/users/auth/check", middleware.AuthorizeJWT, h.CheckPasswordAuth, middleware.ErrorHandler)
 		api.POST("/merchants", middleware.AuthorizeJWT, h.RegisterMerchant, middleware.ErrorHandler)
+		api.GET("/merchants", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetMerchantProfile, middleware.ErrorHandler)
+		api.PUT("/merchants/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.UpdateMerchantProfile, middleware.ErrorHandler)
 		api.PATCH("/users/wallet", middleware.AuthorizeJWT, h.ChangeWalletPin, middleware.ErrorHandler)
 		api.GET("/users/wallet/check", middleware.AuthorizeJWT, h.IsUserHasWallet, middleware.ErrorHandler)
 		api.POST("/users/wallet", middleware.AuthorizeJWT, h.CreateUserWallet, middleware.ErrorHandler)

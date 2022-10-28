@@ -13,6 +13,8 @@ import (
 
 type MerchantService interface {
 	GetMerchantDetail(username string) (*dto.MerchantDetailResponse, error)
+	GetMerchantProfile(username string) (*dto.MerchantProfileRes, error)
+	UpdateMerchantProfile(merchantId uint64, username string, payload *dto.MerchantProfileReq) error
 	GetMerchantProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetMerchantProductsResponse, error)
 	GetSellerAdminProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetSellerAdminProductsResponse, error)
 	RegisterMerchant(user model.User, req *dto.MerchantRegisterRequest) error
@@ -82,6 +84,52 @@ func (m merchantService) GetMerchantDetail(username string) (*dto.MerchantDetail
 	}
 
 	return merchant, nil
+}
+
+func (m merchantService) GetMerchantProfile(username string) (*dto.MerchantProfileRes, error) {
+	md, err := m.merchantRepository.GetMerchantProfile(username)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+		default:
+			return nil, httperror.InternalServerError(err.Error())
+		}
+	}
+
+	merchant := &dto.MerchantProfileRes{
+		Id:             md.Id,
+		Name:           md.Name,
+		Username:       md.User.Username,
+		Description:    md.Description,
+		ProfilePicture: md.PicUrl,
+		Address:        md.UserAddress,
+	}
+
+	return merchant, nil
+}
+
+func (m merchantService) UpdateMerchantProfile(merchantId uint64, username string, payload *dto.MerchantProfileReq) error {
+	md, err := m.merchantRepository.GetMerchantProfile(username)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return httperror.BadRequestError(err.Error(), "NO_ROWS")
+		default:
+			return httperror.InternalServerError(err.Error())
+		}
+	}
+
+	if md.Id != merchantId {
+		return httperror.ForbiddenError()
+	}
+
+	return m.merchantRepository.UpdateMerchantProfile(&model.Merchant{
+		Id:          merchantId,
+		Name:        payload.Name,
+		Description: payload.Description,
+		PicUrl:      payload.ProfilePicture,
+	})
 }
 
 func (m merchantService) GetMerchantProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetMerchantProductsResponse, error) {
