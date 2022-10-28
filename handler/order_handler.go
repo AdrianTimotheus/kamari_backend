@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"kamari.com/dto"
+	"kamari.com/helper"
 	"kamari.com/httperror"
 	"kamari.com/model"
 	"net/http"
@@ -25,4 +26,40 @@ func (h Handler) ProceedOrder(c *gin.Context) {
 		_ = c.Error(err)
 	}
 	c.JSON(http.StatusCreated, resp)
+}
+
+func (h Handler) GetMerchantOrders(c *gin.Context) {
+	var query struct {
+		Keyword string `form:"keyword"`
+		helper.Filters
+	}
+
+	err := c.BindQuery(&query)
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "INVALID_QUERY_PARAMS"))
+		return
+	}
+
+	user, err := helper.GetUserContext(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, httperror.UnauthorizedError())
+		return
+	}
+
+	merchant, err := h.merchantService.GetMerchantDetail(user.Username)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	orders, metadata, err := h.orderService.GetMerchantOrder(merchant.Id, query.Keyword, &query.Filters)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"__metadata": metadata,
+		"orders":     orders,
+	})
 }

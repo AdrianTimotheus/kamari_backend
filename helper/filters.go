@@ -19,6 +19,7 @@ type Filters struct {
 	SubCategoryId *uint64 `form:"subCategoryId"`
 	VoucherStatus *string `form:"voucherStatus"`
 	PromoStatus   *string `form:"promoStatus"`
+	OrderStatus   *string `form:"orderStatus"`
 }
 
 func (f Filters) Offset() int {

@@ -2,6 +2,7 @@ package service
 
 import (
 	"kamari.com/dto"
+	"kamari.com/helper"
 	"kamari.com/httperror"
 	"kamari.com/model"
 	"kamari.com/repository"
@@ -12,6 +13,7 @@ import (
 
 type OrderService interface {
 	CreateOrder(user model.User, payload dto.CreateOrderRequest) (*dto.StatusMessageResponse, error)
+	GetMerchantOrder(merchantId uint64, keyword string, filters *helper.Filters) ([]model.SellerOrder, *helper.Metadata, error)
 }
 
 type orderService struct {
@@ -79,4 +81,16 @@ func (o orderService) CreateOrder(user model.User, payload dto.CreateOrderReques
 
 	resp := dto.StatusMessageResponse{Status: true}
 	return &resp, nil
+}
+
+func (o orderService) GetMerchantOrder(merchantId uint64, keyword string, filters *helper.Filters) ([]model.SellerOrder, *helper.Metadata, error) {
+	filters.Limit = helper.ReadInt(filters.Limit, 30)
+	filters.Page = helper.ReadInt(filters.Page, 1)
+
+	orders, metadata, err := o.orderRepository.GetMerchantOrders(merchantId, keyword, filters)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return orders, metadata, nil
 }
