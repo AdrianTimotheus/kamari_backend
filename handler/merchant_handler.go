@@ -5,6 +5,7 @@ import (
 	"kamari.com/dto"
 	"kamari.com/model"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"kamari.com/helper"
@@ -31,6 +32,48 @@ func (h Handler) GetMerchantDetail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, merchant)
+}
+
+func (h Handler) GetMerchantProfile(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	merchant, err := h.merchantService.GetMerchantProfile(user.Username)
+	if err != nil {
+		e := err.(httperror.AppError)
+		_ = c.Error(httperror.AppError{
+			StatusCode: e.StatusCode,
+			Code:       e.Code,
+			Message:    e.Message,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, merchant)
+}
+
+func (h Handler) UpdateMerchantProfile(c *gin.Context) {
+	var (
+		req *dto.MerchantProfileReq
+		err error
+	)
+	merchantId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	if err = c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(httperror.BadRequestError(ErrFailedBindingValidation.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	err = h.merchantService.UpdateMerchantProfile(uint64(merchantId), user.Username, req)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "merchant updated successfully",
+	})
 }
 
 func (h Handler) GetSellerProduct(c *gin.Context) {

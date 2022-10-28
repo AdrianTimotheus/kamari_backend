@@ -9,6 +9,8 @@ import (
 
 type MerchantRepository interface {
 	GetMerchantDetail(username string) (model.Merchant, error)
+	GetMerchantProfile(username string) (model.Merchant, error)
+	UpdateMerchantProfile(merchant *model.Merchant) error
 	GetMerchantDetailById(id uint64) (model.Merchant, error)
 	RegisterMerchant(userId uint64, req *dto.MerchantRegisterRequest) error
 }
@@ -40,6 +42,26 @@ func (m merchantRepository) GetMerchantDetail(username string) (model.Merchant, 
 	}
 
 	return merchant, nil
+}
+
+func (m merchantRepository) GetMerchantProfile(username string) (model.Merchant, error) {
+	var merchant model.Merchant
+	err := m.db.
+		Joins("User").
+		Preload("UserAddress.City.Province").
+		Where(`"User"."username" = ?`, username).
+		First(&merchant).Error
+
+	if err != nil {
+		return merchant, err
+	}
+
+	return merchant, nil
+}
+
+func (m merchantRepository) UpdateMerchantProfile(merchant *model.Merchant) error {
+	return m.db.
+		Updates(&merchant).Error
 }
 
 func (m merchantRepository) GetMerchantDetailById(id uint64) (model.Merchant, error) {
