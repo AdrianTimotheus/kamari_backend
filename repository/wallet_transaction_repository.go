@@ -10,6 +10,7 @@ type WalletTransactionRepository interface {
 	GetUserWalletTransactionByType(walletId uint64, dataOffset int, filter string) ([]model.WalletTransaction, error)
 	CountWalletTransactionRecords(walletId uint64) (int64, error)
 	GetWalletTransactionByID(TransactionID uint64) (*model.WalletTransaction, error)
+	GetMerchantWithdrawHistories(walletId uint64) ([]model.WalletTransaction, error)
 }
 
 type walletTransaction struct {
@@ -76,4 +77,15 @@ func (w walletTransaction) GetWalletTransactionByID(TransactionID uint64) (*mode
 		return nil, err
 	}
 	return &wTModel, nil
+}
+
+func (w walletTransaction) GetMerchantWithdrawHistories(walletId uint64) ([]model.WalletTransaction, error) {
+	var resp []model.WalletTransaction
+	err := w.db.Where("dst_wallet_id=?", walletId).
+		Where("description=?", "Merchant income withdraw").Order("id DESC").
+		Find(&resp).Error
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }

@@ -23,3 +23,15 @@ func (h Handler) PayCheckoutWithWallet(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, resp)
 }
+
+func (h Handler) GetWithdrawHistories(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	resp, err := h.walletTransactionService.GetMerchantWithdrawHistories(user)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
