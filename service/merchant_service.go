@@ -16,6 +16,8 @@ type MerchantService interface {
 	GetMerchantProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetMerchantProductsResponse, error)
 	GetSellerAdminProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetSellerAdminProductsResponse, error)
 	RegisterMerchant(user model.User, req *dto.MerchantRegisterRequest) error
+	GetMerchantPaycheck(user model.User) (*dto.MerchantPaycheckResponse, error)
+	MerchantWithdraw(user model.User) (*dto.MerchantPaycheckResponse, error)
 }
 
 type merchantService struct {
@@ -278,4 +280,60 @@ func (m merchantService) RegisterMerchant(user model.User, req *dto.MerchantRegi
 		return err
 	}
 	return nil
+}
+
+func (m merchantService) GetMerchantPaycheck(user model.User) (*dto.MerchantPaycheckResponse, error) {
+	merchant, err := m.merchantRepository.GetMerchantDetail(user.Username)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, httperror.BadRequestError("User has no merchant", "USER_HAS_NO_MERCHANT")
+		default:
+			return nil, httperror.InternalServerError(err.Error())
+		}
+	}
+
+	totalIncome, err := m.merchantRepository.GetMerchantIncome(merchant)
+	if err != nil {
+		return nil, err
+	}
+	resp := dto.MerchantPaycheckResponse{
+		Merchant: dto.MerchantDetailResponse{
+			Id:                merchant.Id,
+			Name:              merchant.Name,
+			Description:       merchant.Description,
+			ProfilePicture:    merchant.PicUrl,
+			MerchantCreatedAt: merchant.CreatedAt,
+		},
+		Income: totalIncome,
+	}
+	return &resp, nil
+}
+
+func (m merchantService) MerchantWithdraw(user model.User) (*dto.MerchantPaycheckResponse, error) {
+	merchant, err := m.merchantRepository.GetMerchantDetail(user.Username)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, httperror.BadRequestError("User has no merchant", "USER_HAS_NO_MERCHANT")
+		default:
+			return nil, httperror.InternalServerError(err.Error())
+		}
+	}
+
+	income, err := m.merchantRepository.WithdrawIncome(user, merchant)
+	if err != nil {
+		return nil, err
+	}
+	resp := dto.MerchantPaycheckResponse{
+		Merchant: dto.MerchantDetailResponse{
+			Id:                merchant.Id,
+			Name:              merchant.Name,
+			Description:       merchant.Description,
+			ProfilePicture:    merchant.PicUrl,
+			MerchantCreatedAt: merchant.CreatedAt,
+		},
+		Income: income,
+	}
+	return &resp, nil
 }
