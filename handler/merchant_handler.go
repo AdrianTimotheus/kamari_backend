@@ -99,3 +99,28 @@ func (h Handler) RegisterMerchant(c *gin.Context) {
 		"message": "merchant created successfully",
 	})
 }
+
+func (h Handler) GetMerchantPaycheck(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	resp, err := h.merchantService.GetMerchantPaycheck(user)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h Handler) WithDrawMerchantIncome(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	resp, err := h.merchantService.MerchantWithdraw(user)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+
+}

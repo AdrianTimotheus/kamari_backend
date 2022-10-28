@@ -11,6 +11,8 @@ type MerchantRepository interface {
 	GetMerchantDetail(username string) (model.Merchant, error)
 	GetMerchantDetailById(id uint64) (model.Merchant, error)
 	RegisterMerchant(userId uint64, req *dto.MerchantRegisterRequest) error
+	GetMerchantIncome(merchant model.Merchant) (uint64, error)
+	WithdrawIncome(user model.User, merchant model.Merchant) (uint64, error)
 }
 
 type merchantRepository struct {
@@ -34,7 +36,6 @@ func (m merchantRepository) GetMerchantDetail(username string) (model.Merchant, 
 		Joins("UserAddress").
 		Where(`"User"."username" = ?`, username).
 		First(&merchant).Error
-
 	if err != nil {
 		return merchant, err
 	}
@@ -96,4 +97,68 @@ func (m merchantRepository) RegisterMerchant(userId uint64, req *dto.MerchantReg
 	}
 
 	return nil
+}
+
+func (m merchantRepository) GetMerchantIncome(merchant model.Merchant) (uint64, error) {
+	order := model.Order{MerchantId: merchant.Id}
+	var income uint64
+	err := m.db.Model(&order).Select("coalesce(SUM(merchant_income),0)").
+		Where("merchant_id=?", merchant.Id).
+		Where("order_status_id=?", 6).
+		Where("withdraw_status=false").
+		Scan(&income).Error
+	if err != nil {
+		return 0, err
+	}
+	return income, nil
+}
+
+func (m merchantRepository) WithdrawIncome(user model.User, merchant model.Merchant) (uint64, error) {
+	order := model.Order{MerchantId: merchant.Id}
+
+	var income uint64
+	err := m.db.Model(&order).Select("SUM(merchant_income) ").
+		Where("merchant_id=?", merchant.Id).
+		Where("order_status_id=?", 6).
+		Where("withdraw_status=false").
+		Scan(&income).Error
+
+	err = m.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&order).
+			Where("merchant_id=?", merchant.Id).
+			Where("order_status_id=?", 6).
+			Update("withdraw_status", true).Error
+		if err != nil {
+			return err
+		}
+
+		var wallet model.Wallet
+		err = tx.Model(&wallet).
+			Where("user_id=?", user.Id).
+			Update("balance", gorm.Expr("balance+?", income)).First(&wallet).
+			Error
+		if err != nil {
+			return err
+		}
+
+		if income != 0 {
+			walletTransaction := model.WalletTransaction{
+				DstWalletId:       wallet.Id,
+				Amount:            income,
+				Description:       "Merchant income withdraw",
+				TransactionTypeId: 2,
+			}
+			err = tx.Exec("INSERT INTO wallet_transactions (src_wallet_id, dst_wallet_id, transaction_type_id, amount, description) values (?,?,?,?,?)"+
+				"", nil, wallet.Id, walletTransaction.TransactionTypeId, walletTransaction.Amount, walletTransaction.Description).Error
+			//err = tx.Create(&walletTransaction).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return 0, err
+	}
+	return income, nil
 }
