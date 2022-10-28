@@ -102,9 +102,9 @@ func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model
 
 		}
 
-		if err := tx.Model(&wallet).Update("balance", gorm.Expr("balance-?", walletTransaction.Amount)).Error; err != nil {
-			return httperror.InternalServerError("Internal Server Error")
-		}
+		//if err := tx.Model(&wallet).Update("balance", gorm.Expr("balance-?", walletTransaction.Amount)).Error; err != nil {
+		//	return httperror.InternalServerError("Internal Server Error")
+		//}
 
 		if err := tx.Exec("INSERT INTO wallet_transactions (src_wallet_id, dst_wallet_id, transaction_type_id, amount, description) values (?,?,?,?,?)"+
 			"", wallet.Id, nil, walletTransaction.TransactionTypeId, walletTransaction.Amount, walletTransaction.Description).Error; err != nil {
