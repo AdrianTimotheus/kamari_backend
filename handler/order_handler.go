@@ -63,3 +63,21 @@ func (h Handler) GetMerchantOrders(c *gin.Context) {
 		"orders":     orders,
 	})
 }
+
+func (h Handler) UpdateOrderStatus(c *gin.Context) {
+	id, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(helper.ErrInvalidReturnType.Error(), "BAD_PARAMS"))
+		return
+	}
+
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+	dtoResp, err := h.orderService.UpwardOrderStatus(id.(uint64), user)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, dtoResp)
+
+}

@@ -13,8 +13,10 @@ type Order struct {
 	DstAddressId             uint64
 	TransactionId            uint64
 	OrderStatusId            uint64
+	OrderStatus              OrderStatus
 	WithdrawStatus           bool
 	MerchantId               uint64
+	Merchant                 Merchant
 	CourierId                uint64
 	UserId                   uint64
 	ShippingFee              uint64

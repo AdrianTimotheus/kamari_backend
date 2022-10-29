@@ -1,6 +1,9 @@
 package service
 
 import (
+	"errors"
+	"fmt"
+	"gorm.io/gorm"
 	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
@@ -14,6 +17,7 @@ import (
 type OrderService interface {
 	CreateOrder(user model.User, payload dto.CreateOrderRequest) (*dto.StatusMessageResponse, error)
 	GetMerchantOrder(merchantId uint64, keyword string, filters *helper.Filters) ([]model.SellerOrder, *helper.Metadata, error)
+	UpwardOrderStatus(OrderId uint64, user model.User) (*dto.StatusMessageResponse, error)
 }
 
 type orderService struct {
@@ -42,7 +46,6 @@ func (o orderService) CreateOrder(user model.User, payload dto.CreateOrderReques
 	var orderModels []model.Order
 	for i, data := range payload.Orders {
 		now := time.Now().Format("2006-01-02-150405")
-
 		invoice := "INV/?/TRC-?/MRCH-?/USR-?/?"
 		invoice = strings.Replace(invoice, "?", now, 1)
 		invoice = strings.Replace(invoice, "?", strconv.Itoa(int(payload.TransactionId)), 1)
@@ -93,4 +96,35 @@ func (o orderService) GetMerchantOrder(merchantId uint64, keyword string, filter
 	}
 
 	return orders, metadata, nil
+}
+
+func (o orderService) UpwardOrderStatus(orderId uint64, user model.User) (*dto.StatusMessageResponse, error) {
+	orderModel, err := o.orderRepository.GetCurrentOrder(orderId)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, nil
+		default:
+			return nil, httperror.InternalServerError(err.Error())
+		}
+	}
+	resp := dto.StatusMessageResponse{Status: false}
+	if orderModel.Merchant.UserId != user.Id {
+		return &resp, httperror.ForbiddenError()
+	}
+	switch orderModel.OrderStatus.Id {
+	case 1:
+		orderModel.OrderStatusId = 2
+	case 2:
+		orderModel.OrderStatusId = 3
+	default:
+		return &resp, httperror.BadRequestError("Maximum Status Reached", "MAX_STATUS_REACHED")
+	}
+	fmt.Println("HERE:", orderModel.OrderStatusId)
+	err = o.orderRepository.UpdateCurrentOrderId(orderModel)
+	if err != nil {
+		return nil, err
+	}
+	resp.Status = true
+	return &resp, nil
 }

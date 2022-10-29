@@ -183,6 +183,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/paychecks", middleware.AuthorizeJWT, h.GetMerchantPaycheck, middleware.ErrorHandler)
 		api.POST("/paychecks/withdraw", middleware.AuthorizeJWT, h.WithDrawMerchantIncome, middleware.ErrorHandler)
 		api.GET("/paychecks/history", middleware.AuthorizeJWT, h.GetWithdrawHistories, middleware.ErrorHandler)
+		api.PUT("/order/:id", middleware.AuthorizeJWT, h.UpdateOrderStatus, middleware.ErrorHandler)
 
 		// system admin
 		api.POST("/categories", middleware.AuthorizeJWT, middleware.AuthorizeAdmin, h.CreateCategory, middleware.ErrorHandler)
