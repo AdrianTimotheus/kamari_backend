@@ -17,6 +17,7 @@ import (
 type OrderService interface {
 	CreateOrder(user model.User, payload dto.CreateOrderRequest) (*dto.StatusMessageResponse, error)
 	GetMerchantOrder(merchantId uint64, keyword string, filters *helper.Filters) ([]model.SellerOrder, *helper.Metadata, error)
+	GetMerchantOrderSummary(merchantId uint64) ([]model.SellerOrder, error)
 	UpwardOrderStatus(OrderId uint64, user model.User) (*dto.StatusMessageResponse, error)
 }
 
@@ -96,6 +97,15 @@ func (o orderService) GetMerchantOrder(merchantId uint64, keyword string, filter
 	}
 
 	return orders, metadata, nil
+}
+
+func (o orderService) GetMerchantOrderSummary(merchantId uint64) ([]model.SellerOrder, error) {
+	orders, err := o.orderRepository.GetMerchantOrderSummary(merchantId)
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
 }
 
 func (o orderService) UpwardOrderStatus(orderId uint64, user model.User) (*dto.StatusMessageResponse, error) {
