@@ -10,6 +10,7 @@ import (
 
 type OrderRepository interface {
 	GetMerchantOrders(merchantId uint64, keyword string, filters *helper.Filters) ([]model.SellerOrder, *helper.Metadata, error)
+	GetMerchantOrderSummary(merchantId uint64) ([]model.SellerOrder, error)
 	CreateOrder(user model.User, order []model.Order, item []dto.ItemToProceed, listOfProductVariant []uint64) error
 	GetOrderItemToProcess(userId uint64) ([]model.CheckoutItem, error)
 	CountUserCheckoutItem(listOfProductVariant []uint64, userId uint64) int64
@@ -37,7 +38,7 @@ func (o orderRepository) GetMerchantOrders(merchantId uint64, keyword string, fi
 		count  int64
 	)
 
-	invoiceSearch := fmt.Sprintf("%%%s", keyword)
+	invoiceSearch := fmt.Sprintf("%%%s%%", keyword)
 	res := o.db.
 		Table("orders").
 		Select(
@@ -88,6 +89,31 @@ func (o orderRepository) GetMerchantOrders(merchantId uint64, keyword string, fi
 
 	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
 	return orders, &metadata, nil
+}
+
+func (o orderRepository) GetMerchantOrderSummary(merchantId uint64) ([]model.SellerOrder, error) {
+	var orders []model.SellerOrder
+
+	res := o.db.
+		Table("orders").
+		Select(
+			`"orders"."id" AS id`,
+			`"orders"."created_at" AS order_created_at`,
+			`"orders"."invoice" AS invoice`,
+			`"orders"."user_total_payment" AS user_total_payment`,
+			`"orders"."transaction_id" AS transaction_id`,
+			`"orders"."merchant_id" AS merchant_id`,
+			`"orders"."withdraw_status" AS withdraw_status`,
+			`"os"."status" AS status`,
+		).
+		Joins(`LEFT JOIN order_statuses os on orders.order_status_id = os.id`).
+		Where(`"orders"."merchant_id" = ?`, merchantId).
+		Find(&orders)
+
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return orders, nil
 }
 
 func (o orderRepository) CreateOrder(user model.User, order []model.Order, item []dto.ItemToProceed, listOfProductVariant []uint64) error {
@@ -161,6 +187,7 @@ func (o orderRepository) getOrderDetails(orderId uint64) ([]model.SellerOrderDet
 			`"order_details"."quantity" AS quantity`,
 			`"p"."id" AS product_id`,
 			`"p"."name" AS product_name`,
+			`"p"."thumbnail_url" AS thumbnail_url`,
 			`"pv"."main_variant" AS main_variant`,
 			`"pv"."main_variant_item" AS main_variant_item`,
 			`"pv"."sub_variant" AS sub_variant`,

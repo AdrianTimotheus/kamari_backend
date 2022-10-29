@@ -64,6 +64,30 @@ func (h Handler) GetMerchantOrders(c *gin.Context) {
 	})
 }
 
+func (h Handler) GetMerchantOrderSummary(c *gin.Context) {
+	user, err := helper.GetUserContext(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, httperror.UnauthorizedError())
+		return
+	}
+
+	merchant, err := h.merchantService.GetMerchantDetail(user.Username)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	orders, err := h.orderService.GetMerchantOrderSummary(merchant.Id)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"orders": orders,
+	})
+}
+
 func (h Handler) UpdateOrderStatus(c *gin.Context) {
 	id, err := helper.GetParam(c, "id", "uint64")
 	if err != nil {

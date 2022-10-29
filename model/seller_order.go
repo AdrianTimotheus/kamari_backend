@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type SellerOrder struct {
 	Id               uint64              `json:"id"`
 	Invoice          string              `json:"invoice"`
@@ -15,4 +17,5 @@ type SellerOrder struct {
 	UserEmail        string              `json:"user_email"`
 	UserName         string              `json:"user_name"`
 	OrderDetail      []SellerOrderDetail `json:"order_items" gorm:"-"`
+	OrderCreatedAt   time.Time           `json:"order_created_at,omitempty"`
 }
