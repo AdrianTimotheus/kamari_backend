@@ -89,13 +89,20 @@ func (p productRepository) GetAllProducts(keyword string, filters *helper.Filter
 		).
 		Joins("Merchant").
 		Joins("Category").
+		Joins("SellerCategory").
 		Joins(`JOIN users ON users.id = "Merchant"."user_id"`).
 		Joins(`LEFT JOIN user_addresses ON user_addresses.id = "Merchant"."user_address_id"`).
 		Joins(`LEFT JOIN cities ON cities.id = user_addresses.city_id`).
 		Where(`to_tsvector('simple', "products"."name") @@ plainto_tsquery('simple', ?) OR ? = ''`, keyword, keyword)
 
+	if filters.MerchantId != nil {
+		res = res.Where(`"products"."merchant_id" = ?`, *filters.MerchantId)
+	}
 	if filters.CategoryId != nil {
 		res = res.Where(`"products"."category_id" = ?`, *filters.CategoryId)
+	}
+	if filters.SellerCategoryId != nil {
+		res = res.Where(`"products"."seller_category_id" = ?`, *filters.SellerCategoryId)
 	}
 	switch filters.SortBy {
 	case "recommended":
@@ -183,6 +190,8 @@ func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int
 	err = nil
 	if marketplaceCategoryId != 0 {
 		err = p.db.
+			Preload("Category").
+			Preload("SellerCategory").
 			Where("merchant_id=?", merchantID).
 			Where("category_id", marketplaceCategoryId).
 			Offset(pageOffset).
@@ -191,6 +200,8 @@ func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int
 			Find(&products).Error
 	} else if sellerCategoryId != 0 {
 		err = p.db.
+			Preload("Category").
+			Preload("SellerCategory").
 			Where("merchant_id=?", merchantID).
 			Where("seller_category_id=?", sellerCategoryId).
 			Offset(pageOffset).
@@ -199,6 +210,8 @@ func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int
 			Find(&products).Error
 	} else {
 		err = p.db.
+			Preload("Category").
+			Preload("SellerCategory").
 			Where("merchant_id=?", merchantID).
 			Offset(pageOffset).
 			Limit(Limit).

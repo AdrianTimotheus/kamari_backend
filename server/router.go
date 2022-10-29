@@ -112,6 +112,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/vouchers/merchant/:id", h.GetMerchantVoucherByMerchantId, middleware.ErrorHandler)
 		api.GET("/vouchers/marketplace", h.GetAllMarketplaceActiveVoucher, middleware.ErrorHandler)
 		api.POST("/shipments", h.GetShippingCost, middleware.ErrorHandler)
+		api.GET("/seller-categories/:username", h.GetSellerPageCategories, middleware.ErrorHandler)
 
 		// need auth
 		api.GET("/carts/hover", middleware.AuthorizeJWT, h.GetCartHoverItems, middleware.ErrorHandler)

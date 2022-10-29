@@ -101,6 +101,7 @@ func (p productService) GetProducts(keyword string, filters *helper.Filters) ([]
 			Availability:     product.Availability,
 			CategoryId:       product.CategoryId,
 			Category:         product.Category,
+			SellerCategory:   product.SellerCategory,
 		}
 		productResponse[i] = p
 	}

@@ -21,6 +21,7 @@ type CategoryService interface {
 	GetComplementaryCategories(keyword string, filters *helper.Filters) ([]dto.ComplementaryCategoryResponse, *helper.Metadata, error)
 	GetComplementaryCategory(id uint64) (*model.Complementary, error)
 	GetSellerCategories(userId uint64, params url.Values) ([]dto.GetSellerCategoriesRes, uint64, error)
+	GetSellerPageCategories(username string) ([]model.SellerCategory, error)
 	GetSellerCategory(userId uint64, sellerCategoryId uint64) (string, []dto.SellerCategoriesItemsRes, error)
 	GetAvailableProducts(userId uint64, params url.Values) ([]dto.SellerCategoriesAvailableItemsRes, uint64, error)
 	UpdateSellerCategory(sellerCategoryId uint64, userId uint64, req dto.SellerCategoryRequest) error
@@ -190,6 +191,10 @@ func (c categoryService) DeleteComplementaryCategory(complementaryId uint64) err
 func (c categoryService) GetSellerCategories(userId uint64, params url.Values) ([]dto.GetSellerCategoriesRes, uint64, error) {
 	result, totalPage, err := c.categoryRepository.GetSellerCategories(userId, params)
 	return result, totalPage, err
+}
+
+func (c categoryService) GetSellerPageCategories(username string) ([]model.SellerCategory, error) {
+	return c.categoryRepository.GetSellerPageCategories(username)
 }
 
 func (c categoryService) GetSellerCategory(userId uint64, sellerCategoryId uint64) (string, []dto.SellerCategoriesItemsRes, error) {

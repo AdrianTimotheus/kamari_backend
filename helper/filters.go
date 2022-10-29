@@ -5,21 +5,23 @@ import (
 )
 
 type Filters struct {
-	Page          int     `form:"page"`
-	Limit         int     `form:"limit"`
-	SortBy        string  `form:"sortBy"`
-	Sort          string  `form:"sort"`
-	SortDirection string  `form:"sortDirection"`
-	Location      string  `form:"location"`
-	FilterBy      string  `form:"filterBy"`
-	MaxPrice      *uint64 `form:"maxPrice"`
-	MinPrice      *uint64 `form:"minPrice"`
-	Rating        *int    `form:"rating"`
-	CategoryId    *uint64 `form:"categoryId"`
-	SubCategoryId *uint64 `form:"subCategoryId"`
-	VoucherStatus *string `form:"voucherStatus"`
-	PromoStatus   *string `form:"promoStatus"`
-	OrderStatus   *string `form:"orderStatus"`
+	Page             int     `form:"page"`
+	Limit            int     `form:"limit"`
+	SortBy           string  `form:"sortBy"`
+	Sort             string  `form:"sort"`
+	SortDirection    string  `form:"sortDirection"`
+	Location         string  `form:"location"`
+	FilterBy         string  `form:"filterBy"`
+	MaxPrice         *uint64 `form:"maxPrice"`
+	MinPrice         *uint64 `form:"minPrice"`
+	Rating           *int    `form:"rating"`
+	CategoryId       *uint64 `form:"categoryId"`
+	SubCategoryId    *uint64 `form:"subCategoryId"`
+	SellerCategoryId *uint64 `form:"sellerCategoryId"`
+	MerchantId       *uint64 `form:"merchantId"`
+	VoucherStatus    *string `form:"voucherStatus"`
+	PromoStatus      *string `form:"promoStatus"`
+	OrderStatus   	 *string `form:"orderStatus"`
 }
 
 func (f Filters) Offset() int {

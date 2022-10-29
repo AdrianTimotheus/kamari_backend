@@ -187,13 +187,15 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 	var dtoItem []dto.Product
 	for _, modelData := range models {
 		temp := dto.Product{
-			ID:           modelData.Id,
-			Title:        modelData.Name,
-			ThumbnailURL: modelData.ThumbnailUrl,
-			ItemSold:     modelData.UnitSold,
-			ProvinceName: cityModel.Province.Name,
-			CityName:     cityModel.Name,
-			MerchantName: merchantModel.Name,
+			ID:             modelData.Id,
+			Title:          modelData.Name,
+			ThumbnailURL:   modelData.ThumbnailUrl,
+			ItemSold:       modelData.UnitSold,
+			ProvinceName:   cityModel.Province.Name,
+			CityName:       cityModel.Name,
+			MerchantName:   merchantModel.Name,
+			Category:       &modelData.Category,
+			SellerCategory: &modelData.SellerCategory,
 		}
 		dtoItem = append(dtoItem, temp)
 	}
