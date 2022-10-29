@@ -198,6 +198,26 @@ func (h Handler) GetSellerCategories(c *gin.Context) {
 	})
 }
 
+func (h Handler) GetSellerPageCategories(c *gin.Context) {
+	res, err := helper.GetParam(c, "username", "string")
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	username := res.(string)
+
+	response, err := h.categoryService.GetSellerPageCategories(username)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"seller_categories": response,
+	})
+}
+
 func (h Handler) UpdateSellerCategory(c *gin.Context) {
 	var req dto.SellerCategoryRequest
 

@@ -29,6 +29,7 @@ type CategoryRepository interface {
 	DeleteSubCategory(subCategory *model.Subcategory) error
 	DeleteComplementaryCategory(complementary *model.Complementary) error
 	GetSellerCategories(userId uint64, params url.Values) ([]dto.GetSellerCategoriesRes, uint64, error)
+	GetSellerPageCategories(username string) ([]model.SellerCategory, error)
 	GetSellerCategory(userId uint64, sellerCategoryId uint64) (string, []dto.SellerCategoriesItemsRes, error)
 	UpdateSellerCategory(userId uint64, category model.SellerCategory) error
 	CreateSellerCategory(userId uint64, category model.SellerCategory) error
@@ -362,6 +363,17 @@ func (c categoryRepository) GetSellerCategories(userId uint64, params url.Values
 	}
 
 	return productsCountBySellerCategories, uint64((len(productsCountBySellerCategories))/limit) + 1, nil
+}
+
+func (c categoryRepository) GetSellerPageCategories(username string) ([]model.SellerCategory, error) {
+	var categories []model.SellerCategory
+	result := c.db.
+		Table("seller_categories").
+		Joins("JOIN merchants on seller_categories.merchant_id = merchants.id").
+		Joins("JOIN users on merchants.user_id = users.id").
+		Where("users.username = ?", username).
+		Find(&categories)
+	return categories, result.Error
 }
 
 func (c categoryRepository) GetSellerCategory(userId uint64, sellerCategoryId uint64) (string, []dto.SellerCategoriesItemsRes, error) {

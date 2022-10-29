@@ -24,6 +24,7 @@ type Product struct {
 	Merchant                Merchant
 	Category                Category
 	Subcategory             Subcategory
+	SellerCategory          SellerCategory
 	ProductPhotos           []ProductPhoto
 	ProductVariants         []ProductVariant
 }
