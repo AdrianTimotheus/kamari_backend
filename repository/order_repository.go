@@ -13,6 +13,8 @@ type OrderRepository interface {
 	CreateOrder(user model.User, order []model.Order, item []dto.ItemToProceed, listOfProductVariant []uint64) error
 	GetOrderItemToProcess(userId uint64) ([]model.CheckoutItem, error)
 	CountUserCheckoutItem(listOfProductVariant []uint64, userId uint64) int64
+	GetCurrentOrder(orderId uint64) (*model.Order, error)
+	UpdateCurrentOrderId(orderModel *model.Order) error
 }
 
 type orderRepository struct {
@@ -173,4 +175,26 @@ func (o orderRepository) getOrderDetails(orderId uint64) ([]model.SellerOrderDet
 	}
 
 	return orderDetails, nil
+}
+
+func (o orderRepository) GetCurrentOrder(orderId uint64) (*model.Order, error) {
+	orderModel := model.Order{
+		Id: orderId,
+	}
+	err := o.db.Joins("OrderStatus").
+		Joins("Merchant").
+		First(&orderModel).Error
+	if err != nil {
+		return nil, err
+	}
+	return &orderModel, nil
+}
+
+func (o orderRepository) UpdateCurrentOrderId(orderModel *model.Order) error {
+	fmt.Println("HEY YOOOOO:", orderModel.OrderStatusId)
+	err := o.db.Table("orders").Where("id=?", orderModel.Id).Update("order_status_id", orderModel.OrderStatusId).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
