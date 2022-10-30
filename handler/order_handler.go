@@ -2,12 +2,13 @@ package handler
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
 	"kamari.com/model"
-	"net/http"
 )
 
 func (h Handler) ProceedOrder(c *gin.Context) {
@@ -64,6 +65,37 @@ func (h Handler) GetMerchantOrders(c *gin.Context) {
 	})
 }
 
+func (h Handler) GetMerchantOrderDetail(c *gin.Context) {
+	i, err := helper.GetParam(c, "id", "uint64")
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(helper.ErrInvalidReturnType.Error(), "BAD_PARAMS"))
+		return
+	}
+	orderId := i.(uint64)
+
+	user, err := helper.GetUserContext(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, httperror.UnauthorizedError())
+		return
+	}
+
+	merchant, err := h.merchantService.GetMerchantDetail(user.Username)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	order, err := h.orderService.GetOrderDetails(orderId, merchant.Id)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"order": order,
+	})
+
+}
 func (h Handler) GetMerchantOrderSummary(c *gin.Context) {
 	user, err := helper.GetUserContext(c)
 	if err != nil {

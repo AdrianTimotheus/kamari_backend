@@ -22,13 +22,13 @@ type CheckoutProduct struct {
 }
 
 type MainVariant struct {
-	Name string `json:"name,omitempty"`
-	Item string `json:"item,omitempty"`
+	Name string `json:"name,omitempty" gorm:"column:main_variant"`
+	Item string `json:"item,omitempty" gorm:"column:main_variant_item"`
 }
 
 type SubVariant struct {
-	Name string `json:"name,omitempty"`
-	Item string `json:"item,omitempty"`
+	Name string `json:"name,omitempty" gorm:"column:sub_variant"`
+	Item string `json:"item,omitempty" gorm:"column:sub_variant_item"`
 }
 
 type SupportedCourier struct {
