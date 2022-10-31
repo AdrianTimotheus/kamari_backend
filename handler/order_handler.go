@@ -29,6 +29,36 @@ func (h Handler) ProceedOrder(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
+func (h Handler) ProceedOrderSLP(c *gin.Context) {
+	val := c.Query("s")
+
+	var req *dto.SealabsPayRes
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(httperror.BadRequestError(ErrFailedBindingValidation.Error(), "INVALID_PAYLOAD"))
+		return
+	}
+
+	if req.Status == "TXN_FAILED" {
+		_, err := h.transactionService.CancelOrder(val)
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"status": req.Status,
+		})
+		return
+	}
+
+	resp, err := h.orderService.CreateOrderSLP(val)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
 func (h Handler) GetMerchantOrders(c *gin.Context) {
 	var query struct {
 		Keyword string `form:"keyword"`

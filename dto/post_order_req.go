@@ -1,11 +1,22 @@
 package dto
 
+import "kamari.com/model"
+
 type CreateOrderRequest struct {
 	//PaymentMethod string          `json:"payment_method" binding:"required"`
 	//CardNumber    string          `json:"card_number"`
 	TransactionId uint64          `json:"transaction_id" binding:"required"`
 	Orders        []Order         `json:"orders" binding:"required"`
 	Products      []ItemToProceed `json:"products" binding:"required"`
+}
+
+type CreateOrderRequestSLP struct {
+	//PaymentMethod string          `json:"payment_method" binding:"required"`
+	//CardNumber    string          `json:"card_number"`
+	TransactionId uint64          `json:"transaction_id" binding:"required"`
+	Orders        []Order         `json:"orders" binding:"required"`
+	Products      []ItemToProceed `json:"products" binding:"required"`
+	User          model.User      `json:"user" binding:"required"`
 }
 
 type ItemToProceed struct {
@@ -22,8 +33,8 @@ type Order struct {
 	UserTotalPayment         uint64  `json:"user_total_payment" binding:"required"`
 	CourierId                uint64  `json:"courier_id" binding:"required"`
 	ShippingFee              uint64  `json:"shipping_fee" binding:"required"`
-	MerchantVoucherId        *uint64 `json:"merchant_voucher_id,omitempty"`
-	MarketplaceVoucherId     *uint64 `json:"marketplace_voucher_id,omitempty"`
+	MerchantVoucherId        *uint64 `json:"merchant_voucher_id,omitempty" gorm:"default:null"`
+	MarketplaceVoucherId     *uint64 `json:"marketplace_voucher_id,omitempty" gorm:"default:null"`
 	DstAddressId             uint64  `json:"dst_address_id" binding:"required"`
 	MerchantId               uint64  `json:"merchant_id" binding:"required"`
 	MerchantIncome           uint64  `json:"merchant_income" binding:"required"`

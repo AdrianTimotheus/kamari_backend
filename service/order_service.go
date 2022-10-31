@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"encoding/json"
 	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
@@ -17,6 +18,7 @@ import (
 type OrderService interface {
 	CreateOrder(user model.User, payload dto.CreateOrderRequest) (*dto.StatusMessageResponse, error)
 	GetMerchantOrder(merchantId uint64, keyword string, filters *helper.Filters) ([]model.SellerOrder, *helper.Metadata, error)
+	CreateOrderSLP(sign string) (*dto.StatusMessageResponse, error)
 	GetOrderDetails(orderId, merchantId uint64) (*dto.OrderHighlightResponse, error)
 	GetMerchantOrderSummary(merchantId uint64) ([]model.SellerOrder, error)
 	UpwardOrderStatus(OrderId uint64, user model.User) (*dto.StatusMessageResponse, error)
@@ -76,10 +78,79 @@ func (o orderService) CreateOrder(user model.User, payload dto.CreateOrderReques
 			Courier:                  model.Courier{},
 			User:                     model.User{},
 		}
+
 		orderModels = append(orderModels, temp)
 	}
 
 	err := o.orderRepository.CreateOrder(user, orderModels, payload.Products, listOfProductVariant)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := dto.StatusMessageResponse{Status: true}
+	return &resp, nil
+}
+
+func (o orderService) CreateOrderSLP(sign string) (*dto.StatusMessageResponse, error) {
+	redisHelperSec := helper.NewRedisClient(7)
+	keySec := redisHelperSec.GenerateKey("s", sign, "")
+	payloadSec, err := redisHelperSec.GetData(keySec)
+	if err != nil {
+		return nil, httperror.BadRequestError("Invalid Signature", "INVALID_SIGNATURE")
+	}
+
+	defer redisHelperSec.Delete(keySec)
+
+	order := new(dto.CreateOrderRequestSLP)
+	json.Unmarshal([]byte(payloadSec), order)
+
+	//verify product
+	var listOfProductVariant []uint64
+	for _, data := range order.Products {
+		listOfProductVariant = append(listOfProductVariant, data.VariantID)
+	}
+
+	numOfRecords := o.orderRepository.CountUserCheckoutItem(listOfProductVariant, order.User.Id)
+	if numOfRecords != int64(len(listOfProductVariant)) {
+		return nil, httperror.BadRequestError("Wrong Product Variant", "WRONG_PRODUCT_VARIANT")
+	}
+
+	var orderModels []model.Order
+	for i, data := range order.Orders {
+		now := time.Now().Format("2006-01-02-150405")
+
+		invoice := "INV/?/TRC-?/MRCH-?/USR-?/?"
+		invoice = strings.Replace(invoice, "?", now, 1)
+		invoice = strings.Replace(invoice, "?", strconv.Itoa(int(order.TransactionId)), 1)
+		invoice = strings.Replace(invoice, "?", strconv.Itoa(int(data.MerchantId)), 1)
+		invoice = strings.Replace(invoice, "?", strconv.Itoa(int(order.User.Id)), 1)
+		invoice = strings.Replace(invoice, "?", strconv.Itoa(i), 1)
+
+		temp := model.Order{
+			Invoice:                  invoice,
+			UserTotalPayment:         data.UserTotalPayment,
+			MerchantIncome:           data.MerchantIncome,
+			MerchantVoucherId:        data.MerchantVoucherId,
+			MarketplaceVoucherId:     data.MarketplaceVoucherId,
+			DstAddressId:             data.DstAddressId,
+			TransactionId:            order.TransactionId,
+			OrderStatusId:            1,
+			WithdrawStatus:           false,
+			MerchantId:               data.MerchantId,
+			CourierId:                data.CourierId,
+			UserId:                   order.User.Id,
+			ShippingFee:              data.ShippingFee,
+			TotalProductPrice:        data.TotalProductsPrice,
+			MerchantTotalDiscount:    data.MerchantTotalDiscount,
+			MarketplaceTotalDiscount: data.MarketPlaceTotalDiscount,
+			Transaction:              model.Transaction{},
+			Courier:                  model.Courier{},
+			User:                     model.User{},
+		}
+		orderModels = append(orderModels, temp)
+	}
+
+	err = o.orderRepository.CreateOrder(order.User, orderModels, order.Products, listOfProductVariant)
 	if err != nil {
 		return nil, err
 	}

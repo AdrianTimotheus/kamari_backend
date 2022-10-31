@@ -18,6 +18,8 @@ instanceNumber 1 : step up token
 instanceNumber 2 : refresh token
 instansceNumber 3: add bank account
 instansceNumber 4: Top Up Wallet
+instanceNumber 5: something
+instanceNumber 6: Pay SLP
 */
 func NewRedisClient(instanceNumber int) RedisHelper {
 	client := redis.NewClient(&redis.Options{

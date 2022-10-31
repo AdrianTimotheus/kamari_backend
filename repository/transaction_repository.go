@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"kamari.com/dto"
 	"kamari.com/httperror"
 	"kamari.com/model"
 	"time"
@@ -11,6 +12,8 @@ import (
 
 type TransactionRepository interface {
 	CreateTransactionPayWithWallet(transaction *model.Transaction, wallet *model.Wallet, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, walletTransaction *model.WalletTransaction, promoItems []model.ProductPromoItem, productVariantModels []model.ProductVariant) (*model.Transaction, error)
+	CreateTransactionPayWithSLP(transaction *model.Transaction, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, productPromoItems []model.ProductPromoItem, productVariantModels []model.ProductVariant) (*model.Transaction, error)
+	CancelCreateTransactionPayWithSLP(transaction *dto.CreateOrderRequestSLP, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, productPromoItems []model.ProductPromoItem, productVariantModels []model.ProductVariant) (*dto.CreateOrderRequestSLP, error)
 }
 
 type transactionRepository struct {
@@ -119,6 +122,162 @@ func (t transactionRepository) CreateTransactionPayWithWallet(transaction *model
 		if err := tx.Model(&walletPayModel).Create(&walletPayModel).Error; err != nil {
 			return httperror.InternalServerError("Internal Server Error")
 		}
+		return nil
+	})
+
+	return transaction, err
+}
+
+func (t transactionRepository) CreateTransactionPayWithSLP(transaction *model.Transaction, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, productPromoItems []model.ProductPromoItem, productVariantModels []model.ProductVariant) (*model.Transaction, error) {
+	err := t.db.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Create(&transaction).Error; err != nil {
+			return httperror.InternalServerError("Internal Server Error")
+		}
+
+		if marketplaceVoucher.ID != 0 {
+			if err := tx.Model(&marketplaceVoucher).Update("stock_left", gorm.Expr("stock_left-1")).First(&marketplaceVoucher).Error; err != nil {
+				return httperror.BadRequestError("Out of Marketplace Voucher", "OUT_OF_MARKETPLACE_VOUCHER")
+				//return err
+			}
+			if marketplaceVoucher.StockLeft < 0 {
+				return httperror.BadRequestError("Out of Marketplace Voucher", "OUT_OF_MARKETPLACE_VOUCHER")
+			}
+		}
+
+		for _, data := range merchantVoucher {
+			if data.Id != 0 {
+				if err := tx.Model(&data).Update("stock_left", gorm.Expr("stock_left-1")).First(&data).Error; err != nil {
+					return httperror.BadRequestError("Out of Merchant Voucher", "OUT_OF_MERCHANT_VOUCHER")
+					//return err
+				}
+				if data.StockLeft < 0 {
+					return httperror.BadRequestError("Out of Merchant Voucher", "OUT_OF_MERCHANT_VOUCHER")
+				}
+			}
+		}
+
+		for _, data := range productVariantModels {
+			err := tx.Model(&data).Where("product_variants.id=?", data.ID).
+				Update("stock", gorm.Expr("stock - ?", data.Stock)).Scan(&data).Error
+			if err != nil {
+				return httperror.InternalServerError("Internal Server Error")
+			}
+			if data.Stock < 0 {
+				return httperror.BadRequestError("Insufficient Product Stock", "INSUFFICIENT_PRODUCT_STOCK")
+			}
+		}
+
+		for _, data := range productPromoItems {
+			var resp model.ProductPromoItem
+			now := time.Now().Format("2006-01-02")
+			err := tx.Model(&resp).
+				Joins("ProductPromo").
+				Where("product_id=?", data.ProductId).
+				Where("start_date <= ?", now).
+				Where("end_date >= ?", now).
+				First(&resp).Error
+			if err != nil {
+				fmt.Println(err)
+				if !errors.Is(err, gorm.ErrRecordNotFound) {
+					return httperror.InternalServerError("Internal Server Error")
+				}
+			} else {
+				fmt.Println("MAX: ", resp.MaximumItem)
+				fmt.Println("taken: ", data.StockLeft)
+
+				if resp.MaximumItem >= data.StockLeft {
+					fmt.Println("MAX: ", resp.MaximumItem)
+					fmt.Println("taken: ", data.StockLeft)
+					err := tx.Model(&resp).
+						Where("id=?", resp.Id).
+						Update("stock_left", gorm.Expr("stock_left - ?", data.StockLeft)).
+						First(&resp).Error
+					if err != nil {
+						return httperror.BadRequestError("Out of product promotion. Recalculate Total Payment", "BAD_REQUEST_OUT_OF_PRODUCT_PROMOTION")
+					}
+				}
+			}
+
+		}
+
+		return nil
+	})
+
+	return transaction, err
+}
+
+func (t transactionRepository) CancelCreateTransactionPayWithSLP(transaction *dto.CreateOrderRequestSLP, marketplaceVoucher *model.MarketplaceVoucher, merchantVoucher []model.MerchantVoucher, productPromoItems []model.ProductPromoItem, productVariantModels []model.ProductVariant) (*dto.CreateOrderRequestSLP, error) {
+
+	err := t.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(model.Transaction{}).
+			Where("id", transaction.TransactionId).
+			Update("is_paid", false).
+			Error
+		if err != nil {
+			return err
+		}
+
+		if marketplaceVoucher.ID != 0 {
+			if err := tx.Model(&marketplaceVoucher).Update("stock_left", gorm.Expr("stock_left+1")).First(&marketplaceVoucher).Error; err != nil {
+				return httperror.BadRequestError("Out of Marketplace Voucher", "OUT_OF_MARKETPLACE_VOUCHER")
+				//return err
+			}
+		}
+
+		for _, data := range merchantVoucher {
+			if data.Id != 0 {
+				if err := tx.Model(&data).Update("stock_left", gorm.Expr("stock_left+1")).First(&data).Error; err != nil {
+					return httperror.BadRequestError("Out of Merchant Voucher", "OUT_OF_MERCHANT_VOUCHER")
+					//return err
+				}
+				if data.StockLeft < 0 {
+					return httperror.BadRequestError("Out of Merchant Voucher", "OUT_OF_MERCHANT_VOUCHER")
+				}
+			}
+		}
+
+		for _, data := range productVariantModels {
+			err := tx.Model(&data).Where("product_variants.id=?", data.ID).
+				Update("stock", gorm.Expr("stock + ?", data.Stock)).Scan(&data).Error
+			if err != nil {
+				return httperror.InternalServerError("Internal Server Error")
+			}
+		}
+
+		for _, data := range productPromoItems {
+			var resp model.ProductPromoItem
+			now := time.Now().Format("2006-01-02")
+			err := tx.Model(&resp).
+				Joins("ProductPromo").
+				Where("product_id=?", data.ProductId).
+				Where("start_date <= ?", now).
+				Where("end_date >= ?", now).
+				First(&resp).Error
+			if err != nil {
+				fmt.Println(err)
+				if !errors.Is(err, gorm.ErrRecordNotFound) {
+					return httperror.InternalServerError("Internal Server Error")
+				}
+			} else {
+				fmt.Println("MAX: ", resp.MaximumItem)
+				fmt.Println("taken: ", data.StockLeft)
+
+				if resp.MaximumItem >= data.StockLeft {
+					fmt.Println("MAX: ", resp.MaximumItem)
+					fmt.Println("taken: ", data.StockLeft)
+					err := tx.Model(&resp).
+						Where("id=?", resp.Id).
+						Update("stock_left", gorm.Expr("stock_left + ?", data.StockLeft)).
+						First(&resp).Error
+					if err != nil {
+						return httperror.BadRequestError("Out of product promotion. Recalculate Total Payment", "BAD_REQUEST_OUT_OF_PRODUCT_PROMOTION")
+					}
+				}
+			}
+
+		}
+
 		return nil
 	})
 
