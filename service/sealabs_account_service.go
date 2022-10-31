@@ -24,6 +24,7 @@ type SealabsAccountService interface {
 	PostSeaLabsPay(req string) (*string, error)
 	TopUpWallet(payload *dto.PayWithSLPReq, user model.User) (*dto.SLPPayRes, error)
 	generateCallBackUrl(sign string, endPoint string) string
+	PayOrder(payload *dto.TransactionPaySLPRequest, user model.User) (*dto.SLPPayRes, string, error)
 }
 
 type sealabsAccountService struct {
@@ -229,9 +230,44 @@ func (s sealabsAccountService) TopUpWallet(payload *dto.PayWithSLPReq, user mode
 	return r, err
 }
 
+func (s sealabsAccountService) PayOrder(payload *dto.TransactionPaySLPRequest, user model.User) (*dto.SLPPayRes, string, error) {
+	reqJson, _ := json.Marshal(payload)
+
+	const signatureLen = 10
+	callBackSignature := helper.RandomString(signatureLen)
+	callBackUrl := s.generateCallBackUrl(callBackSignature, "checkout/proceed/slp")
+	redirectUrl := "http://localhost:3000/payment"
+
+	postReq := dto.SLPPayReq{
+		CardNumber:   payload.CardNumber,
+		Amount:       int(payload.Amount),
+		MerchantCode: config.Config.SeaLabsPayConfig.MerchantCode,
+		RedirectUrl:  redirectUrl,
+		CallbackUrl:  callBackUrl,
+	}
+	helper.CreateSignature(config.Config.SeaLabsPayConfig.ApiKey, &postReq)
+
+	res, err := s.PostSeaLabsPay(helper.Encode(&postReq))
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	r := new(dto.SLPPayRes)
+
+	redisHelper := helper.NewRedisClient(6)
+	key := redisHelper.GenerateKey("s", callBackSignature, "")
+
+	err = redisHelper.Set(key, reqJson)
+
+	r = r.Create(*res)
+
+	return r, callBackSignature, err
+}
+
 func (s sealabsAccountService) generateCallBackUrl(sign string, endPoint string) string {
 	//Change when deployed
-	baseUrl := "https://f88c-2404-8000-1000-4633-56a6-59a2-1518-d987.ap.ngrok.io/api/" + endPoint
+	baseUrl := "https://1064-143-92-127-34.ap.ngrok.io/api/" + endPoint
 	callBackUrl := fmt.Sprintf("%s?s=%s", baseUrl, sign)
 	return callBackUrl
 }

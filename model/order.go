@@ -8,8 +8,8 @@ type Order struct {
 	Invoice                  string
 	UserTotalPayment         uint64
 	MerchantIncome           uint64
-	MerchantVoucherId        *uint64
-	MarketplaceVoucherId     *uint64
+	MerchantVoucherId        *uint64 `gorm:"default:null"`
+	MarketplaceVoucherId     *uint64 `gorm:"default:null"`
 	DstAddressId             uint64
 	TransactionId            uint64
 	OrderStatusId            uint64
