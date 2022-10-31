@@ -127,12 +127,6 @@ func (p productService) GetProducts(keyword string, filters *helper.Filters) ([]
 		}
 	}
 
-	if filters.MinPrice != nil {
-		productResponse = helper.FilterProductPrice(productResponse, "minPrice", *filters.MinPrice)
-	}
-	if filters.MaxPrice != nil {
-		productResponse = helper.FilterProductPrice(productResponse, "maxPrice", *filters.MaxPrice)
-	}
 	if filters.Rating != nil {
 		productResponse = helper.FilterProductByRating(productResponse, *filters.Rating)
 	}

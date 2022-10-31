@@ -85,14 +85,17 @@ func (p productRepository) GetAllProducts(keyword string, filters *helper.Filter
 			"products.category_id",
 			"products.availability",
 			"products.merchant_id",
+			`min("pv"."price") AS price`,
 			"users.username AS seller",
 		).
-		Joins("Merchant").
 		Joins("Category").
-		Joins("SellerCategory").
-		Joins(`JOIN users ON users.id = "Merchant"."user_id"`).
-		Joins(`LEFT JOIN user_addresses ON user_addresses.id = "Merchant"."user_address_id"`).
+		Joins(`LEFT JOIN merchants ON "products"."merchant_id" = "merchants"."id"`).
+		//Joins(`LEFT JOIN categories ON "products"."category_id" = "categories"."id"`).
+		Joins(`LEFT JOIN seller_categories ON "products"."seller_category_id" = "seller_categories"."id"`).
+		Joins(`LEFT JOIN users ON users.id = "merchants"."user_id"`).
+		Joins(`LEFT JOIN user_addresses ON user_addresses.id = "merchants"."user_address_id"`).
 		Joins(`LEFT JOIN cities ON cities.id = user_addresses.city_id`).
+		Joins(`LEFT JOIN product_variants pv ON pv.product_id = products.id`).
 		Where(`to_tsvector('simple', "products"."name") @@ plainto_tsquery('simple', ?) OR ? = ''`, keyword, keyword)
 
 	if filters.MerchantId != nil {
@@ -104,6 +107,15 @@ func (p productRepository) GetAllProducts(keyword string, filters *helper.Filter
 	if filters.SellerCategoryId != nil {
 		res = res.Where(`"products"."seller_category_id" = ?`, *filters.SellerCategoryId)
 	}
+
+	if filters.MinPrice != nil {
+		res = res.Where(`"pv"."price" >= ?`, *filters.MinPrice)
+	}
+
+	if filters.MaxPrice != nil {
+		res = res.Where(`"pv"."price" <= ?`, *filters.MaxPrice)
+	}
+
 	switch filters.SortBy {
 	case "recommended":
 		res = res.Order(`"products"."view_count" DESC, "products"."favourite_count" DESC`)
@@ -114,6 +126,12 @@ func (p productRepository) GetAllProducts(keyword string, filters *helper.Filter
 	default:
 		res = res.Order(`"products"."id" DESC`)
 	}
+
+	res = res.
+		Group(`"products"."id"`).
+		Group(`"cities"."name"`).
+		Group(`"users"."username"`).
+		Group("Category.id")
 
 	if err := res.Find(&products).Count(&count).Error; err != nil {
 		return nil, nil, err
@@ -126,15 +144,6 @@ func (p productRepository) GetAllProducts(keyword string, filters *helper.Filter
 	if res.Error != nil {
 		return nil, nil, res.Error
 	}
-
-	//err := p.db.
-	//	Table("products").
-	//	Select("COUNT(*) OVER() AS COUNT").
-	//	Limit(1).
-	//	Scan(&count).Error
-	//if err != nil {
-	//	return nil, nil, res.Error
-	//}
 
 	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
 
