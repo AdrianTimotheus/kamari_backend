@@ -19,10 +19,12 @@ import (
 type OrderService interface {
 	CreateOrder(user model.User, payload dto.CreateOrderRequest) (*dto.StatusMessageResponse, error)
 	GetMerchantOrder(merchantId uint64, keyword string, filters *helper.Filters) ([]model.SellerOrder, *helper.Metadata, error)
+	GetUserOrders(userId uint64, keyword string, filters *helper.Filters) ([]dto.UserOrderRes, *helper.Metadata, error)
 	CreateOrderSLP(sign string) (*dto.StatusMessageResponse, error)
 	GetOrderDetails(orderId, merchantId uint64) (*dto.OrderHighlightResponse, error)
 	GetMerchantOrderSummary(merchantId uint64) ([]model.SellerOrder, error)
 	UpwardOrderStatus(OrderId uint64, user model.User) (*dto.StatusMessageResponse, error)
+	CompleteOrder(orderId uint64, user *model.User) error
 }
 
 type orderService struct {
@@ -172,6 +174,39 @@ func (o orderService) GetMerchantOrder(merchantId uint64, keyword string, filter
 	return orders, metadata, nil
 }
 
+func (o orderService) GetUserOrders(userId uint64, keyword string, filters *helper.Filters) ([]dto.UserOrderRes, *helper.Metadata, error) {
+	filters.Limit = helper.ReadInt(filters.Limit, 30)
+	filters.Page = helper.ReadInt(filters.Page, 1)
+
+	orders, metadata, err := o.orderRepository.GetUserOrders(userId, keyword, filters)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var dtoRes []dto.UserOrderRes
+	for _, order := range orders {
+		dtoRes = append(dtoRes, dto.UserOrderRes{
+			Id:               order.Id,
+			Invoice:          order.Invoice,
+			UserTotalPayment: order.UserTotalPayment,
+			TransactionId:    order.TransactionId,
+			Status:           order.Status,
+			Merchant: dto.OrderMerchantRes{
+				Id:               order.MerchantId,
+				Name:             order.MerchantName,
+				Description:      order.MerchantDescription,
+				PicUrl:           order.MerchantPicUrl,
+				MerchantUsername: order.MerchantUsername,
+			},
+			CourierName:    order.CourierName,
+			OrderDetail:    order.OrderDetail,
+			OrderCreatedAt: order.OrderCreatedAt,
+		})
+	}
+
+	return dtoRes, metadata, nil
+}
+
 func (o orderService) GetOrderDetails(orderId, merchantId uint64) (*dto.OrderHighlightResponse, error) {
 	order, err := o.orderRepository.GetOrderDetail(orderId, merchantId)
 	if err != nil {
@@ -233,4 +268,26 @@ func (o orderService) UpwardOrderStatus(orderId uint64, user model.User) (*dto.S
 		}
 	}
 	return &resp, nil
+}
+
+func (o orderService) CompleteOrder(orderId uint64, user *model.User) error {
+	order, err := o.orderRepository.GetCurrentOrder(orderId)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return httperror.BadRequestError("no row", "NO_ROWS")
+		default:
+			return httperror.InternalServerError(err.Error())
+		}
+	}
+	if order.UserId != user.Id {
+		return httperror.ForbiddenError()
+	}
+	if order.OrderStatusId != 4 {
+		return httperror.BadRequestError("order status is not valid", "INVALID_ORDER_STATUS")
+	}
+
+	order.OrderStatusId = 6
+	err = o.orderRepository.UpdateCurrentOrderId(order)
+	return err
 }
