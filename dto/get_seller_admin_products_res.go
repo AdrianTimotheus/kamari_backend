@@ -3,9 +3,7 @@ package dto
 import "kamari.com/model"
 
 type GetSellerAdminProductsResponse struct {
-	Page      int                  `json:"page"`
-	TotalPage int                  `json:"total_page"`
-	Products  []SellerAdminProduct `json:"products"`
+	Products []SellerAdminProduct `json:"products"`
 }
 
 type SellerAdminProduct struct {

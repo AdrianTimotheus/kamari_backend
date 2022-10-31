@@ -14,7 +14,7 @@ type ProductRepository interface {
 	GetMerchantProduct(merchantId uint64) ([]model.Product, error)
 	GetAllProducts(keyword string, filters *helper.Filters) ([]model.ProductList, *helper.Metadata, error)
 	GetMerchantProducts(MerchantID uint64, pageOffset int, orderBy string, Limit int, sellerCategoryId int, marketplaceCategoryId int) ([]model.Product, error)
-	GetSellerAdminProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int, sellerCategoryId int, marketplaceCategoryId int) ([]model.Product, error)
+	GetSellerAdminProducts(merchantID uint64, keyword string, filters *helper.Filters) ([]model.Product, *helper.Metadata, error)
 	GetCountMerchantProduct(username string) (int64, error)
 	GetProductReviewScore(productID uint64) (count int, score int, err error)
 	GetProductReviewScoreDecimal(productId uint64) (int, float32, error)
@@ -225,62 +225,43 @@ func (p productRepository) GetMerchantProducts(merchantID uint64, pageOffset int
 	return products, nil
 }
 
-func (p productRepository) GetSellerAdminProducts(merchantID uint64, pageOffset int, orderBy string, keyword string, Limit int, sellerCategoryId int, marketplaceCategoryId int) ([]model.Product, error) {
-	fmt.Println(pageOffset)
-	var products []model.Product
-	k := fmt.Sprintf("%%%s%%", keyword)
-	var err error
-	err = nil
-	if marketplaceCategoryId != 0 {
-		err = p.db.
-			Preload("Merchant").
-			Preload("Merchant.User").
-			Preload("Category").
-			Preload("Subcategory").
-			Preload("ProductPhotos").
-			Preload("ProductVariants").
-			Where("merchant_id=?", merchantID).
-			Where("category_id", marketplaceCategoryId).
-			Where("name ILIKE ?", k).
-			Offset(pageOffset).
-			Limit(Limit).
-			Order(orderBy).
-			Find(&products).Error
-	} else if sellerCategoryId != 0 {
-		err = p.db.
-			Preload("Merchant").
-			Preload("Merchant.User").
-			Preload("Category").
-			Preload("Subcategory").
-			Preload("ProductPhotos").
-			Preload("ProductVariants").
-			Where("merchant_id=?", merchantID).
-			Where("seller_category_id=?", sellerCategoryId).
-			Where("name ILIKE ?", k).
-			Offset(pageOffset).
-			Limit(Limit).
-			Order(orderBy).
-			Find(&products).Error
-	} else {
-		err = p.db.
-			Preload("Merchant").
-			Preload("Merchant.User").
-			Preload("Category").
-			Preload("Subcategory").
-			Preload("ProductPhotos").
-			Preload("ProductVariants").
-			Where("merchant_id=?", merchantID).
-			Where("name ILIKE ?", k).
-			Offset(pageOffset).
-			Limit(Limit).
-			Order(orderBy).
-			Find(&products).Error
-	}
+func (p productRepository) GetSellerAdminProducts(merchantID uint64, keyword string, filters *helper.Filters) ([]model.Product, *helper.Metadata, error) {
+	var (
+		products []model.Product
+		count    int64
+	)
 
-	if err != nil {
-		return nil, err
+	k := fmt.Sprintf("%%%s%%", keyword)
+	res := p.db.
+		Preload("Merchant").
+		Preload("Merchant.User").
+		Preload("Category").
+		Preload("Subcategory").
+		Preload("ProductPhotos").
+		Preload("ProductVariants").
+		Where("merchant_id=?", merchantID).
+		Where("name ILIKE ?", k)
+
+	if filters.CategoryId != nil {
+		res = res.
+			Where("category_id", *filters.CategoryId)
+	} else if filters.SellerCategoryId != nil {
+		res = res.
+			Where("seller_category_id=?", *filters.SellerCategoryId)
 	}
-	return products, nil
+	if err := res.Find(&products).Count(&count).Error; err != nil {
+		return nil, nil, err
+	}
+	res = res.
+		Limit(filters.Limit).
+		Offset(filters.Offset()).
+		Find(&products)
+	if res.Error != nil {
+		return nil, nil, res.Error
+	}
+	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
+	return products, &metadata, nil
+
 }
 
 //func (p productRepository) GetCountMerchantProductVariants(username string) (int64, error) {
