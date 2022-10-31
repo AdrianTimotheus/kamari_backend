@@ -268,7 +268,7 @@ func (s sealabsAccountService) PayOrder(payload *dto.TransactionPaySLPRequest, u
 
 func (s sealabsAccountService) generateCallBackUrl(sign string, endPoint string) string {
 	//Change when deployed
-	baseUrl := "https://1064-143-92-127-34.ap.ngrok.io/api/" + endPoint
+	baseUrl := "http://api.kamarioddspace.com/api/" + endPoint
 	callBackUrl := fmt.Sprintf("%s?s=%s", baseUrl, sign)
 	return callBackUrl
 }
