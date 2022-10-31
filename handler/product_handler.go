@@ -124,7 +124,7 @@ func (h Handler) EditProduct(c *gin.Context) {
 func (h Handler) DeleteProduct(c *gin.Context) {
 	userVal, _ := c.Get("user")
 	user := userVal.(model.User)
-	id, err := helper.GetParam(c, "id", "int")
+	id, err := helper.GetParam(c, "id", "uint64")
 	if err != nil {
 		_ = c.Error(httperror.BadRequestError(helper.ErrInvalidReturnType.Error(), "BAD_PARAMS"))
 		return

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"kamari.com/dto"
 	"kamari.com/httperror"
@@ -85,10 +86,12 @@ func (c cartRepository) GetCartItems(userId uint64) ([]dto.CartItemRaw, error) {
 		"merchants.pic_url as merchant_pic_url, \n"+
 		"product_promos.start_date as start_date, \n"+
 		"product_promos.end_date as end_date, \n"+
-		"product_promo_items.stock_left as stock_left, \n"+
+		"product_variants.stock as stock_left, \n"+
 		"product_promo_items.maximum_item as maximum_item, \n"+
 		"product_promo_items.promo_type_id as promo_type_id, \n"+
-		"product_promo_items.discount_amount as discount_amount	 \n"+
+		"product_promo_items.discount_amount as discount_amount,	 \n"+
+		"products.minimum_order as minimum_order, \n"+
+		"products.maximum_order as maximum_order \n"+
 		"from carts inner join product_variants on carts.variant_id = product_variants.id \n"+
 		"inner join products on products.id = product_variants.product_id  \n"+
 		"inner join merchants on merchants.id = products.merchant_id \n"+
@@ -116,6 +119,14 @@ func (c cartRepository) CreateCartItem(userId uint64, req dto.AddCartItemRequest
 	var exists bool
 	//var cartItem model.CartItem
 	var err error
+	var productVariant model.ProductVariant
+
+	c.db.Table("product_variants").Where("id = ?", req.VariantId).First(&productVariant)
+	fmt.Println(productVariant.Stock)
+	fmt.Println(req.Quantity)
+	if uint64(productVariant.Stock) < req.Quantity {
+		return httperror.BadRequestError("Quantity exceeds stock", "QUANTITY_EXCEEDS_STOCK")
+	}
 
 	c.db.Table("carts").
 		Select("count(*) > 0").

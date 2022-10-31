@@ -3,14 +3,15 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"kamari.com/config"
 	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
 	"kamari.com/model"
 	"kamari.com/repository"
-	"net/http"
-	"strings"
 )
 
 type SealabsAccountService interface {
@@ -123,7 +124,7 @@ func (s sealabsAccountService) VerifySeaLabsAccount(req *dto.SealabsAccountReque
 	const signatureLen = 10
 	callBackSignature := helper.RandomString(signatureLen)
 	callBackUrl := s.generateCallBackUrl(callBackSignature, "users/sealabspay/validate")
-	redirectUrl := "http://localhost:3000/payment"
+	redirectUrl := "http://kamarioddspace.com/payment"
 
 	postReq := dto.SLPPayReq{
 		CardNumber:   req.CardNumber,
@@ -201,7 +202,7 @@ func (s sealabsAccountService) TopUpWallet(payload *dto.PayWithSLPReq, user mode
 	const signatureLen = 10
 	callBackSignature := helper.RandomString(signatureLen)
 	callBackUrl := s.generateCallBackUrl(callBackSignature, "wallets/topup")
-	redirectUrl := "http://localhost:3000/wallet"
+	redirectUrl := "http://kamarioddspace.com/wallet"
 
 	postReq := dto.SLPPayReq{
 		CardNumber:   payload.CardNumber,
@@ -236,7 +237,7 @@ func (s sealabsAccountService) PayOrder(payload *dto.TransactionPaySLPRequest, u
 	const signatureLen = 10
 	callBackSignature := helper.RandomString(signatureLen)
 	callBackUrl := s.generateCallBackUrl(callBackSignature, "checkout/proceed/slp")
-	redirectUrl := "http://localhost:3000/payment"
+	redirectUrl := "http://kamarioddspace.com/payment"
 
 	postReq := dto.SLPPayReq{
 		CardNumber:   payload.CardNumber,
@@ -267,7 +268,7 @@ func (s sealabsAccountService) PayOrder(payload *dto.TransactionPaySLPRequest, u
 
 func (s sealabsAccountService) generateCallBackUrl(sign string, endPoint string) string {
 	//Change when deployed
-	baseUrl := "https://1064-143-92-127-34.ap.ngrok.io/api/" + endPoint
+	baseUrl := "http://api.kamarioddspace.com/api/" + endPoint
 	callBackUrl := fmt.Sprintf("%s?s=%s", baseUrl, sign)
 	return callBackUrl
 }
