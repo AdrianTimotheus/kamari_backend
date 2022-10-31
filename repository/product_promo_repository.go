@@ -19,6 +19,7 @@ type ProductPromoRepository interface {
 	IsRemovable(promoId uint64) (bool, error)
 	DeletePromoItem(itemId uint64) error
 	IsValidPromoItem(merchantId, promoId, promoItemId uint64) (bool, error)
+	CronDeleteExpiredPromotion() ([]*model.ProductPromo, int, error)
 }
 
 type productPromoRepository struct {
@@ -84,13 +85,15 @@ func (p productPromoRepository) GetProductPromos(merchantId uint64, keyword stri
 		case "ongoing":
 			res = res.
 				Where("start_date <= ?", now).
-				Where("end_date >= ?", now)
+				Where("end_date >= ?", now).
+				Where("deleted_at IS NULL")
 		case "willCome":
 			res = res.
-				Where("start_date > ?", now)
+				Where("start_date > ?", now).
+				Where("deleted_at IS NULL")
 		case "hasEnded":
 			res = res.
-				Where("end_date < ?", now)
+				Where("end_date < ? OR deleted_at IS NOT NULL", now)
 		}
 	}
 
@@ -300,7 +303,7 @@ func (p productPromoRepository) getPromoItems(promoId uint64) ([]model.ProductPr
 	var promoItems []model.ProductPromoItem
 
 	err := p.db.
-		Where("promo_id = ?", promoId).
+		Where("product_promo_id = ?", promoId).
 		Find(&promoItems).Error
 	if err != nil {
 		return nil, err
@@ -325,4 +328,20 @@ func (productPromoRepository) updateMerchantPromoItems(promoItems []model.Produc
 	}
 
 	return nil
+}
+
+func (p productPromoRepository) CronDeleteExpiredPromotion() ([]*model.ProductPromo, int, error) {
+	var promos []*model.ProductPromo
+	result := p.db.
+		Where("end_date < now()").
+		Find(&promos)
+
+	for _, promo := range promos {
+		err := p.EndPromoTransaction(promo.Id)
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
+	return promos, len(promos), result.Error
 }

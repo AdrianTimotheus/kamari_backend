@@ -9,6 +9,7 @@ import (
 	"kamari.com/httperror"
 	"kamari.com/model"
 	"kamari.com/repository"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -122,6 +123,10 @@ func (o orderService) GetMerchantOrderSummary(merchantId uint64) ([]model.Seller
 	return orders, nil
 }
 
+func setAtScriptUpdateDelivered(orderId uint64) error {
+	return exec.Command("bash", "-c", fmt.Sprintf("go run scripts/at/update_order_status/main.go %d | at now + 10 min", orderId)).Run()
+}
+
 func (o orderService) UpwardOrderStatus(orderId uint64, user model.User) (*dto.StatusMessageResponse, error) {
 	orderModel, err := o.orderRepository.GetCurrentOrder(orderId)
 	if err != nil {
@@ -144,11 +149,17 @@ func (o orderService) UpwardOrderStatus(orderId uint64, user model.User) (*dto.S
 	default:
 		return &resp, httperror.BadRequestError("Maximum Status Reached", "MAX_STATUS_REACHED")
 	}
-	fmt.Println("HERE:", orderModel.OrderStatusId)
 	err = o.orderRepository.UpdateCurrentOrderId(orderModel)
 	if err != nil {
 		return nil, err
 	}
 	resp.Status = true
+
+	if orderModel.OrderStatusId == 3 {
+		err := setAtScriptUpdateDelivered(orderId)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &resp, nil
 }
