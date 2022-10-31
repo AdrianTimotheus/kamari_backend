@@ -77,9 +77,7 @@ func (a addressRepository) AddNewAddress(address model.Address) (*model.Address,
 		Find(&exists).Error
 
 	if !exists {
-		address.IsDefault = true
-	} else {
-		address.IsDefault = false
+		*address.IsDefault = true
 	}
 
 	err = a.db.Table("user_addresses").Create(&address).Scan(&userAddress).Error

@@ -11,5 +11,5 @@ type Address struct {
 	Phone         string `json:"phone"`
 	CityId        uint64 `json:"city_id"`
 	DetailAddress string `json:"detail_address"`
-	IsDefault     bool   `json:"is_default"`
+	IsDefault     *bool  `json:"is_default"`
 }

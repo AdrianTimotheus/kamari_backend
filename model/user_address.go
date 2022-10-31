@@ -13,7 +13,7 @@ type UserAddress struct {
 	CityId        uint64 `json:"city_id"`
 	City          City   `json:"city,omitempty"`
 	DetailAddress string `json:"detail_address"`
-	IsDefault     bool   `json:"is_default"`
+	IsDefault     bool   `json:"is_default" gorm:"column:is_default"`
 }
 
 func (u UserAddress) TableName() string {

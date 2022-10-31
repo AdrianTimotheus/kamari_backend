@@ -38,6 +38,8 @@ func (a addressService) GetAddress(userId uint64) ([]model.Address, error) {
 }
 
 func (a addressService) EditAddress(userId uint64, req dto.EditAddressReq) (*model.Address, error) {
+	isDefault := false
+
 	address := model.Address{
 		Id:            req.Id,
 		Title:         req.Title,
@@ -45,7 +47,7 @@ func (a addressService) EditAddress(userId uint64, req dto.EditAddressReq) (*mod
 		Phone:         req.Phone,
 		CityId:        req.CityId,
 		DetailAddress: req.DetailAddress,
-		IsDefault:     false,
+		IsDefault:     &(isDefault),
 	}
 	response, err := a.addressRepository.EditAddress(userId, address)
 	if err != nil {
@@ -55,6 +57,7 @@ func (a addressService) EditAddress(userId uint64, req dto.EditAddressReq) (*mod
 }
 
 func (a addressService) AddNewAddress(userId uint64, req dto.AddNewAddressRequest) (*model.Address, error) {
+	isDefault := false
 	address := model.Address{
 		UserId:        userId,
 		Title:         req.Title,
@@ -62,7 +65,7 @@ func (a addressService) AddNewAddress(userId uint64, req dto.AddNewAddressReques
 		Phone:         req.Phone,
 		CityId:        req.CityId,
 		DetailAddress: req.DetailAddress,
-		IsDefault:     false,
+		IsDefault:     &isDefault,
 	}
 	response, err := a.addressRepository.AddNewAddress(address)
 	if err != nil {
