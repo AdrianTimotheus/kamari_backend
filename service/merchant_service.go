@@ -77,7 +77,7 @@ func (m merchantService) GetMerchantDetail(username string) (*dto.MerchantDetail
 		Name:              md.Name,
 		Username:          md.User.Username,
 		Description:       md.Description,
-		ProfilePicture:    md.User.PicUrl,
+		ProfilePicture:    md.PicUrl,
 		ShopLocation:      ml.Name,
 		FollowerCount:     mf,
 		ProductCount:      uint64(len(mp)),
