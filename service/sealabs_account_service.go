@@ -124,7 +124,7 @@ func (s sealabsAccountService) VerifySeaLabsAccount(req *dto.SealabsAccountReque
 	const signatureLen = 10
 	callBackSignature := helper.RandomString(signatureLen)
 	callBackUrl := s.generateCallBackUrl(callBackSignature, "users/sealabspay/validate")
-	redirectUrl := "http://localhost:3000/payment"
+	redirectUrl := "http://kamarioddspace.com/payment"
 
 	postReq := dto.SLPPayReq{
 		CardNumber:   req.CardNumber,
@@ -202,7 +202,7 @@ func (s sealabsAccountService) TopUpWallet(payload *dto.PayWithSLPReq, user mode
 	const signatureLen = 10
 	callBackSignature := helper.RandomString(signatureLen)
 	callBackUrl := s.generateCallBackUrl(callBackSignature, "wallets/topup")
-	redirectUrl := "http://localhost:3000/wallet"
+	redirectUrl := "http://kamarioddspace.com/wallet"
 
 	postReq := dto.SLPPayReq{
 		CardNumber:   payload.CardNumber,
@@ -237,7 +237,7 @@ func (s sealabsAccountService) PayOrder(payload *dto.TransactionPaySLPRequest, u
 	const signatureLen = 10
 	callBackSignature := helper.RandomString(signatureLen)
 	callBackUrl := s.generateCallBackUrl(callBackSignature, "checkout/proceed/slp")
-	redirectUrl := "http://localhost:3000/payment"
+	redirectUrl := "http://kamarioddspace.com/payment"
 
 	postReq := dto.SLPPayReq{
 		CardNumber:   payload.CardNumber,
