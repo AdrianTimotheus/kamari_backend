@@ -21,6 +21,7 @@ type OrderRepository interface {
 	CountUserCheckoutItem(listOfProductVariant []uint64, userId uint64) int64
 	GetCurrentOrder(orderId uint64) (*model.Order, error)
 	UpdateCurrentOrderId(orderModel *model.Order) error
+	CronUpdateStatusFromOnDeliveryToDelivered(orderId int) error
 }
 
 type orderRepository struct {
@@ -373,10 +374,17 @@ func (o orderRepository) GetCurrentOrder(orderId uint64) (*model.Order, error) {
 }
 
 func (o orderRepository) UpdateCurrentOrderId(orderModel *model.Order) error {
-	fmt.Println("HEY YOOOOO:", orderModel.OrderStatusId)
 	err := o.db.Table("orders").Where("id=?", orderModel.Id).Update("order_status_id", orderModel.OrderStatusId).Error
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (o orderRepository) CronUpdateStatusFromOnDeliveryToDelivered(orderId int) error {
+	return o.db.
+		Table("orders").
+		Where("id = ?", orderId).
+		Update("order_status_id", 4).
+		Error
 }
