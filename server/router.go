@@ -177,6 +177,7 @@ func NewRouter(c RouterConfig) *gin.Engine {
 		api.GET("/sellers/categories/available-products", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetAvailableProducts, middleware.ErrorHandler)
 		api.POST("/sellers/categories/:id/items", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.AddProductsToSellerCategory, middleware.ErrorHandler)
 		api.DELETE("/sellers/categories/items", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.RemoveProductFromSellerCategory, middleware.ErrorHandler)
+		api.DELETE("/sellers/categories/items/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.RemoveSpecificProductFromSellerCategory, middleware.ErrorHandler)
 		api.GET("/sellers/orders", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetMerchantOrders, middleware.ErrorHandler)
 		api.GET("/sellers/orders/:id", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetMerchantOrderDetail, middleware.ErrorHandler)
 		api.GET("/sellers/orders/summary", middleware.AuthorizeJWT, middleware.AuthorizeSeller, h.GetMerchantOrderSummary, middleware.ErrorHandler)
