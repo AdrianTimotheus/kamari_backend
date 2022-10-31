@@ -86,7 +86,7 @@ func (c cartRepository) GetCartItems(userId uint64) ([]dto.CartItemRaw, error) {
 		"merchants.pic_url as merchant_pic_url, \n"+
 		"product_promos.start_date as start_date, \n"+
 		"product_promos.end_date as end_date, \n"+
-		"product_promo_items.stock_left as stock_left, \n"+
+		"product_variants.stock as stock_left, \n"+
 		"product_promo_items.maximum_item as maximum_item, \n"+
 		"product_promo_items.promo_type_id as promo_type_id, \n"+
 		"product_promo_items.discount_amount as discount_amount,	 \n"+
