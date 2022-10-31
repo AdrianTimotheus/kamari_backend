@@ -10,4 +10,6 @@ type SellerOrderDetail struct {
 	SubVariant      string `json:"sub_variant"`
 	SubVariantItem  string `json:"sub_variant_item"`
 	Quantity        uint64 `json:"quantity"`
+	RealPrice       uint64 `json:"real_price"`
+	Price           uint64 `json:"price"`
 }

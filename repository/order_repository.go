@@ -16,6 +16,7 @@ type OrderRepository interface {
 	GetMerchantOrders(merchantId uint64, keyword string, filters *helper.Filters) ([]model.SellerOrder, *helper.Metadata, error)
 	GetOrderDetail(orderId, merchantId uint64) (*dto.OrderHighlightResponse, error)
 	GetMerchantOrderSummary(merchantId uint64) ([]model.SellerOrder, error)
+	GetUserOrders(userId uint64, keyword string, filters *helper.Filters) ([]model.UserOrder, *helper.Metadata, error)
 	CreateOrder(user model.User, order []model.Order, item []dto.ItemToProceed, listOfProductVariant []uint64) error
 	GetOrderItemToProcess(userId uint64) ([]model.CheckoutItem, error)
 	CountUserCheckoutItem(listOfProductVariant []uint64, userId uint64) int64
@@ -120,6 +121,63 @@ func (o orderRepository) GetMerchantOrderSummary(merchantId uint64) ([]model.Sel
 		return nil, res.Error
 	}
 	return orders, nil
+}
+
+func (o orderRepository) GetUserOrders(userId uint64, keyword string, filters *helper.Filters) ([]model.UserOrder, *helper.Metadata, error) {
+	var (
+		orders []model.UserOrder
+		count  int64
+	)
+	invoiceSearch := fmt.Sprintf("%%%s%%", keyword)
+	res := o.db.
+		Table("orders").
+		Select(
+			`"orders"."id" AS id`,
+			`"orders"."invoice" AS invoice`,
+			`"orders"."user_total_payment" AS user_total_payment`,
+			`"orders"."transaction_id" AS transaction_id`,
+			`"orders"."merchant_id" AS merchant_id`,
+			`"c"."name" AS courier_name`,
+			`"os"."status" AS status`,
+			`"m"."name" AS merchant_name`,
+			`"m"."description" AS merchant_description`,
+			`"m"."pic_url" AS merchant_pic_url`,
+			`"mu"."username" AS merchant_username`,
+		).
+		Joins(`LEFT JOIN order_statuses os on orders.order_status_id = os.id`).
+		Joins(`LEFT JOIN merchants m on orders.merchant_id = m.id`).
+		Joins(`LEFT JOIN users mu on m.user_id = mu.id`).
+		Joins(`LEFT JOIN couriers c on orders.courier_id = c.id`).
+		Where(`"orders"."user_id" = ?`, userId).
+		Where(`"orders"."invoice" ILIKE ?`, invoiceSearch)
+	if filters.OrderStatus != nil {
+		res = res.Where(`"os"."status" = ?`, *filters.OrderStatus)
+	}
+
+	if err := res.Find(&orders).Count(&count).Error; err != nil {
+		return nil, nil, err
+	}
+
+	res = res.
+		Order("id DESC").
+		Limit(filters.Limit).
+		Offset(filters.Offset()).
+		Find(&orders)
+	if res.Error != nil {
+		return nil, nil, nil
+	}
+
+	for i, order := range orders {
+		od, err := o.getOrderDetails(order.Id)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		orders[i].OrderDetail = od
+	}
+
+	metadata := helper.CalculateMetaData(int(count), filters.Page, filters.Limit)
+	return orders, &metadata, nil
 }
 
 func (o orderRepository) CreateOrder(user model.User, order []model.Order, item []dto.ItemToProceed, listOfProductVariant []uint64) error {
@@ -341,6 +399,8 @@ func (o orderRepository) getOrderDetails(orderId uint64) ([]model.SellerOrderDet
 		Select(
 			`"order_details"."id" AS id`,
 			`"order_details"."quantity" AS quantity`,
+			`"order_details"."real_price" AS real_price`,
+			`"order_details"."discounted_price" AS price`,
 			`"p"."id" AS product_id`,
 			`"p"."name" AS product_name`,
 			`"p"."thumbnail_url" AS thumbnail_url`,
