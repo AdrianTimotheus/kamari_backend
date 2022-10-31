@@ -258,7 +258,7 @@ func (w walletService) ValidateTopUpWallet(sign string, req *dto.SealabsPayRes) 
 		DstWalletId:       wModel.Id,
 		Amount:            uint64(topUpReq.Amount),
 		Description:       "Top Up From Sea Labs Pay",
-		TransactionTypeId: 1,
+		TransactionTypeId: 2,
 		TransactionType:   model.TransactionType{},
 	}
 
