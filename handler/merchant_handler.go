@@ -98,10 +98,13 @@ func (h Handler) GetSellerProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, dtoResponse)
 }
 func (h Handler) GetProductsSellerAdmin(c *gin.Context) {
-	var payload dto.GetMerchantProductRequest
-	if err := c.ShouldBindQuery(&payload); err != nil {
-		fmt.Println(err)
-		_ = c.Error(httperror.BadRequestError("missing required field", "MISSING_REQUIRED_FIELD"))
+	var query struct {
+		Keyword string `form:"keyword"`
+		helper.Filters
+	}
+	err := c.BindQuery(&query)
+	if err != nil {
+		_ = c.Error(httperror.BadRequestError(err.Error(), "INVALID_QUERY_PARAMS"))
 		return
 	}
 	user, err := helper.GetUserContext(c)
@@ -109,12 +112,15 @@ func (h Handler) GetProductsSellerAdmin(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, httperror.UnauthorizedError())
 		return
 	}
-	dtoResponse, err := h.merchantService.GetSellerAdminProducts(user.Username, payload)
+	products, metadata, err := h.merchantService.GetSellerAdminProducts(user.Username, query.Keyword, &query.Filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, dtoResponse)
+	c.JSON(http.StatusOK, gin.H{
+		"__metadata": metadata,
+		"products":   products,
+	})
 }
 
 func (h Handler) RegisterMerchant(c *gin.Context) {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"kamari.com/dto"
+	"kamari.com/helper"
 	"kamari.com/httperror"
 	"kamari.com/model"
 	"kamari.com/repository"
@@ -16,7 +17,7 @@ type MerchantService interface {
 	GetMerchantProfile(username string) (*dto.MerchantProfileRes, error)
 	UpdateMerchantProfile(merchantId uint64, username string, payload *dto.MerchantProfileReq) error
 	GetMerchantProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetMerchantProductsResponse, error)
-	GetSellerAdminProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetSellerAdminProductsResponse, error)
+	GetSellerAdminProducts(username string, keyword string, filters *helper.Filters) (*dto.GetSellerAdminProductsResponse, *helper.Metadata, error)
 	RegisterMerchant(user model.User, req *dto.MerchantRegisterRequest) error
 	GetMerchantPaycheck(user model.User) (*dto.MerchantPaycheckResponse, error)
 	MerchantWithdraw(user model.User) (*dto.MerchantPaycheckResponse, error)
@@ -76,7 +77,7 @@ func (m merchantService) GetMerchantDetail(username string) (*dto.MerchantDetail
 		Name:              md.Name,
 		Username:          md.User.Username,
 		Description:       md.Description,
-		ProfilePicture:    md.User.PicUrl,
+		ProfilePicture:    md.PicUrl,
 		ShopLocation:      ml.Name,
 		FollowerCount:     mf,
 		ProductCount:      uint64(len(mp)),
@@ -252,41 +253,25 @@ func (m merchantService) GetMerchantProducts(username string, payload dto.GetMer
 	return &dtoResp, nil
 }
 
-func (m merchantService) GetSellerAdminProducts(username string, payload dto.GetMerchantProductRequest) (*dto.GetSellerAdminProductsResponse, error) {
+func (m merchantService) GetSellerAdminProducts(username string, keyword string, filters *helper.Filters) (*dto.GetSellerAdminProductsResponse, *helper.Metadata, error) {
 	var dtoResp dto.GetSellerAdminProductsResponse
 
 	merchantModel, err := m.merchantRepository.GetMerchantDetail(username)
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+			return nil, nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
 		default:
-			return nil, httperror.InternalServerError(err.Error())
+			return nil, nil, httperror.InternalServerError(err.Error())
 		}
 	}
-
-	if payload.Page <= 0 {
-		payload.Page = 1
-	}
-	pageOffset := (payload.Page * payload.Limit) - payload.Limit
-	var orderBy string
-	switch payload.SortBy {
-	case "latest":
-		orderBy = "created_at DESC"
-	case "oldest":
-		orderBy = "created_at ASC"
-	default:
-		orderBy = "unit_sold DESC"
-	}
-	var models []model.Product
-	models, err = m.productRepository.GetSellerAdminProducts(merchantModel.Id, pageOffset, orderBy, payload.Search, payload.Limit, payload.SellerCategory, payload.MarketplaceCategory)
-
-	if err != nil {
+	models, metadata, err1 := m.productRepository.GetSellerAdminProducts(merchantModel.Id, keyword, filters)
+	if err1 != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			return nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
+			return nil, nil, httperror.BadRequestError(err.Error(), "NO_ROWS")
 		default:
-			return nil, httperror.InternalServerError(err.Error())
+			return nil, nil, httperror.InternalServerError(err.Error())
 		}
 	}
 
@@ -305,23 +290,14 @@ func (m merchantService) GetSellerAdminProducts(username string, payload dto.Get
 	for i, _ := range dtoItem {
 		count, score, err := m.productRepository.GetProductReviewScoreDecimal(dtoItem[i].ID)
 		if err != nil {
-			return nil, httperror.InternalServerError(err.Error())
+			return nil, nil, httperror.InternalServerError(err.Error())
 		}
 		dtoItem[i].ReviewScore = score
 		dtoItem[i].ReviewCount = count
 	}
 
-	totalRecord, _ := m.productRepository.GetCountMerchantProduct(username)
-
-	if int(totalRecord)%payload.Limit == 0 {
-		dtoResp.TotalPage = int(totalRecord) / payload.Limit
-	} else {
-		dtoResp.TotalPage = (int(totalRecord) / payload.Limit) + 1
-	}
-
-	dtoResp.Page = payload.Page
 	dtoResp.Products = dtoItem
-	return &dtoResp, nil
+	return &dtoResp, metadata, nil
 }
 
 func (m merchantService) RegisterMerchant(user model.User, req *dto.MerchantRegisterRequest) error {
