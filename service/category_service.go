@@ -28,6 +28,7 @@ type CategoryService interface {
 	CreateSellerCategory(userId uint64, req dto.SellerCategoryRequest) error
 	DeleteSellerCategory(userId uint64, sellerCategoryId uint64) error
 	AddProductToSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory, sellerCategoryId uint64) error
+	RemoveSpecificProductFromSellerCategory(userId uint64, productId uint64) error
 	DeleteProductFromSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory) error
 	UpdateCategory(categoryId uint64, req *dto.CategoryRequest) error
 	UpdateSubCategory(subCategoryId uint64, req *dto.EditSubCategoryRequest) error
@@ -249,5 +250,10 @@ func (c categoryService) AddProductToSellerCategory(userId uint64, req dto.AddRe
 
 func (c categoryService) DeleteProductFromSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory) error {
 	err := c.categoryRepository.DeleteProductFromSellerCategory(userId, req)
+	return err
+}
+
+func (c categoryService) RemoveSpecificProductFromSellerCategory(userId uint64, productId uint64) error {
+	err := c.categoryRepository.RemoveSpecificProductFromSellerCategory(userId, productId)
 	return err
 }

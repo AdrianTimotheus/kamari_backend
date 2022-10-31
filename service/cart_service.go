@@ -69,6 +69,8 @@ func (c cartService) GetCartItems(user model.User) ([]dto.CartItemsResponse, err
 			EndDate:         item.EndDate,
 			StockLeft:       item.StockLeft,
 			MaximumItem:     item.MaximumItem,
+			MinimumOrder:    item.MinimumOrder,
+			MaximumOrder:    item.MaximumOrder,
 		}
 		m[item.MerchantName] = append(m[item.MerchantName], cartItem)
 	}
@@ -103,6 +105,9 @@ func (c cartService) GetCartItems(user model.User) ([]dto.CartItemsResponse, err
 				Price:           tempCartItem.Price,
 				DiscountedPrice: discountedPrice,
 				Quantity:        tempCartItem.Quantity,
+				StockLeft:       tempCartItem.StockLeft,
+				MinimumOrder:    tempCartItem.MinimumOrder,
+				MaximumOrder:    tempCartItem.MaximumOrder,
 			}
 			tempData = append(tempData, temp)
 		}

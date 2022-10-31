@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"math"
 	"net/url"
 	"strconv"
 
@@ -37,6 +38,7 @@ type CategoryRepository interface {
 	GetAvailableProducts(userId uint64, params url.Values) ([]dto.SellerCategoriesAvailableItemsRes, uint64, error)
 	AddProductToSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory, sellerCategoryId uint64) error
 	DeleteProductFromSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory) error
+	RemoveSpecificProductFromSellerCategory(userId uint64, productId uint64) error
 }
 
 type categoryRepository struct {
@@ -317,6 +319,7 @@ func (c categoryRepository) DeleteComplementaryCategory(complementary *model.Com
 func (c categoryRepository) GetSellerCategories(userId uint64, params url.Values) ([]dto.GetSellerCategoriesRes, uint64, error) {
 	var productsCountBySellerCategories []dto.GetSellerCategoriesRes
 	var merchant model.Merchant
+	var count int64
 
 	keywordParams := params["keyword"]
 	keyword := ""
@@ -335,23 +338,41 @@ func (c categoryRepository) GetSellerCategories(userId uint64, params url.Values
 
 	if keyword == "" {
 		err = c.db.Table("seller_categories").
-			Select("seller_categories.id,seller_categories.name, count(seller_categories.name)").
-			Joins("join products on seller_categories.id = products.seller_category_id").
-			Where("products.merchant_id = ?", merchant.Id).
-			Group("seller_category_id, seller_categories.name, seller_categories.id").
+			Select("seller_categories.id, seller_categories.name, count(products.id)").
+			Joins("left join products on seller_categories.id = products.seller_category_id").
+			Where("seller_categories.merchant_id = ?", merchant.Id).
+			Where("seller_categories.deleted_at IS NULL").
+			Group("seller_categories.name, seller_categories.id").
+			Count(&count).Error
+		err = c.db.Table("seller_categories").
+			Select("seller_categories.id, seller_categories.name, count(products.id)").
+			Joins("left join products on seller_categories.id = products.seller_category_id").
+			Where("seller_categories.merchant_id = ?", merchant.Id).
+			Where("seller_categories.deleted_at IS NULL").
+			Group("seller_categories.name, seller_categories.id").
 			Limit(limit).
 			Offset(offset).
 			Find(&productsCountBySellerCategories).
 			Error
 	} else {
 		//SELECT seller_categories.name, seller_category_id, count(seller_categories.name) from seller_categories join products on seller_categories.id = products.seller_category_id group by seller_category_id, seller_categories.name;
+		err = c.db.Table("seller_categories").
+			Select("seller_categories.id, seller_categories.name, count(products.id)").
+			Joins("left join products on seller_categories.id = products.seller_category_id").
+			Where("seller_categories.merchant_id = ?", merchant.Id).
+			Where("seller_categories.name ILIKE ?", keyword).
+			Where("seller_categories.deleted_at IS NULL").
+			Group("seller_categories.name, seller_categories.id").
+			Count(&count).Error
+		fmt.Println(count)
 
 		err = c.db.Table("seller_categories").
-			Select("seller_categories.id, seller_categories.name, count(seller_categories.name)").
-			Joins("join products on seller_categories.id = products.seller_category_id").
-			Where("products.merchant_id = ?", merchant.Id).
+			Select("seller_categories.id, seller_categories.name, count(products.id)").
+			Joins("left join products on seller_categories.id = products.seller_category_id").
+			Where("seller_categories.merchant_id = ?", merchant.Id).
 			Where("seller_categories.name ILIKE ?", keyword).
-			Group("seller_category_id, seller_categories.name, seller_categories.id").
+			Where("seller_categories.deleted_at IS NULL").
+			Group("seller_categories.name, seller_categories.id").
 			Limit(limit).
 			Offset(offset).
 			Find(&productsCountBySellerCategories).
@@ -362,7 +383,9 @@ func (c categoryRepository) GetSellerCategories(userId uint64, params url.Values
 		return nil, 0, err
 	}
 
-	return productsCountBySellerCategories, uint64((len(productsCountBySellerCategories))/limit) + 1, nil
+	//pp, _ := json.MarshalIndent(productsCountBySellerCategories, "", "\t")
+	//fmt.Println("testtt", string(pp))
+	return productsCountBySellerCategories, uint64(math.Ceil(float64(count) / float64(limit))), nil
 }
 
 func (c categoryRepository) GetSellerPageCategories(username string) ([]model.SellerCategory, error) {
@@ -403,6 +426,7 @@ func (c categoryRepository) GetSellerCategory(userId uint64, sellerCategoryId ui
 		Preload("Variants").
 		Where("seller_category_id = ?", sellerCategoryId).
 		Where("merchant_id = ?", merchant.Id).
+		Where("deleted_at IS NULL").
 		Find(&products).
 		Error
 
@@ -506,6 +530,7 @@ func (c categoryRepository) DeleteSellerCategory(userId uint64, sellerCategoryId
 func (c categoryRepository) GetAvailableProducts(userId uint64, params url.Values) ([]dto.SellerCategoriesAvailableItemsRes, uint64, error) {
 	var products []dto.SellerCategoriesAvailableItemsRes
 	var merchant model.Merchant
+	var count int64
 
 	keywordParams := params["keyword"]
 	keyword := ""
@@ -527,12 +552,28 @@ func (c categoryRepository) GetAvailableProducts(userId uint64, params url.Value
 			Preload("Variants").
 			Where("merchant_id = ?", merchant.Id).
 			Where("seller_category_id IS NULL").
+			Find(&products).
+			Count(&count).
+			Error
+		err = c.db.Table("products").
+			Preload("Variants").
+			Where("merchant_id = ?", merchant.Id).
+			Where("seller_category_id IS NULL").
 			Limit(limit).
 			Offset(offset).
 			Find(&products).
 			Error
 	} else {
 		//SELECT seller_categories.name, seller_category_id, count(seller_categories.name) from seller_categories join products on seller_categories.id = products.seller_category_id group by seller_category_id, seller_categories.name;
+		err = c.db.Table("products").
+			Preload("Variants").
+			Where("merchant_id = ?", merchant.Id).
+			Where("seller_category_id IS NULL").
+			Where("name ILIKE ?", keyword).
+			Find(&products).
+			Count(&count).
+			Error
+
 		err = c.db.Table("products").
 			Preload("Variants").
 			Where("merchant_id = ?", merchant.Id).
@@ -548,7 +589,7 @@ func (c categoryRepository) GetAvailableProducts(userId uint64, params url.Value
 		return nil, 0, err
 	}
 
-	return products, uint64((len(products))/limit) + 1, nil
+	return products, uint64(math.Ceil(float64(count) / float64(limit))), nil
 }
 
 func (c categoryRepository) AddProductToSellerCategory(userId uint64, req dto.AddRemoveProductFromCategory, sellerCategoryId uint64) error {
@@ -611,6 +652,29 @@ func (c categoryRepository) DeleteProductFromSellerCategory(userId uint64, req d
 	}
 
 	err = c.db.Table("products").Where("id IN ?", filteredId).Update("seller_category_id", gorm.Expr("NULL")).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c categoryRepository) RemoveSpecificProductFromSellerCategory(userId uint64, productId uint64) error {
+	var merchant model.Merchant
+	var exists bool
+
+	err := c.db.Where("user_id = ?", userId).First(&merchant).Error
+
+	err = c.db.Table("products").
+		Select("count(*) > 0").
+		Where("merchant_id = ?", merchant.Id).
+		Where("id = ?", productId).
+		Find(&exists).Error
+
+	if !exists {
+		return httperror.BadRequestError("Product not found", "PRODUCT_NOT_FOUND")
+	}
+
+	err = c.db.Table("products").Where("id = ?", productId).Update("seller_category_id", gorm.Expr("NULL")).Error
 	if err != nil {
 		return err
 	}

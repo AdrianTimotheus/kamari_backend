@@ -386,6 +386,25 @@ func (h Handler) RemoveProductFromSellerCategory(c *gin.Context) {
 	})
 }
 
+func (h Handler) RemoveSpecificProductFromSellerCategory(c *gin.Context) {
+	userVal, _ := c.Get("user")
+	user := userVal.(model.User)
+
+	id, _ := helper.GetParam(c, "id", "uint64")
+	productId := id.(uint64)
+
+	err := h.categoryService.RemoveSpecificProductFromSellerCategory(user.Id, productId)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Item removed from seller category",
+	})
+}
+
 func (h Handler) UpdateCategory(c *gin.Context) {
 	id, _ := helper.GetParam(c, "id", "uint64")
 	categoryId := id.(uint64)

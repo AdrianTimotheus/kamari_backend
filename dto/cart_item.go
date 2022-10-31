@@ -14,6 +14,9 @@ type CartItem struct {
 	Price           uint64 `json:"real_price"`
 	DiscountedPrice uint64 `json:"price"`
 	Quantity        uint64 `json:"quantity"`
+	StockLeft       uint64 `json:"stock_left"`
+	MinimumOrder    uint64 `json:"minimum_order"`
+	MaximumOrder    uint64 `json:"maximum_order"`
 }
 
 type CartItemRaw struct {
@@ -33,6 +36,8 @@ type CartItemRaw struct {
 	PromoTypeId     uint8     `json:"promo_type_id" column:"promo_type_id"`
 	DiscountAmount  uint64    `json:"discount_amount" column:"discount_amount"`
 	StockLeft       uint64    `json:"stock_left"`
+	MinimumOrder    uint64    `json:"minimum_order" column:"minimum_order"`
+	MaximumOrder    uint64    `json:"maximum_order" column:"maximum_order"`
 	MaximumItem     uint64    `json:"maximum_item"`
 	StartDate       time.Time `json:"start_date"`
 	EndDate         time.Time `json:"end_date"`
