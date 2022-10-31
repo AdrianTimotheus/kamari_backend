@@ -26,7 +26,8 @@ func main() {
 }
 
 func testOnly(orderId int) {
-	err := exec.Command("bash", "-c", fmt.Sprintf("echo order id %d is updated > ~/text.txt | at now", orderId)).Run()
+	command := fmt.Sprintf("at now+10 minutes <<< 'echo order id %d is updated > ~/text.txt'", orderId)
+	err := exec.Command("bash", "-c", command).Run()
 	if err != nil {
 		fmt.Println("Error run exec: ", err.Error())
 	}

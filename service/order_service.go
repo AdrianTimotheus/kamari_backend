@@ -1,10 +1,10 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
-	"encoding/json"
 	"kamari.com/dto"
 	"kamari.com/helper"
 	"kamari.com/httperror"
@@ -230,7 +230,8 @@ func (o orderService) GetMerchantOrderSummary(merchantId uint64) ([]model.Seller
 }
 
 func setAtScriptUpdateDelivered(orderId uint64) error {
-	return exec.Command("bash", "-c", fmt.Sprintf("go run scripts/at/update_order_status/main.go %d | at now + 10 min", orderId)).Run()
+	command := fmt.Sprintf("at now+10 minutes <<< 'go run scripts/at/update_order_status/main.go %d'", orderId)
+	return exec.Command("bash", "-c", command).Run()
 }
 
 func (o orderService) UpwardOrderStatus(orderId uint64, user model.User) (*dto.StatusMessageResponse, error) {
